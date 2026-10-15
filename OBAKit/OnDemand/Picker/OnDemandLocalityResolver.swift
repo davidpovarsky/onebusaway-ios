@@ -46,14 +46,18 @@ struct OnDemandLocalityResolver {
     /// calls `cancelGeocode()`, which completes the request with
     /// `kCLErrorGeocodeCanceled` instead of leaving it in flight.
     @Sendable static func reverseGeocodedLocality(_ location: CLLocation) async -> String? {
-        let geocoder = CLGeocoder()
+        let box = GeocoderBox()
         return await withTaskCancellationHandler {
-            let placemarks = try? await geocoder.reverseGeocodeLocation(location)
+            let placemarks = try? await box.geocoder.reverseGeocodeLocation(location)
             return placemarks?.first?.locality
         } onCancel: {
-            geocoder.cancelGeocode()
+            box.geocoder.cancelGeocode()
         }
     }
+}
+
+private final class GeocoderBox: @unchecked Sendable {
+    let geocoder = CLGeocoder()
 }
 
 /// Resumes a continuation with the first answer only.
