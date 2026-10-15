@@ -13,18 +13,13 @@ import OTPKit
 #endif
 
 nonisolated public enum MOTItineraryMapper {
-    private static let isoFormatter: ISO8601DateFormatter = {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return f
-    }()
-
-    private static let fallbackISOFormatter = ISO8601DateFormatter()
-
     private static func parseDate(_ string: String?) -> Date {
         guard let s = string, !s.isEmpty else { return Date() }
-        if let d = isoFormatter.date(from: s) { return d }
-        if let d = fallbackISOFormatter.date(from: s) { return d }
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let d = formatter.date(from: s) { return d }
+        formatter.formatOptions = [.withInternetDateTime]
+        if let d = formatter.date(from: s) { return d }
         return Date()
     }
 
