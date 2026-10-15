@@ -2458,3 +2458,19 @@
 
 /* Label before the rental range chips */
 "map_layers.min_range" = "Min. range";
+
+/* Israel MOT Integration */
+"israel_mot.provider_name" = "Israel Ministry of Transport";
+"israel_mot.region_name" = "Israel";
+"israel_mot.region_subtitle" = "National Transit (Buses, Rail, Light Rail)";
+"israel_mot.waf_notice_title" = "Government WAF Security Protected";
+"israel_mot.waf_notice_body" = "Direct native trip planning and push endpoints on api.bus.gov.il are currently restricted by the Ministry of Transport's F5 Volt WAF. Schedules, route geometry, stop details, and location searches operate live.";
+"israel_mot.cached_schedule_notice" = "Showing cached schedule data.";
+"israel_mot.live_stop_eta" = "Live Stop ETA";
+"israel_mot.national_rail" = "Israel Railways";
+"israel_mot.light_rail_jerusalem" = "Jerusalem Light Rail (Cfir)";
+"israel_mot.light_rail_telaviv" = "Dankal Light Rail";
+"israel_mot.carmelit" = "Carmelit & Cable Car (Rakavlit)";
+"israel_mot.settings.use_live_api" = "Connect to Live Bus.gov.il API";
+"israel_mot.settings.waf_status" = "WAF Shield Status: Protected";
+"israel_mot.settings.inspect_endpoints" = "Inspect Live Endpoints";
