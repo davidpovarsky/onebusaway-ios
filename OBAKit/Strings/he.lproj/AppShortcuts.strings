@@ -1,0 +1,19 @@
+/*
+ * App Shortcuts phrases (Siri) - Hebrew (he).
+ * Keys are the English phrases from OBAAppShortcuts in TrackBookmarkIntent.swift.
+ * Every value must keep ${applicationName}, or Siri drops the phrase.
+ */
+
+"Track ${bookmark} with ${applicationName}" = "עקוב אחר ${bookmark} באמצעות ${applicationName}";
+
+"Track ${applicationName} bookmark" = "עקוב אחר סימנייה ב-${applicationName}";
+
+"Start ${applicationName} Live Activity" = "הפעל פעילות חיה ב-${applicationName}";
+
+"When is my next ${bookmark} in ${applicationName}" = "מתי הנסיעה הבאה שלי עבור ${bookmark} ב-${applicationName}";
+
+"Next departures for ${bookmark} in ${applicationName}" = "יציאות קרובות עבור ${bookmark} ב-${applicationName}";
+
+"When is my next bus in ${applicationName}" = "מתי האוטובוס הבא שלי ב-${applicationName}";
+
+"Do I have time to catch the bus with ${applicationName}" = "האם יש לי זמן לתפוס את האוטובוס עם ${applicationName}";

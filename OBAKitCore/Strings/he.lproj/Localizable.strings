@@ -1,0 +1,631 @@
+/*
+ * OBAKitCore Strings - Hebrew (he)
+ */
+
+/* An error message that tells the user that they are connected to a captive portal WiFi network. */
+"api_error.captive_portal" = "נראה שאתה מחובר לרשת אלחוטית (WiFi) החוסמת גישה לאינטרנט. נסה להתנתק מה-WiFi או לבצע הזדהות ברשת כדי להמשיך.";
+
+/* An error that tells the user that cellular data access is disabled for this app in iOS Settings. Both substituted values are the app name. */
+"api_error.cellular_data_restricted_fmt" = "ליישום %1$@ אין כעת הרשאה לשימוש בנתונים סלולריים. לתיקון, עבור אל הגדרות > סלולרי והפעל נתונים סלולריים עבור %2$@, או התחבר לרשת WiFi.";
+
+/* An error shown when the server returns a body the app cannot decode and no region name is available to specialize the copy. */
+"api_error.decoding_failure" = "השרת החזיר נתונים שהיישום אינו יכול לקרוא. בדרך כלל זו תקלה בהזנת הנתונים של התחנה או המפעיל. אנא נסה שוב בקרוב.";
+
+/* An error message that informs the user that the wrong kind of content was received from the server. */
+"api_error.invalid_content_type_fmt" = "התקבל סוג תוכן שגוי מהשרת: ציפינו לנתוני %1$@, אך התקבלו נתוני %2$@.";
+
+/* An error shown when the regional server returned a body the app cannot decode. Distinct from a down server. The first substituted value is the region name, the second is the app name. */
+"api_error.invalid_response_data_fmt" = "השרת עבור %1$@ החזיר נתונים שאינם קריאים. בדרך כלל זו תקלה בערוץ הנתונים של התחנה או המפעיל, ולא ב-%2$@. נסה שוב בקרוב.";
+
+/* An error that tells the user that the network connection isn't working. */
+"api_error.network_failure" = "לא ניתן להתחבר לאינטרנט או לשרת. אנא בדוק את החיבור לרשת ונסה שוב.";
+
+/* An error message that tells the user that no region has been selected. */
+"api_error.no_region_selected" = "לא נבחר אזור פעילות. אנא בחר אזור כדי להמשיך.";
+
+/* An error that tells the user that the server unexpectedly failed to return data. */
+"api_error.no_response_body" = "השרת לא החזיר נתונים במענה לבקשתך באופן בלתי צפוי.";
+
+/* An error that is produced in response to HTTP status codes outside of 200-299. */
+"api_error.request_failure_fmt" = "השרת נתקל בשגיאה בעת הטיפול בבקשתך (קוד מצב %1$d). (כתובת: %2$@)";
+
+/* An error that is produced in response to HTTP status code 404 */
+"api_error.request_not_found" = "404 לא נמצא (%@)";
+
+/* An error shown when the server returns a 500 Internal Server Error. The substituted value is the region name, e.g. 'Puget Sound'. */
+"api_error.server_error_fmt" = "שרת התחבורה עבור %@ נתקל בשגיאה בעת עיבוד בקשתך. אנא נסה שוב.";
+
+/* An error shown when the regional transit server cannot be reached. Mentions VPN because riders often hit this with a working phone on a filtered network. The first substituted value is the region name, the second is the app name. */
+"api_error.server_unavailable_fmt" = "לא ניתן ליצור קשר עם שרת התחבורה של %1$@. היישום %2$@ אינו יכול להציג מידע תחבורה עבור אזור זה כרגע. ייתכן שהשרת אינו זמין, או ש-VPN או חומת אש חוסמים את הגישה.";
+
+/* An error message that tells the user that surveys are not available. */
+"api_error.survey_service_not_configured" = "שירות הסקרים אינו זמין באזור זה.";
+
+/* This will appear on a button or as a title, and indicates that this UI will create a new bookmark. */
+"common.add_alarm" = "הוסף התראה";
+
+/* This will appear on a button or as a title, and indicates that this UI will create a new bookmark. */
+"common.add_bookmark" = "הוסף סימנייה";
+
+/* The noun, like an alarm clock or an alarm bell. */
+"common.alarm" = "התראה";
+
+/* Back, as in 'back to the previous screen.' */
+"common.back" = "חזרה";
+
+/* The verb 'to bookmark'. */
+"common.bookmark" = "סימנייה";
+
+/* The verb 'to cancel', i.e. to stop an action. */
+"common.cancel" = "ביטול";
+
+/* Button to clear recent search results */
+"common.clear_recent_searches" = "נקה חיפושים אחרונים";
+
+/* Confirmation message before clearing recent search results */
+"common.clear_recent_searches.confirmation" = "האם אתה בטוח שברצונך למחוק את החיפושים האחרונים?";
+
+/* The verb 'to close'. */
+"common.close" = "סגור";
+
+/* Asks the user to confirm a delete action. Typically this is showned when the user taps a 'delete' button on an important item. */
+"common.confirmdelete" = "אישור מחיקה";
+
+/* The verb 'to continue'. */
+"common.continue" = "המשך";
+
+/* The verb 'to delete', as in to destroy something. */
+"common.delete" = "מחק";
+
+/* The verb 'to dismiss', as in to hide or get rid of something. Used as a button title on alerts. */
+"common.dismiss" = "סגור";
+
+/* The verb 'to donate', as in to give money to a charitable cause. */
+"common.donate" = "תרומה";
+
+/* The body of the message to display to the user after they donate to OTSF. %@ is the app name. */
+"common.donation_thank_you.body" = "תמיכתך מסייעת לנו להמשיך ולשפר את %@.";
+
+/* Title of an alert to display to the user after they donate to OTSF */
+"common.donation_thank_you.title" = "תודה רבה על תמיכתך!";
+
+/* Past participle of 'do'. As in 'I am done' or 'I am finished.' */
+"common.done" = "סיום";
+
+/* The verb 'to edit', as in to change or modify something. Used as a button title. */
+"common.edit" = "עריכה";
+
+/* Title for the alert empty set indicator. */
+"common.empty_alert_set.title" = "אין התראות";
+
+/* Body for the bookmark empty set indicator. */
+"common.empty_bookmark_set.body" = "הוסף תחנה או נסיעה למועדפים כדי לגשת אליהם במהירות כאן.";
+
+/* Body for the bookmark empty set indicator when the user has a pending migration from the old version of the app. */
+"common.empty_bookmark_set.body_with_pending_migration" = "עבור ללשונית עוד > הגדרות > העברת נתונים כדי שהסימניות שלך יופיעו כאן.";
+
+/* Title for the bookmark empty set indicator. */
+"common.empty_bookmark_set.title" = "אין סימניות";
+
+/* The noun 'error', as in 'something went wrong'. */
+"common.error" = "שגיאה";
+
+/* The title of a button that exports all of the user's data into a file. */
+"common.export_data" = "ייצוא נתונים";
+
+/* Description of the privacy policy for sharing data with the external survey service. */
+"common.external_survey_privacy_info.description" = "סקר זה ישתף את התחנה, הקו, האזור והמיקום הנוכחי שלך";
+
+/* The verb 'to filter'. */
+"common.filter" = "סינון";
+
+/* The verb 'to go' */
+"common.go" = "סע";
+
+/* This is button text that tells the user they can tap on it to learn more about the topic at hand. */
+"common.learn_more" = "מידע נוסף";
+
+/* Fallback title for the stop arrivals screen when the stop name is not yet available. */
+"common.live_arrivals" = "זמני הגעה בזמן אמת";
+
+/* Used to indicate that content is loading. */
+"common.loading" = "טוען…";
+
+/* A common error message that can be used when the user's location is not available and we need it to accomplish something. */
+"common.location_unavailable" = "המיקום אינו זמין";
+
+/* The noun for a map. */
+"common.map" = "מפה";
+
+/* A title or command for upgrading data from older versions of OBA. */
+"common.migrate_data" = "העברת נתונים";
+
+/* An explanation about what the Migrate Data feature does. */
+"common.migrate_data_description" = "שדרג את התחנות האחרונות והסימניות שלך כדי שיתאימו לגרסה העדכנית של היישום. (נדרש חיבור לאינטרנט.)";
+
+/* As in 'see more' or 'learn more'. */
+"common.more" = "עוד";
+
+/* The verb 'to next', i.e. to get next survey question. */
+"common.next" = "הבא";
+
+/* OK */
+"common.ok" = "אישור";
+
+/* i.e. recently selected search results for map locations from the trip planner. */
+"common.recent_searches" = "חיפושים אחרונים";
+
+/* i.e. recently viewed or visited stops for transit vehicles, like a bus stop, ferry terminal, or train station. */
+"common.recent_stops" = "תחנות אחרונות";
+
+/* The verb 'refresh', as in 'reload'. */
+"common.refresh" = "רענן";
+
+/* The verb 'retry'. */
+"common.retry" = "נסה שוב";
+
+/* The verb 'save', as in 'save data'. */
+"common.save" = "שמור";
+
+/* A noun referring to a bus/train schedule or timetable. */
+"common.schedule" = "לוח זמנים";
+
+/* Explains that this is departure comes from schedule data, not from a real-time vehicle location. */
+"common.scheduled_not_real_time" = "מתוכנן / לא בזמן אמת";
+
+/* Plural form of schedule, referring to bus/train schedules or timetables. */
+"common.schedules" = "לוחות זמנים";
+
+/* A noun referring to an alert about service interruptions, reroutes, or other disruptions or changes. */
+"common.service_alert" = "התראת שירות";
+
+/* Plural form of a noun referring to an alert about service interruptions, reroutes, or other disruptions or changes. */
+"common.service_alerts" = "התראות שירות";
+
+/* A noun referring to a collection of options for adjusting app behavior. */
+"common.settings" = "הגדרות";
+
+/* A verb referring to sharing something generic. */
+"common.share" = "שתף";
+
+/* Button title for sharing the status of your trip (i.e. location, arrival time, etc.) */
+"common.share_trip" = "שתף נסיעה";
+
+/* The verb 'to skip' as in 'don't perform a particular step and go on to the next one instead.' */
+"common.skip" = "דלג";
+
+/* The verb 'to sort' as in to arrange things in an order. */
+"common.sort" = "מיון";
+
+/* Noun. Plural form of a transit stop. */
+"common.stops" = "תחנות";
+
+/* The verb 'to submit', i.e. to submit a survey answer. */
+"common.submit" = "שלח";
+
+/* A format string used to tell the user when the UI they are looking at was last updated. e.g. Updated: 9:41 AM. The time is calculated at runtime. */
+"common.updated_at_fmt" = "עודכן: %@";
+
+/* Used to tell the user that the UI they are looking at is actively being updated with new data from the server. */
+"common.updating" = "מעדכן…";
+
+/* The title of the Vehicles tab showing real-time vehicle positions on a map. */
+"common.vehicles" = "כלי תחבורה";
+
+/* VoiceOver clause naming the clock time of a departure. %@ is the time. */
+"departure_time.a11y_at_fmt" = "בשעה %@";
+
+/* VoiceOver clause for a departure whose real-time prediction differs from its scheduled time. %1$@ is the scheduled time, %2$@ the predicted time. */
+"departure_time.a11y_rescheduled_fmt" = "מתוכנן ל-%1$@, צפוי כעת ב-%2$@";
+
+/* Use for vehicles that arrived X minutes ago. */
+"formatters.arrived_x_min_ago_fmt" = "הגיע לפני %d דק'";
+
+/* Use for vehicles arriving in X minutes. */
+"formatters.arrives_in_x_min_fmt" = "מגיע בעוד %d דק'";
+
+/* Use for vehicles arriving now. */
+"formatters.arriving_now" = "מגיע עכשיו";
+
+/* Short caption under a past stop-page countdown for a vehicle that already arrived. */
+"formatters.caption.arrived" = "הגיע";
+
+/* Short caption under a stop-page countdown for a vehicle arriving at this stop. */
+"formatters.caption.arrives" = "מגיע";
+
+/* Short caption under a past stop-page countdown for a vehicle that already left. */
+"formatters.caption.departed" = "יצא";
+
+/* Short caption under a stop-page countdown for a vehicle departing this stop (first stop or layover). */
+"formatters.caption.departs" = "יוצא";
+
+/* Headed in an eastern direction */
+"formatters.cardinal_adjective.east" = "לכיוון מזרח";
+
+/* Headed in a northern direction */
+"formatters.cardinal_adjective.north" = "לכיוון צפון";
+
+/* Headed in a northeastern direction */
+"formatters.cardinal_adjective.northeast" = "לכיוון צפ'-מז'";
+
+/* Headed in a northwestern direction */
+"formatters.cardinal_adjective.northwest" = "לכיוון צפ'-מע'";
+
+/* Headed in a southern direction */
+"formatters.cardinal_adjective.south" = "לכיוון דרום";
+
+/* Headed in an southeastern direction */
+"formatters.cardinal_adjective.southeast" = "לכיוון דר'-מז'";
+
+/* Headed in a southwestern direction */
+"formatters.cardinal_adjective.southwest" = "לכיוון דר'-מע'";
+
+/* Headed in a western direction */
+"formatters.cardinal_adjective.west" = "לכיוון מערב";
+
+/* East Direction */
+"formatters.cardinal_direction.east" = "מזרח";
+
+/* North Direction */
+"formatters.cardinal_direction.north" = "צפון";
+
+/* Northeast Direction */
+"formatters.cardinal_direction.northeast" = "צפון-מזרח";
+
+/* Northwest Direction */
+"formatters.cardinal_direction.northwest" = "צפון-מערב";
+
+/* South Direction */
+"formatters.cardinal_direction.south" = "דרום";
+
+/* Southeast Direction */
+"formatters.cardinal_direction.southeast" = "דרום-מזרח";
+
+/* Southwest Direction */
+"formatters.cardinal_direction.southwest" = "דרום-מערב";
+
+/* West Direction */
+"formatters.cardinal_direction.west" = "מערב";
+
+/* Abbreviation for East */
+"formatters.cardinal_direction_abbrev.east" = "מז'";
+
+/* Abbreviation for North */
+"formatters.cardinal_direction_abbrev.north" = "צפ'";
+
+/* Abbreviation for Northeast */
+"formatters.cardinal_direction_abbrev.northeast" = "צפ'-מז'";
+
+/* Abbreviation for Northwest */
+"formatters.cardinal_direction_abbrev.northwest" = "צפ'-מע'";
+
+/* Abbreviation for South */
+"formatters.cardinal_direction_abbrev.south" = "דר'";
+
+/* Abbreviation for Southeast */
+"formatters.cardinal_direction_abbrev.southeast" = "דר'-מז'";
+
+/* Abbreviation for Southwest */
+"formatters.cardinal_direction_abbrev.southwest" = "דר'-מע'";
+
+/* Abbreviation for West */
+"formatters.cardinal_direction_abbrev.west" = "מע'";
+
+/* Use for vehicles that departed X minutes ago. */
+"formatters.departed_x_min_ago_fmt" = "יצא לפני %d דק'";
+
+/* Use for vehicles departing now. */
+"formatters.departing_now" = "יוצא עכשיו";
+
+/* Use for vehicles departing in X minutes. */
+"formatters.departs_in_x_min_fmt" = "יוצא בעוד %d דק'";
+
+/* Format string for describing an early future arrival schedule deviation. e.g. arrives 3 min early. Note that the abbrevation for 'minutes' should make sense for both singular and plural forms. */
+"formatters.deviation.arrival_future_early_fmt" = "יקדים ב-%d דק'";
+
+/* Format string for describing a late future arrival schedule deviation. e.g. arrives 3 min late. Note that the abbrevation for 'minutes' should make sense for both singular and plural forms. */
+"formatters.deviation.arrival_future_late_fmt" = "יאחר ב-%d דק'";
+
+/* Describes an on-time arrival. e.g. arrives on time. */
+"formatters.deviation.arrival_future_on_time" = "מגיע בזמן";
+
+/* Format string for describing an early arrival schedule deviation. e.g. Arrived 3 min early. Note that the abbrevation for 'minutes' should make sense for both singular and plural forms. */
+"formatters.deviation.arrival_past_early_fmt" = "הקדים ב-%d דק'";
+
+/* Format string for describing a late arrival schedule deviation. e.g. Arrived 3 min late. Note that the abbrevation for 'minutes' should make sense for both singular and plural forms. */
+"formatters.deviation.arrival_past_late_fmt" = "איחר ב-%d דק'";
+
+/* Describes an on-time arrival. e.g. arrived on time. */
+"formatters.deviation.arrival_past_on_time" = "הגיע בזמן";
+
+/* Describes an on-time departure. e.g. departs on time. */
+"formatters.deviation.departs_future_on_time" = "יוצא בזמן";
+
+/* Format string for describing an early future departure schedule deviation. e.g. departs 3 min early. Note that the abbrevation for 'minutes' should make sense for both singular and plural forms. */
+"formatters.deviation.departure_future_early_fmt" = "יוצא מוקדם ב-%d דק'";
+
+/* Format string for describing a late future departure schedule deviation. e.g. departs 3 min late. Note that the abbrevation for 'minutes' should make sense for both singular and plural forms. */
+"formatters.deviation.departure_future_late_fmt" = "יוצא באיחור של %d דק'";
+
+/* Format string for describing an early departure schedule deviation. e.g. Departed 3 min early. Note that the abbrevation for 'minutes' should make sense for both singular and plural forms. */
+"formatters.deviation.departure_past_early_fmt" = "יצא מוקדם ב-%d דק'";
+
+/* Format string for describing a late departure schedule deviation. e.g. Departed 3 min late. Note that the abbrevation for 'minutes' should make sense for both singular and plural forms. */
+"formatters.deviation.departure_past_late_fmt" = "יצא באיחור של %d דק'";
+
+/* Describes an on-time departure. e.g. departed on time. */
+"formatters.deviation.departure_past_on_time" = "יצא בזמן";
+
+/* Overflowing map-pin route list. The argument is the visible names; U+2026 marks that more routes exist. e.g. '10, 12, 49…' */
+"formatters.map_routes_overflow_fmt" = "%@…";
+
+/* Short formatted time text for arrivals/departures occurring now. */
+"formatters.now" = "עכשיו";
+
+/* Formatted time text for arrivals/departures that occur in one minute. */
+"formatters.one_minute" = "דקה אחת";
+
+/* Formatted time text for arrivals/departures that occurred one minute ago. */
+"formatters.one_minute_ago" = "לפני דקה";
+
+/* A format string used to denote the list of routes served by this stop. e.g. 'Routes: 10, 12, 49' */
+"formatters.routes_label_fmt" = "קווים: %@";
+
+/* A format string used to denote the overflowing list of routes served by this stop. e.g. 'Routes: 10, 12, 49, + 3 more */
+"formatters.routes_label_plus_more_fmt" = "קווים: %1$@, ועוד %2$d";
+
+/* Placeholder text for the search bar: 'Search in {REGION NAME}' */
+"formatters.search_bar_placeholder_fmt" = "חיפוש ב-%@";
+
+/* Short formatted time text for arrivals/departures. Example: 7m means that this event happens 7 minutes in the future. -7m means 7 minutes in the past. */
+"formatters.short_time_fmt" = "%d דק'";
+
+/* Format string representing a non-numeric stop number. e.g. Stop: 'Old Library' */
+"formatters.stop.stop_code_non_numeric" = "תחנה: '%@'";
+
+/* Format string representing a numeric stop number. e.g. Stop #1234 */
+"formatters.stop.stop_code_numeric" = "תחנה מס' %@";
+
+/* A string that prefixes a stop ID to tell the user what that value is. */
+"formatters.stop_id_fmt" = "מזהה תחנה: %@";
+
+/* Indicates that an event just took place. */
+"formatters.time_ago_just_now" = "הרגע";
+
+/* Formatted time text for arrivals/departures. Used for accessibility labels, so be sure to spell out the word for 'minute'. Example: 7 minutes means that this event happens 7 minutes in the future. -7 minutes means 7 minutes in the past. */
+"formatters.time_fmt" = "%d דקות";
+
+/* Transfer arrival banner. First parameter is the arrival time, second is the route name and headsign. e.g. 'Arriving at 4:10 PM via 10 - Capitol Hill' */
+"formatters.transfer.arrival_banner_fmt" = "מגיע אל %1$@ דרך %2$@";
+
+/* Short text shown when a departure occurs at the same time as the rider's transfer arrival. */
+"formatters.transfer.on_arrival" = "עכשיו";
+
+/* VoiceOver lead-in before the spoken list of the next departures on a Live Activity, e.g. '…, later departures, 15 minutes, 22 minutes'. */
+"live_activity.a11y_later_departures" = "יציאות מאוחרות יותר";
+
+/* Shown on a Live Activity when ActivityKit marks it stale (no recent update). */
+"live_activity.stale_warning" = "מידע זה עשוי שלא להיות עדכני.";
+
+/* Error shown when a location request is made without authorization */
+"location_service.error.not_authorized" = "הגישה למיקום אינה מורשית.";
+
+/* The body of the tip pointing at the map toolbar's basemap button, which opens the Map sheet where the rental layers are turned on and off */
+"map_layers_tip.message" = "הקש כאן כדי להציג אופניים וקורקינטים על המפה.";
+
+/* Title for the tip pointing at the map toolbar's basemap button when a region gains bike and scooter rental map layers */
+"map_layers_tip.title" = "חדש: אופניים וקורקינטים";
+
+/* Error when a route has no real-time vehicle tracking data. */
+"nearby_trip_matcher.error.no_realtime" = "אין נתוני מעקב בזמן אמת עבור קו זה.";
+
+/* Error when no transit stops are found near the user's location. */
+"nearby_trip_matcher.error.no_stops" = "לא נמצאו תחנות בסביבה.";
+
+/* Bus. Used for short- and long-distance bus routes. */
+"route_type.bus" = "אוטובוס";
+
+/* Cable car. Used for street-level cable cars where the cable runs beneath the car. */
+"route_type.cable_car" = "רכבל";
+
+/* Ferry. Used for short- and long-distance boat service. */
+"route_type.ferry" = "מעבורת";
+
+/* Funicular. Any rail system designed for steep inclines. */
+"route_type.funicular" = "פוניקולר";
+
+/* Gondola, Suspended cable car. Typically used for aerial cable cars where the car is suspended from the cable. */
+"route_type.gondola" = "גונדולה";
+
+/* Tram, Streetcar, Light rail. Any light rail or street level system within a metropolitan area. */
+"route_type.light_rail" = "רכבת קלה";
+
+/* Rail. Used for intercity or long-distance travel. */
+"route_type.rail" = "רכבת";
+
+/* Subway, Metro. Any underground rail system within a metropolitan area. */
+"route_type.subway" = "רכבת תחתית";
+
+/* The body of the schedule/timetable feature tip */
+"schedule_tip.message" = "הקש כאן כדי לצפות בלוח הזמנים של האוטובוסים והרכבות שלך.";
+
+/* Title for the schedule/timetable feature tip */
+"schedule_tip.title" = "צפה בלוח הזמנים של הקו";
+
+/* Shown in place of the minutes countdown when the vehicle is departing now */
+"stop_page.countdown.now" = "עכשיו";
+
+/* User-facing string that means the location of the stop on the map is wrong. */
+"stop_problem_code.user_description.location_wrong" = "המיקום שגוי";
+
+/* User-facing string that means the name of the stop is wrong. */
+"stop_problem_code.user_description.name_wrong" = "השם שגוי";
+
+/* User-facing string that means the number/ID of the stop is wrong. */
+"stop_problem_code.user_description.number_wrong" = "המספר שגוי";
+
+/* User-facing string that means that something else is wrong */
+"stop_problem_code.user_description.other" = "אחר";
+
+/* User-facing string that means our data is wrong about a route or a scheduled trip */
+"stop_problem_code.user_description.route_or_trip_missing" = "קו או נסיעה מתוכננת חסרים";
+
+/* Indicating missing external survey url */
+"survey.external.url.missing" = "לא ניתן לפתוח את הסקר כעת. אנא נסה שוב מאוחר יותר.";
+
+/* Body for survey dismissal action alert. */
+"survey_alert.dismissal.body" = "המשוב שלך מסייע בשיפור שירותי התחבורה וחוויית השימוש ביישום.";
+
+/* Title for survey dismissal action alert. */
+"survey_alert.dismissal.title" = "סגירת סקר";
+
+/* The action of not showing the survey again. */
+"survey_alert.do.not.show.again" = "אל תציג שוב";
+
+/* The action of reminding later. i.e, to remind me later on the survey. */
+"survey_alert.remind.later" = "הזכר לי מאוחר יותר";
+
+/* The action of skipping the current survey. */
+"survey_alert.skip.survey" = "דלג על סקר זה";
+
+/* Error message to show when the user has not answered the hero survey question with a valid answer. */
+"survey_error.hero_question_answer.error" = "אנא הזן תשובה חוקית";
+
+/* Error message to show when the user has not answered all required survey questions. */
+"survey_error.required_remaining_questions.error" = "אנא ענה על כל שאלות החובה";
+
+/* Indicating that survey service is not setup up right or has some other issue. */
+"survey_service.not.available" = "שירות הסקרים אינו זמין.";
+
+/* Indicating missing survey update id when submitting responses */
+"survey_service.update.path.missing" = "אירעה שגיאה בעת שליחת התשובות שלך. אנא נסה שוב מאוחר יותר.";
+
+/* Success message to show when the survey is successfully submitted. */
+"survey_success.submitted" = "תשובתך לסקר נשלחה! אנא ענה על שאר השאלות לקבלת משוב מדויק יותר.";
+
+/* Accessibility hint for an input field in a survey. */
+"surveys.accessibility.hint_answer.input" = "הזן את תשובתך לשאלת הסקר";
+
+/* Accessibility label for an input field in a survey. */
+"surveys.accessibility_answer.input" = "קלט תשובה";
+
+/* Accessibility label for a value that is not selected. */
+"surveys.accessibility_not_selected_value" = "לא נבחר";
+
+/* Accessibility label for a selected value. */
+"surveys.accessibility_selected_value" = "נבחר";
+
+/* Accessibility for survey label */
+"surveys.accessibility_survey_label" = "תווית סקר";
+
+/* Accessibility label that allows selection of a survey option. */
+"surveys.accessibility_tap_to_select" = "הקש לבחירה";
+
+/* Accessibility label  that toggles the selection state of a survey option. */
+"surveys.accessibility_tap_toggle_selection" = "הקש לשינוי בחירה";
+
+/* Clock time with a timezone badge, e.g. 4:00 PM (PST). First argument is the clock. Second is the badge. */
+"timezone.clock_with_badge_fmt" = "%1$@ (%2$@)";
+
+/* GMT offset with whole hours, e.g. GMT+5 or GMT-8. First argument is + or -. Second is the hour count. */
+"timezone.gmt_offset_hours_fmt" = "GMT%1$@%2$d";
+
+/* GMT offset with hours and minutes, e.g. GMT+5:30. Arguments are sign, hours, and the two-digit minutes. */
+"timezone.gmt_offset_hours_minutes_fmt" = "GMT%1$@%2$d:%3$@";
+
+/* Message for the trip planner tip */
+"trip_planner_tip.message" = "הקש כאן כדי לחפש מקומות ולתכנן את נסיעתך באמצעות תחבורה ציבורית.";
+
+/* Title for the trip planner tip */
+"trip_planner_tip.title" = "תכנן את הנסיעה שלך";
+
+/* User-facing string that means the vehicle came early. */
+"trip_problem_code.user_description.came_early" = "הקדים";
+
+/* User-facing string that means the vehicle came late. */
+"trip_problem_code.user_description.came_late" = "איחר";
+
+/* User-facing string that means the vehicle does not stop here. */
+"trip_problem_code.user_description.does_not_stop_here" = "לא עוצר כאן";
+
+/* User-facing string that means the vehicle never came. */
+"trip_problem_code.user_description.never_came" = "לא הגיע כלל";
+
+/* User-facing string that means that something else is wrong */
+"trip_problem_code.user_description.other" = "אחר";
+
+/* User-facing string that means the vehicle headsign was wrong. */
+"trip_problem_code.user_description.wrong_headsign" = "שילוט יעד שגוי";
+
+/* VoiceOver text describing a route that has already arrived, regardless of realtime data availability. */
+"voiceover.arrivaldeparture_arrived_x_minutes_ago_fmt" = "הגיע לפני %1$d דקות אל %2$@.";
+
+/* VoiceOver text describing a future arrival that is based off realtime data. */
+"voiceover.arrivaldeparture_arriving_in_x_minutes" = "מגיע בעוד %1$d דקות אל %2$@.";
+
+/* VoiceOver text describing a route that is arriving now, regardless of realtime data availability. */
+"voiceover.arrivaldeparture_arriving_now" = "מגיע עכשיו!";
+
+/* VoiceOver text describing a route that has already departed, regardless of realtime data availability. */
+"voiceover.arrivaldeparture_departed_x_minutes_ago_fmt" = "יצא לפני %1$d דקות מ-%2$@.";
+
+/* VoiceOver text describing a future departure that is based off realtime data. */
+"voiceover.arrivaldeparture_departing_in_x_minutes_fmt" = "יוצא בעוד %1$d דקות מ-%2$@.";
+
+/* VoiceOver text describing a route that is departing now, regardless of realtime data availability. */
+"voiceover.arrivaldeparture_departing_now" = "יוצא עכשיו!";
+
+/* VoiceOver text describing the name of a route in a verbose fashion to compensate for no visuals. */
+"voiceover.arrivaldeparture_route_fmt" = "קו %@";
+
+/* VoiceOver text describing a route that is scheduled to arrive (no realtime data was available). */
+"voiceover.arrivaldeparture_scheduled_arrives_in_x_minutes_fmt" = "מתוכנן להגיע בעוד %1$d דקות אל %2$@.";
+
+/* VoiceOver text describing a route that is scheduled to depart. (no realtime data was available) */
+"voiceover.arrivaldeparture_scheduled_departs_in_x_minutes_fmt" = "מתוכנן לצאת בעוד %1$d דקות מ-%2$@.";
+
+/* Weather condition label for clear skies. */
+"weather.condition.clear" = "בהיר";
+
+/* Weather condition label for cloudy skies. */
+"weather.condition.cloudy" = "מעונן";
+
+/* Weather condition label for foggy conditions. */
+"weather.condition.fog" = "ערפל";
+
+/* Weather condition label for partly cloudy skies. */
+"weather.condition.partly_cloudy" = "מעונן חלקית";
+
+/* Weather condition label for rain. */
+"weather.condition.rain" = "גשם";
+
+/* Weather condition label for sleet. */
+"weather.condition.sleet" = "שלג מעורב בגשם";
+
+/* Weather condition label for snow. */
+"weather.condition.snow" = "שלג";
+
+/* Weather condition placeholder when the icon key is unknown. */
+"weather.condition.unknown" = "—";
+
+/* Weather condition label for windy conditions. */
+"weather.condition.wind" = "רוח חזקה";
+
+/* Widget empty state. Quotes the bookmark editor's switch title (edit_bookmark_controller.show_in_today_view_switch_title); keep the two identical. */
+"widget.empty_state" = "הפעל את 'הצג בווידג'ט תצוגת היום' עבור סימנייה כדי לראות אותה כאן.";
+
+/* Description of the bookmarks widget in the iOS Add Widget gallery. */
+"widget.gallery.description" = "צפה ביציאות קרובות עבור הסימניות שלך.";
+
+/* Name of the bookmarks widget in the iOS Add Widget gallery. */
+"widget.gallery.display_name" = "סימניות";
+
+/* Widget header showing when departures were last fetched. %@ is a clock time such as 9:41 AM. */
+"widget.last_updated_fmt" = "עודכן לאחרונה ב-%@";
+
+/* Widget row subtitle when a bookmark has no departures soon. %d is a number of minutes (currently always 60); the abbreviation avoids plural agreement. */
+"widget.no_departures_in_next_minutes_fmt" = "אין יציאות ב-%d הדקות הקרובות";
+
+/* Widget row subtitle when departures for a bookmark are not loaded yet. Tapping opens the stop in the app. */
+"widget.tap_for_more_information" = "הקש למידע נוסף";
+

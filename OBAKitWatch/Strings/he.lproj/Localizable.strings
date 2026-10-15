@@ -1,0 +1,50 @@
+/* Empty state */
+"arrivals.empty" = "אין יציאות ב-60 הדקות הקרובות.";
+
+/* Progress text */
+"arrivals.loading" = "טוען זמני יציאה…";
+
+/* Arrivals cannot load without a region */
+"arrivals.no_service" = "לא נבחר אזור תחבורה.";
+
+/* VoiceOver: route, headsign, time until departure */
+"arrivals.row.a11y_fmt" = "%1$@ לכיוון %2$@, %3$@";
+
+/* %@ is a short time, e.g. 3:42 PM */
+"arrivals.updated_at_fmt" = "עודכן ב-%@";
+
+/* Shown while the system location prompt is up */
+"nearby.awaiting_authorization" = "אפשר גישה למיקום כדי לראות תחנות קרובות אליך.";
+
+/* No nearby stop has a departure in the next 60 minutes */
+"nearby.empty" = "אין יציאות בקרבת מקום בשעה הקרובה.";
+
+/* Progress text */
+"nearby.locating" = "מאתר את מיקומך…";
+
+/* Shown when a location fix fails or times out */
+"nearby.location_failed" = "לא ניתן לאתר את מיקומך. נסה שוב.";
+
+/* Shown when location is denied or restricted */
+"nearby.location_denied" = "גישת המיקום כבויה. הצגת תחנות קרובות דורשת גישה למיקומך.";
+
+/* The fix is outside every supported region */
+"nearby.no_region" = "אין כאן אזור תחבורה נתמך.";
+
+/* Screen title before a transit region is known */
+"nearby.title" = "בקרבת מקום";
+
+/* Progress text while nearby stops' departures load */
+"nearby.loading" = "מאתר קווים קרובים…";
+
+/* VoiceOver: route short name, headsign. e.g. 'C Line to South Lake Union' */
+"nearby.card.a11y_fmt" = "%1$@ לכיוון %2$@";
+
+/* Section header: other nearby stops served by the same route and direction */
+"route.also_nearby" = "עוד בקרבת מקום";
+
+/* Opens every route's departures at the nearest stop */
+"route.all_arrivals" = "כל ההגעות לתחנה זו";
+
+/* Button: show the same route heading the other way */
+"route.switch_direction" = "החלף כיוון";

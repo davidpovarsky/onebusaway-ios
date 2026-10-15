@@ -1,0 +1,27 @@
+/*
+ * App Intents strings - Hebrew (he).
+ */
+
+/* App Intents: type name of a bookmarked trip in Shortcuts and Siri. Singular noun. */
+"bookmark_entity.type_name" = "סימנייה";
+
+/* App Intents: label of the bookmark parameter on the Track Bookmark and Next Departures actions. */
+"bookmark_entity.parameter_title" = "סימנייה";
+
+/* App Intents: name of the Shortcuts action that answers when a bookmarked trip departs next. */
+"next_departures_intent.title" = "יציאות קרובות";
+
+/* App Intents: description of the Next Departures action in Shortcuts. Siri speaks the answer. */
+"next_departures_intent.description" = "קבל מידע מתי יוצאת הנסיעה הבאה בסימנייה.";
+
+/* App Shortcuts: short tile label for Next Departures in Shortcuts and Spotlight. */
+"next_departures_intent.short_title" = "יציאות קרובות";
+
+/* App Intents: name of the Shortcuts action that starts a Live Activity for a bookmarked trip. */
+"track_bookmark_intent.title" = "מעקב אחר סימנייה";
+
+/* App Intents: description of the Track Bookmark action in Shortcuts. */
+"track_bookmark_intent.description" = "הפעל פעילות חיה עבור נסיעה שמורה בסימניות.";
+
+/* App Shortcuts: short tile label for Track Bookmark in Shortcuts and Spotlight. */
+"track_bookmark_intent.short_title" = "מעקב אחר סימנייה";

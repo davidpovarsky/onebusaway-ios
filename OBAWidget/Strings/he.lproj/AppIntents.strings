@@ -1,0 +1,12 @@
+/*
+ * App Intents strings in Hebrew for OBAWidget.
+ */
+
+/* App Intents: name of the widget action that reloads departures. */
+"refresh_widget_intent.title" = "רענן ווידג׳ט";
+
+/* App Intents: title of the bookmarks widget configuration. */
+"widget_configuration_intent.title" = "סימניות";
+
+/* App Intents: description of the bookmarks widget configuration. */
+"widget_configuration_intent.description" = "צפייה בזמני יציאה קרובים עבור הסימניות שלך.";

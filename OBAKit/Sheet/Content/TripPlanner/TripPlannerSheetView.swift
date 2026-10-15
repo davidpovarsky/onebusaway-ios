@@ -262,7 +262,10 @@ private struct TripPlannerSheetContent: View {
         // GraphQL (OTP 2.x) is preferred; REST (OTP 1.x) is the fallback.
         let serverURL: URL
         let apiService: OTPKit.APIService
-        if let graphQLURL = region.openTripPlannerGraphQLURL {
+        if region.regionIdentifier == 972 {
+            serverURL = region.openTripPlannerURL ?? URL(string: "https://api.bus.gov.il/prod/RoutePlanning/GetRoutes")!
+            apiService = MOTTripPlanningAPIService(baseURL: serverURL)
+        } else if let graphQLURL = region.openTripPlannerGraphQLURL {
             serverURL = graphQLURL
             apiService = GraphQLAPIService(baseURL: graphQLURL)
         } else if let restURL = region.openTripPlannerURL {

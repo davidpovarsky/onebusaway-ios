@@ -900,6 +900,13 @@ public class Application: CoreApplication, PushServiceDelegate {
         donationsManager.obacoService = obacoService
     }
 
+    open override func dataLoader(for region: Region) -> URLDataLoader {
+        if region.regionIdentifier == 972 {
+            return MOTCompatibilityDataLoader(fallbackLoader: super.dataLoader(for: region))
+        }
+        return super.dataLoader(for: region)
+    }
+
     // MARK: - Appearance and Themes
 
     /// Sets default styles for several UIAppearance proxies in order to customize the app's look and feel

@@ -196,10 +196,16 @@ open class CoreApplication: NSObject,
 
         self.apiService = RESTAPIService(
             APIServiceConfiguration(baseURL: region.OBABaseURL, apiKey: config.apiKey, uuid: userUUID, appVersion: config.appVersion, regionIdentifier: region.regionIdentifier, surveyBaseURL: region.sidecarBaseURL),
-            dataLoader: config.dataLoader,
+            dataLoader: dataLoader(for: region),
             onDemandSupport: config.onDemandSupport
         )
         refreshFormattersTimeZone()
+    }
+
+    /// Returns the `URLDataLoader` to use for the given region.
+    /// Subclasses may override this to provide custom loaders (e.g. for regional adapters like IsraelMOT).
+    open func dataLoader(for region: Region) -> URLDataLoader {
+        return config.dataLoader
     }
 
     /// Applies or clears region-zone clock display from the Settings toggle.

@@ -1,0 +1,99 @@
+{
+  "data": [
+    {
+      "routeId": "b3f81e6a-7d24-4f51-8742-9a3b61c028a1",
+      "sections": [
+        {
+          "type": "walk",
+          "departure": {
+            "time": "2026-10-15T20:30:00+03:00",
+            "hourTimeString": "20:30",
+            "place": {
+              "name": "יפו/שערי ירושלים",
+              "type": "station",
+              "code": "5997",
+              "location": {
+                "lat": 31.78913,
+                "lng": 35.20317
+              }
+            }
+          },
+          "arrival": {
+            "time": "2026-10-15T20:33:00+03:00",
+            "hourTimeString": "20:33",
+            "place": {
+              "name": "תחנה מרכזית ירושלים",
+              "type": "station",
+              "code": "6109",
+              "location": {
+                "lat": 31.78908,
+                "lng": 35.20248
+              }
+            }
+          },
+          "polyline": "o_`hFs~|dEe@q@y@aA",
+          "travelSummary": {
+            "duration": 180,
+            "length": 220
+          }
+        },
+        {
+          "type": "bus",
+          "transport": {
+            "mode": "bus",
+            "name": "31",
+            "shortName": "31",
+            "headsign": "מסוף גילה",
+            "color": "#007AFF",
+            "routeId": 33285
+          },
+          "departure": {
+            "time": "2026-10-15T20:35:00+03:00",
+            "hourTimeString": "20:35",
+            "place": {
+              "name": "תחנה מרכזית ירושלים",
+              "type": "station",
+              "code": "6109",
+              "location": {
+                "lat": 31.78908,
+                "lng": 35.20248
+              }
+            }
+          },
+          "arrival": {
+            "time": "2026-10-15T20:55:00+03:00",
+            "hourTimeString": "20:55",
+            "place": {
+              "name": "שכטמן/סילבר",
+              "type": "station",
+              "code": "5997",
+              "location": {
+                "lat": 31.81518,
+                "lng": 35.20302
+              }
+            }
+          },
+          "polyline": "Bv8Bggn4gk7z6w4Bggqu3s70yw-B__vw4tjM3_m1jkvQ",
+          "travelSummary": {
+            "duration": 1200,
+            "length": 5400,
+            "price": [
+              {
+                "profileId": 1,
+                "profileName": {
+                  "he": "רגיל",
+                  "en": "Regular",
+                  "ar": "عادي"
+                },
+                "singleRidePrice": 6
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "success": true,
+  "message": "",
+  "duration": 1380
+}

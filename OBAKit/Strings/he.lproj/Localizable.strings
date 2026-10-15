@@ -1,0 +1,2465 @@
+/*
+ * OBAKit Strings - Hebrew (he)
+ */
+
+/* Text for the table header for bookmarking an entire stop. */
+"add_bookmark_controller.bookmark_stop_header" = "שמור את התחנה במועדפים";
+
+/* Text for the table header for bookmarking an individual trip. */
+"add_bookmark_controller.bookmark_trip_header" = "שמור נסיעה במועדפים";
+
+/* Explanatory text shown when route bookmarking is unavailable due to no upcoming departures. */
+"add_bookmark_controller.trip_bookmark_unavailable" = "שמירת נסיעה זמינה רק כאשר ישנן יציאות קרובות מתחנה זו.";
+
+/* Text field placeholder on the Add Group Alert. */
+"add_group_alert.placeholder" = "שם לקבוצת הסימניות";
+
+/* Title of the Add Bookmark Group controller */
+"add_group_alert.title" = "קבוצה חדשה";
+
+/* Action to call agency */
+"agencies_controller.call_agency" = "התקשר למפעיל";
+
+/* Error dialog title */
+"agencies_controller.error_title" = "שגיאה";
+
+/* Error message for invalid phone */
+"agencies_controller.invalid_phone" = "מספר טלפון לא תקין.";
+
+/* Action to open agency website */
+"agencies_controller.open_website" = "פתח אתר אינטרנט";
+
+/* Title of the Agencies controller */
+"agencies_controller.title" = "מפעילי תחבורה";
+
+/* The title of the Agency Alerts controller. */
+"agency_alerts_controller.title" = "התראות מפעיל";
+
+/* {X} minutes. always plural. */
+"alarm_builder_controller.minutes_fmt" = "%d דקות";
+
+/* One minute/1 minute */
+"alarm_builder_controller.one_minute" = "דקה אחת";
+
+/* Explains what the Alarm Time Picker page does. */
+"alarm_time_picker.description" = "הזכר לי כאשר כלי תחבורה זה יצא בעוד:";
+
+/* Title of the Alarm Time Picker page. */
+"alarm_time_picker.title" = "זמן התראה מראש";
+
+/* Toggle label that starts a Live Activity widget on the Lock Screen when an alarm is set. */
+"alarm_time_picker.track_on_lock_screen" = "עקוב במסך הנעילה (Live Activity)";
+
+/* Placeholder shown when a sheet route is pushed but its screen has not been built yet. */
+"app_sheet.unimplemented_route.placeholder" = "מסך זה יהיה זמין בקרוב.";
+
+/* Shown when the rider taps a link or notification for a stop that belongs to a transit region other than the currently selected one. */
+"application.stop_in_other_region" = "תחנה זו שייכת לאזור שירות שונה מהאזור הפעיל כעת, ולכן לא ניתן לפתוח אותה.";
+
+/* Filter option to show all departures regardless of real-time data availability */
+"arrival_departure_filter.all_departures" = "כל היציאות";
+
+/* Filter option to show only departures with real-time estimated data */
+"arrival_departure_filter.real_time_only" = "זמן אמת בלבד";
+
+/* Filter option to show only departures with scheduled data and no real-time information */
+"arrival_departure_filter.scheduled_only" = "מתוכנן בלבד";
+
+/* Context menu action that pins a bookmark to the top of the home sheet's bookmarks section. */
+"bookmarks_controller.context_menu.pin" = "הצמד לראש הרשימה";
+
+/* Action to start a Live Activity for a specific bookmark */
+"bookmarks_controller.context_menu.track_live_activity" = "מעקב פעילות חיה";
+
+/* Context menu action that removes a bookmark's pin, returning it to the normal ordering. */
+"bookmarks_controller.context_menu.unpin" = "בטל הצמדה";
+
+/* The title to display to confirm the user's action to delete a bookmark. */
+"bookmarks_controller.delete_bookmark.actionsheet.title" = "מחק סימנייה";
+
+/* Groups button title in Bookmarks controller */
+"bookmarks_controller.groups_button_title" = "עריכה";
+
+/* Shown on a bookmark card when arrival data has loaded but there are no departures in the near future */
+"bookmarks_controller.no_upcoming_departures" = "אין יציאות קרובות";
+
+/* VoiceOver suffix announcing that a bookmark row is pinned. */
+"bookmarks_controller.pinned.a11y_label" = "מוצמד";
+
+/* A menu item that allows the user to sort their bookmarks by distance from the user. */
+"bookmarks_controller.sort_menu.sort_by_distance" = "מיין לפי מרחק";
+
+/* A menu item that allows the user to sort their bookmarks into groups. */
+"bookmarks_controller.sort_menu.sort_by_group" = "מיין לפי קבוצה";
+
+/* The table section header on the bookmarks controller for when bookmarks are sorted by distance. */
+"bookmarks_controller.sorted_by_distance_header" = "ממוין לפי מרחק";
+
+/* Title of the Bookmarks tab */
+"bookmarks_controller.title" = "סימניות";
+
+/* The title for the bookmarks controller section that shows bookmarks that aren't in a group. */
+"bookmarks_controller.ungrouped_bookmarks_section.title" = "סימניות";
+
+/* This is displayed to confirm that something has been copied to clipboard. */
+"clipboard.copied_text_confirmation" = "הועתק ללוח";
+
+/* Body of the the alert that appears when you try sending an email without Mail.app set up */
+"contact_us_helper.cant_send_email.body_fmt" = "ליצירת קשר, שלח דוא"ל אל %1$@. הקש על 'העתק מידע טכני' להעתקת מידע שיסייע לנו בפתרון הבעיה.";
+
+/* A button that lets the user copy an email address to the clipboard. */
+"contact_us_helper.cant_send_email.copy_email_button" = "העתק כתובת דוא"ל";
+
+/* A button that lets the user copy a default message, including debug info, to the clipboard. */
+"contact_us_helper.cant_send_email.copy_message_button" = "העתק מידע טכני";
+
+/* Title of the alert that appears when the user's device isn't configured to send email. */
+"contact_us_helper.cant_send_email.title" = "לא ניתן לשלוח דוא"ל מ-Mail.app";
+
+/* Feedback email template subject for the app developers. %@ is the app name. */
+"contact_use_helper.feedback_subject.app" = "משוב על יישום %@";
+
+/* Feedback email template subject for the transit agency */
+"contact_use_helper.feedback_subject.transit_agency" = "משוב נוסע למפעיל תחבורה";
+
+/* Title of the Credits controller */
+"credits_controller.title" = "קרדיטים ותודות";
+
+/* Loading message while searching for the user's vehicle. */
+"current_trip_controller.detecting" = "מאתר את כלי התחבורה שלך...";
+
+/* Distance from user to vehicle. e.g. '0.2 mi away' */
+"current_trip_controller.distance_fmt" = "%@ ממך";
+
+/* Error when the API service is unavailable. */
+"current_trip_controller.error_no_service" = "לא ניתן להתחבר לשירות התחבורה.";
+
+/* Error message when the user's location is not available. */
+"current_trip_controller.location_unavailable" = "המיקום אינו זמין. אנא הפעל שירותי מיקום.";
+
+/* Section header when multiple vehicles are found on the selected route. */
+"current_trip_controller.multiple_vehicles" = "נמצאו מספר כלי תחבורה";
+
+/* Title for the current trip screen. */
+"current_trip_controller.my_trip" = "הנסיעה שלי";
+
+/* Message when the route has no real-time tracking data. */
+"current_trip_controller.no_realtime" = "אין מעקב זמן אמת עבור קו זה";
+
+/* Message when no active vehicle is found near the user on the selected route. */
+"current_trip_controller.no_results" = "לא נמצא כלי תחבורה פעיל במסלול זה בקרבתך";
+
+/* Button to retry finding the user's vehicle. */
+"current_trip_controller.retry" = "נסה שוב";
+
+/* An explanation of the optional Umami analytics fields of a custom region. */
+"custom_region_builder_controller.analytics_section.explanation" = "אופציונלי. כתובת שרת Umami ומזהה אתר. שני השדות נדרשים להפעלת ניתוח נתונים.";
+
+/* Title of the Analytics header. */
+"custom_region_builder_controller.analytics_section.header_title" = "ניתוח נתונים";
+
+/* Placeholder for the Umami analytics website ID field. */
+"custom_region_builder_controller.analytics_section.website_id_placeholder" = "מזהה אתר (Website ID)";
+
+/* An explanation of what the Base URL field of a custom region requires. */
+"custom_region_builder_controller.base_url_section.explanation" = "כתובת השרת הראשית, ללא הסיומת '/api/where' שמתווספת אוטומטית.";
+
+/* Title of the Base URL header. */
+"custom_region_builder_controller.base_url_section.header_title" = "כתובת שרת בסיסית";
+
+/* Navigation bar title when editing an existing custom region. */
+"custom_region_builder_controller.edit_title" = "עריכה Custom Region";
+
+/* Example custom region name */
+"custom_region_builder_controller.example_data.region_name" = "אזור מותאם אישית";
+
+/* An explanation of the optional custom region name field. */
+"custom_region_builder_controller.name_section.explanation" = "אופציונלי. אם יישאר ריק, ייקרא על שם המפעיל הראשון.";
+
+/* Title of the Name header. */
+"custom_region_builder_controller.name_section.header_title" = "שם האזור";
+
+/* Navigation bar title when creating a new custom region. */
+"custom_region_builder_controller.new_title" = "אזור מותאם אישית חדש";
+
+/* An error message displayed when a custom region's server cannot be validated. First parameter is the server URL, second is the underlying error message. */
+"custom_region_builder_controller.server_validation_error_fmt" = "לא ניתן להתחבר לשרת בכתובת %1$@. בדוק את הכתובת ונסה שוב.
+
+%2$@";
+
+/* An explanation of dragging the map to highlight the service area of a custom region. */
+"custom_region_builder_controller.service_area_section.explanation" = "גרור את המפה לאזור השירות המשוער.";
+
+/* Title of the Service Area header. */
+"custom_region_builder_controller.service_area_section.header_title" = "אזור שירות";
+
+/* An explanation of the optional Obaco sidecar server URL field of a custom region. */
+"custom_region_builder_controller.sidecar_section.explanation" = "אופציונלי. כתובת שרת Obaco (התראות וסקרים).";
+
+/* Title of the Sidecar Server header. */
+"custom_region_builder_controller.sidecar_section.header_title" = "שרת Obaco";
+
+/* Action button title for the DataMigrationBulletinPage. */
+"data_migration_bulletin.action_button" = "התחל העברת נתונים";
+
+/* Title for the DataMigrationBulletinPage. */
+"data_migration_bulletin.data_upgrade_title" = "שדרוג נתונים";
+
+/* Dismissal button title for the DataMigrationBulletinPage. */
+"data_migration_bulletin.dismiss_button" = "לא עכשיו";
+
+/* An error message that appears when the user needs to have data migrated, but is not connected to the Internet. */
+"data_migration_bulletin.errors.no_api_service_available" = "בדוק את החיבור לרשת ונסה שוב.";
+
+/* An error message that appears when the data migrator runs but no data can be migrated. */
+"data_migration_bulletin.errors.no_data_to_migrate" = "אין נתונים לשדרוג";
+
+/* An error message that appears when the data migrator runs without a pending migration. */
+"data_migration_bulletin.errors.no_migration_pending" = "אין שדרוג נתונים ממתין";
+
+/* First bullet point of DataMigrationBulletinPage explanation */
+"data_migration_bulletin.explanation_1" = "שדרג את התחנות האחרונות והסימניות שלך לגרסה העדכנית של היישום.";
+
+/* Second bullet point of DataMigrationBulletinPage explanation */
+"data_migration_bulletin.explanation_2" = "הסימניות והתחנות יוצגו לאחר השלמת השדרוג.";
+
+/* Third bullet point of DataMigrationBulletinPage explanation */
+"data_migration_bulletin.explanation_3" = "השדרוג עשוי להימשך מספר שניות ודורש חיבור אינטרנט פעיל.";
+
+/* This comment is displayed after the user's data is upgraded in the DataMigrationBulletinPage. */
+"data_migration_bulletin.finished_loading" = "שדרוג הנתונים הושלם בהצלחה!";
+
+/* Data migration report label for showing the number of failed migration tasks. Plural forms live in Localizable.stringsdict; the value above is only the not-found fallback. */
+"data_migration_bulletin.report_summary_number_of_failures" = "%d תקלות";
+
+/* Data migration report label for showing the number of successful migration tasks. Plural forms live in Localizable.stringsdict; the value above is only the not-found fallback. */
+"data_migration_bulletin.report_summary_number_of_successes" = "%d בהצלחה";
+
+/* Title for the Summary section of a data migration report */
+"data_migration_bulletin.report_summary_title" = "סיכום";
+
+/* Button title to let the user view a data migration report. */
+"data_migration_bulletin.view_report_button" = "צפה בדו\"ח";
+
+/* Error shown when the boarding stop cannot be found in the trip's stop list. */
+"destination_stop_picker.error_boarding_stop_not_found" = "לא הצלחנו לקבוע את תחנת העלייה שלך.";
+
+/* Error shown when the API service is unavailable in the destination stop picker. */
+"destination_stop_picker.error_no_service" = "לא ניתן להתחבר לשירות התחבורה.";
+
+/* Title shown while loading the list of stops for destination selection. */
+"destination_stop_picker.loading_title" = "טוען תחנות...";
+
+/* Body text shown when there are no stops available after the boarding stop. */
+"destination_stop_picker.no_stops_body" = "אין תחנות נוספות שנותרו בנסיעה זו.";
+
+/* Title shown when there are no stops available after the boarding stop. */
+"destination_stop_picker.no_stops_title" = "אין תחנות זמינות";
+
+/* Button to retry loading stops after an error. */
+"destination_stop_picker.retry_button" = "נסה שוב";
+
+/* Section header prompting user to select their destination stop. */
+"destination_stop_picker.select_destination_header" = "היכן בכוונתך לרדת?";
+
+/* VoiceOver label for the navigation bar button that shares the trip when no destination could be loaded. */
+"destination_stop_picker.share_without_destination_a11y_label" = "שתף נסיעה ללא תחנת יעד";
+
+/* Short navigation bar button that shares the trip without a destination stop, used where the full phrase will not fit. */
+"destination_stop_picker.share_without_destination_bar_button" = "שתף בכל זאת";
+
+/* Button shown when a trip has no remaining stops, letting the user share the trip without picking a destination. */
+"destination_stop_picker.share_without_destination_button" = "שתף ללא יעד";
+
+/* Navigation bar title for the destination stop picker when sharing a trip. */
+"destination_stop_picker.title" = "בחר יעד";
+
+/* Body of the donation widget that appears on the stop view controller */
+"donation_cell.body" = "OneBusAway מפותח בהתנדבות מלאה כמיזם קוד פתוח לתועלת הציבור.";
+
+/* Title of the button that shows the donation UI. */
+"donation_cell.donate_button_title" = "תרום עכשיו";
+
+/* Title of the button that shows the donation explanation UI. */
+"donation_cell.learn_more_button_title" = "מידע נוסף";
+
+/* Title of the donation widget that appears on the stop view controller. %@ is the app name. */
+"donation_cell.title" = "תמיכה במיזם";
+
+/* Button on the donation-dismiss alert that permanently stops donation requests. */
+"donations.donations_dismiss_alert.button_dismiss" = "לא כעת";
+
+/* Button on the donation-dismiss alert that defers donation requests rather than stopping them. */
+"donations.donations_dismiss_alert.button_remind_later" = "הזכר לי מאוחר יותר";
+
+/* Body of the alert that appears when the user chooses to dismiss the donations request UI on a stop page. %@ is the app name. */
+"donations.donations_dismiss_alert.message" = "%@ מופעל על ידי מתנדבים. תמיכתך מאפשרת לנו להמשיך לפתח את היישום.";
+
+/* Title of the alert that appears when the user chooses to dismiss the donations request UI on a stop page */
+"donations.donations_dismiss_alert.title" = "תמיכה במיזם";
+
+/* Title of the button that lets the user add a new Bookmark Group. */
+"edit_bookmark_controller.add_group_button_title" = "הוסף קבוצת סימניות";
+
+/* Indicates that the user wants to create a duplicate bookmark. */
+"edit_bookmark_controller.duplicate_alert.affirmative_button" = "צור כפילות";
+
+/* Body of an alert telling the user they have already bookmarked this thing. */
+"edit_bookmark_controller.duplicate_alert.body" = "פריט זה כבר קיים בסימניות. האם ליצור סימנייה נוספת?";
+
+/* The title of an alert telling the user that they have already bookmarked this thing. Noun form of 'duplicate', not the verb. */
+"edit_bookmark_controller.duplicate_alert.title" = "סימנייה כפולה";
+
+/* Title of the Bookmark Group header. */
+"edit_bookmark_controller.group_section.header_title" = "קבוצת סימניות";
+
+/* Title of the Bookmark Name header. */
+"edit_bookmark_controller.name_section.header_title" = "שם הסימנייה";
+
+/* Header above the read-only Stop ID on the Edit Bookmark screen. */
+"edit_bookmark_controller.stop_id_section.header_title" = "מזהה תחנה";
+
+/* Footer under the Stop ID row on the Edit Bookmark screen. */
+"edit_bookmark_controller.stop_id_section.footer" = "משמש לאחזור זמני הגעה עבור סימנייה זו. הקש להעתקה.";
+
+/* Title of the read-only Stop ID row on the Edit Bookmark screen. */
+"edit_bookmark_controller.stop_id_row.title" = "מק"ט תחנה";
+
+/* VoiceOver hint for the read-only Stop ID row on the Edit Bookmark screen. Activating the row copies the stop ID. */
+"edit_bookmark_controller.stop_id_row.accessibility_hint" = "מעתיק את מק"ט התחנה ללוח.";
+
+/* Don't add this bookmark to a group. */
+"edit_bookmark_controller.no_group_row" = "(ללא קבוצה)";
+
+/* Body of an alert shown when a bookmark cannot be saved because the current region is unavailable. */
+"edit_bookmark_controller.region_error.body" = "אזור השירות אינו זמין כרגע. אנא נסה שוב.";
+
+/* Title of an alert shown when a bookmark cannot be saved because the current region is unavailable. */
+"edit_bookmark_controller.region_error.title" = "Unable to שמור";
+
+/* Title next to the switch that toggles whether a bookmark will appear in the today view. */
+"edit_bookmark_controller.show_in_today_view_switch_title" = "הצג בווידג'ט תצוגת היום";
+
+/* Title for the Edit Bookmark controller in edit mode */
+"edit_bookmark_controller.title_edit" = "עריכה סימנייה";
+
+/* A button that says continue and don't show again. */
+"fare_payments.dont_show_again" = "המשך ואל תציג שוב";
+
+/* Defers the feedback prompt. */
+"feedback_prompt.later_button" = "שאל אותי מאוחר יותר";
+
+/* Body of the follow-up alert after negative feedback. */
+"feedback_prompt.negative.body" = "נשמח לדעת מה נוכל לשפר. אנו קוראים כל הודעה.";
+
+/* Declines to send feedback. */
+"feedback_prompt.negative.decline_button" = "לא תודה";
+
+/* Opens the feedback email composer. */
+"feedback_prompt.negative.send_button" = "שלח משוב";
+
+/* Title of the follow-up alert after negative feedback. */
+"feedback_prompt.negative.title" = "מצטערים על התקלה";
+
+/* Negative answer to the feedback prompt. */
+"feedback_prompt.negative_button" = "לא ממש";
+
+/* Positive answer to the feedback prompt. */
+"feedback_prompt.positive_button" = "כן!";
+
+/* Title of the alert asking how the rider likes the app. %@ is the app name. */
+"feedback_prompt.title" = "משוב על השירות";
+
+/* A voiceover title describing the 'grabber' for controlling the visibility of a card. */
+"floating_panel.controller.accessibility_label" = "חלונית מידע";
+
+/* A voiceover title describing the action to minimize (or collapse) the visibility of a card. */
+"floating_panel.controller.collapse_action_name" = "כווץ";
+
+/* A voiceover title describing the action to expand the visibility of a card. */
+"floating_panel.controller.expand_action_name" = "הרחב";
+
+/* No comment provided by engineer. */
+"floating_panel.controller.full_sheet_voiceover_change_alert.message" = "החלונית תיפתח אוטומטית במסך מלא כאשר VoiceOver מופעל.";
+
+/* No comment provided by engineer. */
+"floating_panel.controller.full_sheet_voiceover_change_alert.title" = "VoiceOver פעיל";
+
+/* A voiceover title describing that the card's visibility is taking up the full screen. */
+"floating_panel.controller.position.full" = "מסך מלא";
+
+/* A voiceover title describing that the card's visibility is taking up half of the screen. */
+"floating_panel.controller.position.half" = "חצי מסך";
+
+/* A voiceover title describing that the card's visibility taking up the minimum amount of screen. */
+"floating_panel.controller.position.minimized" = "ממוזער";
+
+/* Placeholder for the optional comment field on the ghost bus form. */
+"ghost_bus_report.comment.placeholder" = "פרטים נוספים שיעזרו לנו (אופציונלי)";
+
+/* Header over the trip summary on the ghost bus form. */
+"ghost_bus_report.context.header" = "דיווח נסיעה";
+
+/* Label for the route being reported on the ghost bus form. */
+"ghost_bus_report.context.route" = "קו";
+
+/* Label for the scheduled time on the ghost bus form. */
+"ghost_bus_report.context.scheduled" = "מתוכנן";
+
+/* Label for the stop being reported on the ghost bus form. */
+"ghost_bus_report.context.stop" = "תחנה";
+
+/* Label for the vehicle ID on the ghost bus form. */
+"ghost_bus_report.context.vehicle" = "מספר רכב";
+
+/* Error message when the server rejects a duplicate ghost bus report. */
+"ghost_bus_report.error.already_reported" = "נסיעה זו כבר דווחה ממכשיר זה בעבר.";
+
+/* Title of the ghost bus submission error alert. */
+"ghost_bus_report.error.title" = "לא ניתן לשלוח דיווח";
+
+/* Footer under the submit button on the ghost bus form. Says who receives the report, and that location goes with it only when the rider shares it. %@ is the app name. Must not call the report anonymous: it carries the app's persistent user identifier. */
+"ghost_bus_report.footer_recipients_fmt" = "הדיווח שלך נשלח אל %@ ומשרד התחבורה לשיפור השירות.";
+
+/* Toggle on the ghost bus form for including the rider's location with the report. */
+"ghost_bus_report.share_location" = "שתף את מיקומי";
+
+/* Submit button on the ghost bus form. */
+"ghost_bus_report.submit" = "שלח דיווח";
+
+/* Title of the ghost bus report sheet. */
+"ghost_bus_report.title" = "דיווח על אי-הגעת קו";
+
+/* Header over the wait-duration picker on the ghost bus form. */
+"ghost_bus_report.wait.header" = "זמן המתנה מעבר ללוח הזמנים";
+
+/* Label for the wait-duration picker on the ghost bus form. */
+"ghost_bus_report.wait.label" = "כמה זמן המתנת בתחנה?";
+
+/* Wait-duration choice on the ghost bus form. */
+"ghost_bus_report.wait.minutes_fmt" = "%d min";
+
+/* Longest wait-duration choice on the ghost bus form. */
+"ghost_bus_report.wait.thirty_plus" = "30+ דק'";
+
+/* Body for the home sheet's empty state, shown when there are no nearby stops, no recent stops, and no bookmarks. */
+"home_sheet.empty_set.body" = "תחנות קרובות, תחנות שנצפו לאחרונה והסימניות שלך יוצגו כאן.";
+
+/* Title for the home sheet's empty state, shown when there are no nearby stops, no recent stops, and no bookmarks. */
+"home_sheet.empty_set.title" = "אין פריטים עדיין";
+
+/* VoiceOver hint for a home sheet section header, which opens that section's full list. */
+"home_sheet.section_header.a11y_hint" = "מציג את כל הפריטים במדור זה.";
+
+/* Alert message for Live Activity error. \"Settings\" is the iOS Settings app. */
+"live_activity.error.message" = "אנא בדוק את הרשאות Live Activities בהגדרות המכשיר.";
+
+/* Alert title when Live Activity fails to start */
+"live_activity.error.title" = "לא ניתן להתחיל מעקב";
+
+/* Toast shown when a Live Activity starts on the Lock Screen */
+"live_activity.started.title" = "מעקב פעיל במסך הנעילה";
+
+/* Loading state text */
+"loading" = "טוען...";
+
+/* Description of why we need location services */
+"location_permission_bulletin.description_text" = "אנא אפשר ליישום גישה למיקומך לצורך איתור תחנות קרובות.";
+
+/* Title of the alert that appears to request your location. */
+"location_permission_bulletin.title" = "ברוכים הבאים!";
+
+/* Button that opens iOS Settings so the user can enable location services for the app. */
+"locationservices_alert_gotosettings.button" = "פתח בהגדרות";
+
+/* Body of the alert prompting the user to grant precise location. */
+"locationservices_alert_imprecise.message" = "לדיוק מרבי בזיהוי התחנות הקרובות ביותר אליך, מומלץ לאפשר מיקום מדויק בהגדרות המכשיר.";
+
+/* Title of the alert prompting the user to upgrade from approximate to precise location. %@ is the app name. */
+"locationservices_alert_imprecise.title" = "מיקום מקורב פעיל";
+
+/* Cancel button in the precise-location alert; dismisses without raising accuracy from reduced to full. */
+"locationservices_alert_keep_precise_location_off.button" = "השאר מיקום מדויק כבוי";
+
+/* Cancel button in the location-permission alert; dismisses without granting authorization or opening Settings. */
+"locationservices_alert_keepoff.button" = "השאר מיקום כבוי";
+
+/* Title of the alert asking the user to enable location services. */
+"locationservices_alert_notdetermined.title" = "הפעלת שירותי מיקום";
+
+/* Body of the alert prompting the user to turn on location services. */
+"locationservices_alert_off.message" = "שירותי המיקום כבויים. לא נוכל לאתר תחנות קרובות באופן אוטומטי.";
+
+/* Title of the alert prompting the user to turn on location services. %@ is the app name. */
+"locationservices_alert_off.title" = "שירותי מיקום כבויים";
+
+/* Button that grants one-time full-accuracy location for the current map session while keeping the default reduced-accuracy setting. */
+"locationservices_alert_request_precise_location_once.button" = "אפשר פעם אחת";
+
+/* Message shown when there are no logs to display */
+"log_viewer_controller.no_logs" = "אין יומנים זמינים.";
+
+/* Message for alert when there are no logs to share */
+"log_viewer_controller.no_logs_to_share.message" = "אין קובצי יומן לשיתוף.";
+
+/* Title for alert when there are no logs to share */
+"log_viewer_controller.no_logs_to_share.title" = "אין יומנים";
+
+/* Title of the Logs viewer controller */
+"log_viewer_controller.title" = "יומן מערכת";
+
+/* Explains the purpose of the Manage Bookmarks controller */
+"manage_bookmarks.controller_footer" = "ניתן לסדר מחדש ולמחוק סימניות ממסך זה.";
+
+/* Segmented control item for bookmarks */
+"manage_bookmarks_groups.toggle.bookmarks" = "סימניות";
+
+/* Segmented control item for Groups */
+"manage_bookmarks_groups.toggle.groups" = "קבוצות";
+
+/* 'Add Bookmark Group' button text */
+"manage_groups_controller.add_group_button" = "הוסף קבוצת סימניות";
+
+/* Footer explanation on the Groups section of the Manage Groups controller. */
+"manage_groups_controller.groups.footer_text" = "מחיקת קבוצה לא תמחק את הסימניות שבתוכה.";
+
+/* Placeholder text for Bookmark Group. */
+"manage_groups_controller.text_field_placeholder" = "שם הקבוצה";
+
+/* Manage Groups controller title */
+"manage_groups_controller.title" = "עריכת קבוצות";
+
+/* Map controller for centering the map on the user's current location. */
+"map_controller.center_user_location" = "מרכז את המפה על מיקומי הנוכחי";
+
+/* Name given to a pin the user dropped on the map by long-pressing it, when the location has no better name. Also read by VoiceOver. */
+"map_controller.dropped_pin_title" = "נעץ על המפה";
+
+/* Change Region button on the alert that appears when the user is updating their current region manually. */
+"map_controller.change_region_alert.button" = "החלף אזור";
+
+/* Body of the alert that appears when the user is updating their current region manually. */
+"map_controller.change_region_alert.message_fmt" = "האם להחליף אזור פעילות אל %@?";
+
+/* Title of the alert that appears when the user is updating their current region manually. */
+"map_controller.change_region_alert.title" = "החלפת אזור פעילות?";
+
+/* Voiceover text for the button that opens the Map settings sheet, which covers the base map, points of interest, transit layers and other travel modes. */
+"map_controller.map_settings.accessibility_label" = "הגדרות מפה";
+
+/* Voiceover text indicating that this button toggles the base map type. */
+"map_controller.map_type.accessibility_label" = "סוג תצוגת מפה";
+
+/* Voiceover value combining the base map type with the number of enabled map layers. %1$@ is the base map type, %2$d is the layer count. Plural forms live in Localizable.stringsdict; the value above is only the not-found fallback. */
+"map_controller.map_type.accessibility_value_with_layers_fmt" = "%1$@, %2$d שכבות פעילות";
+
+/* Voiceover text indicating the current map type as the hybrid base map (satellite view with labels). */
+"map_controller.map_type.hybrid.accessibility_value" = "משולב";
+
+/* Voiceover text indicating the current map type as the satellite base map. */
+"map_controller.map_type.satellite.accessibility_value" = "לוויין";
+
+/* Voiceover text indicating the current map type as the standard base map. */
+"map_controller.map_type.standard.accessibility_value" = "רגיל";
+
+/* Accessibility label for the My Trip button on the map toolbar. */
+"map_controller.my_trip_button" = "הנסיעה שלי";
+
+/* A generic message shown when the user's search query produces no search results. */
+"map_controller.no_search_results_found" = "לא נמצאו תוצאות חיפוש.";
+
+/* Accessibility label for a button that provides the current forecast */
+"map_controller.show_weather_button" = "הצג מזג אוויר";
+
+/* Title of the list shown when tapping a map pin that groups several stops at the same location. */
+"map_controller.stop_cluster_picker.title" = "בחר תחנה";
+
+/* VoiceOver hint for a map pin that groups several nearby stops. Activating it opens a list of those stops to choose from. */
+"map_controller.stop_cluster.accessibility_hint" = "מציג את התחנות כאן.";
+
+/* This message appears when a searched-for vehicle doesn't have an assigned trip. */
+"map_controller.vehicle_not_on_trip_error" = "כלי התחבורה שנבחר אינו נמצא בנסיעה פעילה כעת.";
+
+/* Search bar placeholder on the map floating panel when the trip planner is enabled. */
+"map_floating_panel.where_are_you_going" = "לאן תרצה לנסוע?";
+
+/* About section header */
+"map_item_controller.about_header" = "מידע";
+
+/* Call button */
+"map_item_controller.call" = "התקשר";
+
+/* Accessibility label for call button */
+"map_item_controller.call_accessibility" = "התקשר למספר טלפון";
+
+/* Accessibility label for close button */
+"map_item_controller.close_button" = "סגור";
+
+/* Accessibility label for Look Around preview */
+"map_item_controller.look_around" = "תצוגת רחוב";
+
+/* Button that shows the stops near this map item. */
+"map_item_controller.nearby_stops" = "תחנות בסביבה";
+
+/* Accessibility label for nearby stops button */
+"map_item_controller.nearby_stops_accessibility" = "צפה בתחנות קרובות";
+
+/* Plan trip button */
+"map_item_controller.plan_trip" = "תכנן מסלול";
+
+/* Accessibility label for plan trip button */
+"map_item_controller.plan_trip_accessibility" = "תכנן מסלול לכאן";
+
+/* Button to remove a dropped pin from the map */
+"map_item_controller.remove_pin" = "הסר נעץ";
+
+/* Name shown in the trip planner for a destination that has no name of its own, such as a point on the map. */
+"map_item_controller.destination_fallback_title" = "יעד";
+
+/* Accessibility label for remove pin button */
+"map_item_controller.remove_pin_accessibility" = "הסר נעץ זה מהמפה";
+
+/* Accessibility label for share button */
+"map_item_controller.share_button" = "שתף מיקום";
+
+/* Website button */
+"map_item_controller.website" = "אתר אינטרנט";
+
+/* Accessibility label for website button */
+"map_item_controller.website_accessibility" = "פתח אתר אינטרנט";
+
+/* Map sheet row for the rental bikes layer */
+"map_layers.bikes" = "אופניים";
+
+/* Map sheet row for the transit stops layer */
+"map_layers.bus_stops" = "תחנות אוטובוס";
+
+/* Reason shown on a dimmed rental layer row when its server is unreachable */
+"map_layers.rental_unavailable" = "אינו זמין כעת";
+
+/* Shown on a rental vehicle's sheet when the vehicle has left the feed while the sheet was open, e.g. because someone else rented it */
+"map_layers.rental_gone" = "כלי רכב זה אינו זמין עוד";
+
+/* Map sheet row for the rental scooters layer */
+"map_layers.scooters" = "קורקינטים שיתופיים";
+
+/* Map sheet row for the layer drawing a selected stop's routes and live vehicles. */
+"map_layers.stop_routes" = "קווי מסלול וכלי תחבורה";
+
+/* Map sheet row for the layer drawing the trip the rider is following. */
+"map_layers.trip_focus" = "מעקב אחר נסיעה";
+
+/* Basemap style: satellite imagery with labels */
+"map_sheet.basemap_hybrid" = "משולב";
+
+/* Basemap style: satellite imagery */
+"map_sheet.basemap_satellite" = "לוויין";
+
+/* Basemap style: standard street map */
+"map_sheet.basemap_standard" = "רגיל";
+
+/* Map sheet section for display options like Points of Interest */
+"map_sheet.display_group" = "תצוגת מפה";
+
+/* Map sheet row label for the rental minimum-range filter */
+"map_sheet.minimum_range" = "טווח מינימלי";
+
+/* Range filter menu option imposing no minimum range */
+"map_sheet.minimum_range_any" = "הכל";
+
+/* Map sheet group header for non-transit mobility layers */
+"map_sheet.other_modes_group" = "אמצעי תחבורה נוספים";
+
+/* Button restoring the default map layer configuration */
+"map_sheet.reset" = "איפוס";
+
+/* Map sheet row, and the title of the screen it opens, listing the routes that serve the stops currently loaded on the map. */
+"map_sheet.routes_on_map" = "קווים במפה";
+
+/* Empty state on the Routes on Map screen when no stops with routes are loaded for the visible map area. */
+"map_sheet.routes_on_map_empty" = "אין קווים בחלק זה של המפה";
+
+/* Footer under the Routes on Map row explaining what picking a route does and how to undo it. */
+"map_sheet.routes_on_map_footer" = "Show only one route's path and stops. סגור the route to see every stop again.";
+
+/* VoiceOver hint on a route row in the Routes on Map list. */
+"map_sheet.routes_on_map_row_hint" = "מציג קו זה בלבד על גבי המפה.";
+
+/* Empty state on the Routes on Map screen when the map is zoomed out too far to load stops. */
+"map_sheet.routes_on_map_zoomed_out" = "התקרב כדי לראות קווים המשרתים אזור זה";
+
+/* Map sheet toggle for Apple MapKit Points of Interest (restaurants, shops, etc.) */
+"map_sheet.shows_points_of_interest" = "נקודות עניין";
+
+/* Title of the Map sheet */
+"map_sheet.title" = "מפה";
+
+/* Map sheet group header for transit layers */
+"map_sheet.transit_group" = "תחבורה ציבורית";
+
+/* Title of the alert shown when location services are disabled for the app. */
+"map_status_alert.location_services_off.title" = "שירותי מיקום כבויים";
+
+/* Title of the alert shown when the user has restricted the app to reduced-accuracy location. */
+"map_status_alert.precise_location_off.title" = "מיקום מדויק כבוי";
+
+/* Displayed in the map status view at the top of the map when the user has declined to give the app access to their location */
+"map_status_view.location_services_unavailable" = "שירותי מיקום אינם זמינים";
+
+/* Displayed in the map status view at the top of the map when the user has declined to give the app access to their precise location */
+"map_status_view.precise_location_unavailable" = "מיקום מדויק אינו זמין";
+
+/* Displayed in the map status view at the top of the map when the user must zoom in to see stops on the map */
+"map_status_view.zoom_in_for_stops" = "התקרב כדי לראות תחנות";
+
+/* Displayed in the map status view at the top of the map when a bikes or scooters layer is on but the map is zoomed out too far to show rental vehicles */
+"map_status_view.zoom_in_for_rentals" = "התקרב כדי לראות אופניים וקורקינטים";
+
+/* Header for a section that shows the user information about this app. */
+"more_controller.about_app" = "אודות היישום";
+
+/* Header for More-tab rows that open tutorial, phone, or text links configured by the agency. */
+"more_controller.agency_contact.header" = "עזרה ויצירת קשר";
+
+/* Alerts for region row in the More controller */
+"more_controller.alerts_for_region" = "התראות שירות";
+
+/* Opens a tel: link to call the transit agency from the More tab. */
+"more_controller.call_agency" = "התקשר למפעיל";
+
+/* Title of the action sheet option for contacting the developers of the app. */
+"more_controller.contact_developers" = "בקשת תכונה / דיווח על באג";
+
+/* Title of the action sheet option for contacting a user's transit agency. */
+"more_controller.contact_transit" = "בעיה ברכב או בלוח זמנים";
+
+/* A button to contact transit agency/developers. */
+"more_controller.contact_us" = "צור קשר";
+
+/* Contact Us alert title. */
+"more_controller.contact_us_alert_title" = "צור קשר";
+
+/* Credits - like who should get credit for creating this. */
+"more_controller.credits_row_title" = "קרדיטים";
+
+/* Header for the custom links section configured by the transit agency. */
+"more_controller.custom_links.header" = "משאבים";
+
+/* Title for a button that will crash the app. */
+"more_controller.debug_section.crash_row" = "בדיקת קריסה (למפתחים)";
+
+/* This is displayed instead of the user's push ID if the value is not available. */
+"more_controller.debug_section.push_id.not_available" = "אינו זמין";
+
+/* Title for the Push Notification ID row in the More Controller */
+"more_controller.debug_section.push_id.title" = "מזהה פוש (Push ID)";
+
+/* Request to help develop the app */
+"more_controller.develop_the_app" = "הצטרף לפיתוח היישום";
+
+/* Header for the donate section. */
+"more_controller.donate" = "תרומה למיזם";
+
+/* Call to action for donations. %@ is the app name. */
+"more_controller.donate_description_fmt" = "תרומה ל-%@";
+
+/* Header for the volunteer section. */
+"more_controller.help_out" = "סיוע לשיפור היישום";
+
+/* A button that will open a web based donation portal. */
+"more_controller.manage_donations" = "ניהול תרומות";
+
+/* Title of the Agencies row in the My Location section */
+"more_controller.my_location.agencies" = "מפעילים באזור";
+
+/* 'My Location' section header on the 'More' controller. */
+"more_controller.my_location.header" = "המיקום שלי";
+
+/* Title of the mobile fare payment row */
+"more_controller.my_location.pay_fare" = "תשלום נסיעה";
+
+/* Title of the row that lets the user choose their current region. */
+"more_controller.my_location.region_row_title" = "אזור שירות";
+
+/* A link to the app's Privacy Policy */
+"more_controller.privacy_row_title" = "מדיניות פרטיות";
+
+/* A row that opens the App Store review form. %@ is the app name. */
+"more_controller.rate_app" = "דרג את היישום ב-App Store";
+
+/* Opens the agency's text information service, which may be an sms: link or a web page — so the label names neither. */
+"more_controller.text_agency" = "שלח הודעה למפעיל";
+
+/* Title of the More tab / accessibility label for the map-panel more button. */
+"more_controller.title" = "עוד";
+
+/* Request to help localize the app */
+"more_controller.translate_the_app" = "עזור בתרגום היישום";
+
+/* Opens the agency's tutorial or user-manual page from the More tab. */
+"more_controller.tutorials" = "מדריכי שימוש";
+
+/* Updates and Alerts header text */
+"more_controller.updates_and_alerts.header" = "עדכונים והתראות";
+
+/* A link to view application logs */
+"more_controller.view_logs_row_title" = "צפה ביומנים";
+
+/* Explanation about how this app is built and maintained by volunteers. */
+"more_header.support_us_label_text" = "יישום זה מפותח ומתוחזק על ידי מתנדבים.";
+
+/* Body for the empty set indicator on the Nearby controller. */
+"nearby_controller.empty_set.body" = "התרחק או הזז את המפה לאיתור תחנות.";
+
+/* Button to search wider area */
+"nearby_controller.empty_set.button" = "חפש באזור רחב יותר";
+
+/* Title for the empty set indicator on the Nearby controller */
+"nearby_controller.empty_set.title" = "אין תחנות בסביבה";
+
+/* Body for the empty set indicator on the Nearby Stops controller. */
+"nearby_stops_controller.empty_set.body" = "אין תחנות נוספות בסביבה הקרובה.";
+
+/* Title for the empty set indicator on the Nearby Stops controller. */
+"nearby_stops_controller.empty_set.title" = "אין תחנות בסביבה";
+
+/* Error shown on the Nearby Stops screen when no API service is configured (e.g. no region selected). */
+"nearby_stops_controller.no_api_service_error" = "שירות נתוני תחבורה אינו זמין. אנא בחר אזור בהגדרות.";
+
+/* The title of the Nearby Stops controller. */
+"nearby_stops_controller.title" = "תחנות קרובות";
+
+/* Body shown on the Nearby Stops index sheet when no map viewport, device location, or region is available to search around. */
+"nearby_stops_sheet.no_location.body" = "הזז את המפה או הפעל שירותי מיקום לצפייה בתחנות קרובות.";
+
+/* Siri response when the requested bookmark was deleted or belongs to a different region. */
+"next_departures_intent.bookmark_unavailable" = "סימנייה זו אינה זמינה באזור הפעילות הנוכחי.";
+
+/* Siri asks which trip bookmark to report departures for when the user has more than one. */
+"next_departures_intent.choose_bookmark" = "איזו סימנייה?";
+
+/* Siri response naming the next departure. {Route short name} to {Headsign} departs {'now' or 'in X minutes'}. */
+"next_departures_intent.first_departure_fmt" = "%1$@ לכיוון %2$@ יוצא %3$@.";
+
+/* Siri response: a vehicle departs in {X} minutes. Plural forms in Localizable.stringsdict. */
+"next_departures_intent.in_minutes_fmt" = "in %d minutes";
+
+/* Siri response listing the departures after the next one. {List of 'in X minutes'} */
+"next_departures_intent.later_departures_fmt" = "לאחר מכן %@.";
+
+/* Siri response when departures could not be fetched. {Bookmark name} */
+"next_departures_intent.load_failed_fmt" = "לא הצלחנו לטעון יציאות עבור %@. בדוק את החיבור ונסה שוב.";
+
+/* Siri response when the user asks for their next departures but has no trip bookmarks in the current region. */
+"next_departures_intent.no_bookmarks" = "אין לך סימניות שמורות. שמור קו בתחנה כדי להתחיל.";
+
+/* Siri response when a bookmarked trip has no upcoming departures. {Bookmark name} */
+"next_departures_intent.no_departures_fmt" = "אין יציאות עבור %@ בשעה הקרובה.";
+
+/* Siri response when the user asks for their next departures before the app knows their region. */
+"next_departures_intent.no_region" = "בחר תחילה אזור שירות ביישום.";
+
+/* Siri response: a vehicle departs now. Completes 'Route 550 to Seattle departs {now}'. */
+"next_departures_intent.now" = "עכשיו";
+
+/* Joins two complete Siri sentences: {first departure sentence} {later departures sentence}. Use the language's separator between sentences; Chinese uses none. */
+"next_departures_intent.sentences_join_fmt" = "%1$@ %2$@";
+
+/* Vehicle occupancy is very high */
+"occupancy_status.crushed_standing_room_only" = "עמוס מאוד - עמידה צפופה";
+
+/* Vehicle occupancy is zero */
+"occupancy_status.empty" = "ריק";
+
+/* Vehicle occupancy is medium */
+"occupancy_status.few_seats_available" = "מקומות ישיבה בודדים פנויים";
+
+/* Vehicle occupancy is full */
+"occupancy_status.full" = "מלא לחלוטין";
+
+/* A format string that denotes that the associated occupancy status is historical data. e.g. 'Historical: Standing room only' */
+"occupancy_status.historical_fmt" = "היסטורי: %@";
+
+/* Vehicle occupancy is low */
+"occupancy_status.many_seats_available" = "מקומות ישיבה רבים פנויים";
+
+/* Vehicle is not accepting any passengers */
+"occupancy_status.not_accepting_passengers" = "אינו מעלה נוסעים";
+
+/* Short occupancy label: crushed standing room only */
+"occupancy_status.short.crowded" = "עמוס";
+
+/* Short occupancy label: vehicle is empty */
+"occupancy_status.short.empty" = "ריק";
+
+/* Short occupancy label: vehicle is full */
+"occupancy_status.short.full" = "מלא";
+
+/* Short occupancy label: many seats available */
+"occupancy_status.short.many_seats" = "מקומות רבים";
+
+/* Short occupancy label: vehicle is not accepting passengers */
+"occupancy_status.short.not_boarding" = "אינו מעלה";
+
+/* Short occupancy label: few seats available */
+"occupancy_status.short.some_seats" = "יש מקומות";
+
+/* Short occupancy label: standing room only */
+"occupancy_status.short.standing_room" = "עמידה";
+
+/* Short occupancy label: occupancy is unknown */
+"occupancy_status.short.unknown" = "לא ידוע";
+
+/* Vehicle occupancy is high */
+"occupancy_status.standing_room_only" = "עמידה בלבד";
+
+/* Vehicle occupancy status is unknown. */
+"occupancy_status.unknown" = "אין מידע על תפוסה";
+
+/* Recap row label for notification permission */
+"onboarding.done.alerts_row" = "התראות שירות";
+
+/* Body of the final onboarding screen; the argument is a region name */
+"onboarding.done.body_fmt" = "%@ מוכן. בוא נמצא את הקו שלך.";
+
+/* Recap row label for location permission */
+"onboarding.done.location_row" = "שירותי מיקום";
+
+/* Primary button on the final onboarding screen */
+"onboarding.done.primary_button" = "התחל לחקור";
+
+/* Recap row label for the chosen region */
+"onboarding.done.region_row" = "אזור שירות";
+
+/* Title of the final onboarding screen */
+"onboarding.done.title" = "הכל מוכן!";
+
+/* Recap value for a disabled setting */
+"onboarding.done.value_off" = "כבוי";
+
+/* Recap value for an enabled setting */
+"onboarding.done.value_on" = "פעיל";
+
+/* Detail for the map-centering benefit */
+"onboarding.location.benefit_map_body" = "פתיחה ישירה לתחנות בסביבתך.";
+
+/* Heading for a benefit of granting location access */
+"onboarding.location.benefit_map_title" = "מרכז את המפה עליך";
+
+/* Detail for the nearby-stops benefit */
+"onboarding.location.benefit_nearby_body" = "אוטובוסים ורכבות סביבך, ממוינים לפי מרחק.";
+
+/* Heading for a benefit of granting location access */
+"onboarding.location.benefit_nearby_title" = "צפה בתחנות קרובות";
+
+/* Footnote of the location onboarding screen; the argument is the app name */
+"onboarding.location.footnote_fmt" = "%@ משתמש במיקומך רק בזמן שהאפליקציה פתוחה.";
+
+/* Button the user taps to grant access to their location. */
+"onboarding.location.primary_button" = "השתמש במיקום שלי";
+
+/* Button the user can tap on to decline access to their location. */
+"onboarding.location.secondary_button" = "לא עכשיו";
+
+/* Title of the location onboarding screen */
+"onboarding.location.title" = "צפה בתחבורה סביבך";
+
+/* Body of the notifications onboarding screen */
+"onboarding.notifications.body" = "קבל התראות על אירועים אזוריים ושינויים בלוחות הזמנים.";
+
+/* Example service alert shown on the notifications onboarding screen */
+"onboarding.notifications.example_event" = "אירוע מרכזי: תגבור קווים";
+
+/* Example service alert shown on the notifications onboarding screen */
+"onboarding.notifications.example_ferry" = "עיכובים במעבורות: עד 40 דק'";
+
+/* Example service alert shown on the notifications onboarding screen */
+"onboarding.notifications.example_storm" = "מזג אוויר סוער — שינויים במסלולים";
+
+/* Footnote of the notifications onboarding screen */
+"onboarding.notifications.footnote" = "התראות מרכזיות בלבד. ללא ספאם.";
+
+/* Decline button when the notifications step appears alone */
+"onboarding.notifications.maybe_later_button" = "אולי מאוחר יותר";
+
+/* Badge shown when the notifications step appears alone for existing users */
+"onboarding.notifications.new_badge" = "חדש";
+
+/* Decline button on the notifications onboarding screen */
+"onboarding.notifications.not_now_button" = "לא עכשיו";
+
+/* Primary button on the notifications onboarding screen */
+"onboarding.notifications.primary_button" = "הפעל התראות";
+
+/* Title of the notifications onboarding screen */
+"onboarding.notifications.title" = "הישאר מעודכן בשינויים";
+
+/* Accessibility label for the onboarding progress bar */
+"onboarding.progress.accessibility_label" = "התקדמות הגדרה";
+
+/* VoiceOver value of the onboarding progress bar, e.g. Step 1 of 3. {current step} of {total steps} */
+"onboarding.progress.accessibility_value_fmt" = "שלב %1$d מתוך %2$d";
+
+/* Body of the region onboarding screen when the region was detected from the rider's location */
+"onboarding.region.body" = "זיהינו את רשת התחבורה הקרובה ביותר למיקומך.";
+
+/* Body of the region onboarding screen prompting the rider to choose a transit network */
+"onboarding.region.body_choose" = "בחר את רשת התחבורה שלך.";
+
+/* Label on the region card when the region was already selected by app configuration or an earlier launch rather than detected from the rider's location */
+"onboarding.region.current_label" = "אזור נוכחי";
+
+/* Label on the detected-region card */
+"onboarding.region.detected_label" = "זוהה בסביבתך";
+
+/* Header above the alternate-regions list */
+"onboarding.region.other_header" = "או בחר אזור אחר";
+
+/* Link to the full region picker */
+"onboarding.region.see_all_button" = "כל האזורים";
+
+/* Label on the region card when the rider chose the region from the list rather than it being detected from their location */
+"onboarding.region.selected_label" = "הבחירה שלך";
+
+/* Title of the region onboarding screen */
+"onboarding.region.title" = "אזור השירות שלך";
+
+/* Body of the first onboarding screen */
+"onboarding.welcome.body" = "זמני הגעה בזמן אמת של אוטובוסים ורכבות — חינם ובקוד פתוח.";
+
+/* Footnote of the first onboarding screen */
+"onboarding.welcome.footnote" = "זמין בעשרות אזורי תחבורה בעולם ובישראל";
+
+/* Primary button on the first onboarding screen */
+"onboarding.welcome.primary_button" = "התחל";
+
+/* Title of the first onboarding screen; the argument is the app name */
+"onboarding.welcome.title_fmt" = "ברוכים הבאים ל-%@";
+
+/* Body of the destination alert notification. %@ is the name of the rider's destination stop. */
+"proximity_alert.notification.body_fmt" = "אתה מתקרב לתחנת %@.";
+
+/* Title of the notification shown when the rider nears the stop they set a destination alert on. */
+"proximity_alert.notification.title" = "מתקרב לתחנה שלך";
+
+/* Reachability bulletin shown when the user has disabled cellular data for this app in iOS Settings. Both substituted values are the app name. */
+"reachability_bulletin.description.cellular_data_restricted_fmt" = "ליישום %1$@ אין גישה לנתונים סלולריים. אפשר נתונים סלולריים עבור %2$@ בהגדרות המכשיר.";
+
+/* Reachability bulletin for a cellular connection that can't access the Internet. */
+"reachability_bulletin.description.cellular_no_internet" = "אין גישה לאינטרנט דרך החיבור הסלולרי.";
+
+/* Reachability bulletin for a phone with no connection. */
+"reachability_bulletin.description.not_connected" = "אין חיבור לאינטרנט. נסה להתחבר דרך WiFi או נתונים סלולריים.";
+
+/* Reachability bulletin for a WiFi network that can't access the Internet. */
+"reachability_bulletin.description.wifi_no_internet" = "רשת ה-WiFi אינה מספקת גישה לאינטרנט.";
+
+/* Title of the alert that appears when the app can't connect to the server. */
+"reachability_bulletin.title" = "אין חיבור לאינטרנט";
+
+/* Title for a confirmation alert displayed before the user deletes all of their recent stops. */
+"recent_stops.confirmation_alert.title" = "האם אתה בטוח שברצונך למחוק את התחנות האחרונות?";
+
+/* A button that deletes all of the recent stops in the app. */
+"recent_stops.delete_all" = "מחק All";
+
+/* Body for the empty set indicator on the Recent Stops controller. */
+"recent_stops.empty_set.body" = "תחנות שבהן תצפה יופיעו כאן.";
+
+/* The button title for taking the user to the map view to find stops. */
+"recent_stops.empty_set.button" = "מצא תחנות במפה";
+
+/* Title for the empty set indicator on the Recent Stops controller. */
+"recent_stops.empty_set.title" = "אין תחנות אחרונות";
+
+/* Title of the Alarms section of the Recents controller */
+"recent_stops_controller.alarms_section.title" = "התראות";
+
+/* The title of the Recent Stops controller. */
+"recent_stops_controller.title" = "תחנות שנצפו לאחרונה";
+
+/* Formatted alert body shown when there is a mismatch between the user location and selected region. e.g. 'Your region is set to Puget Sound, but you appear to be in San Diego.' */
+"region_mismatch_bulletin.body_fmt" = "האזור שלך מוגדר כ-%1$@, אך נראה שאתה ב-%2$@.";
+
+/* A button on the region mismatch alert that changes the user's current region. e.g. 'Change to San Diego' */
+"region_mismatch_bulletin.change_region_button_fmt" = "עבור אל %@";
+
+/* Alert title shown when there is a mismatch between the user location and selected region. */
+"region_mismatch_bulletin.title" = "זוהה אזור פעילות שונה";
+
+/* A button on the region mismatch alert that updates the map's current location to be the specified region. e.g. 'Show Puget Sound on the map' */
+"region_mismatch_bulletin.update_map_button_fmt" = "הצג את %@ במפה";
+
+/* Help text displayed on a custom (user-created) region. */
+"region_picker.custom_region_help_text" = "אזור מותאם אישית";
+
+/* Help text displayed on an experimental region. */
+"region_picker.experimental_region_help_text" = "אזור ניסיוני";
+
+/* Help text displayed on an inactive region. */
+"region_picker.inactive_region_help_text" = "אזור לא פעיל";
+
+/* Title of a button that shows a region creation view controller. */
+"region_picker.new_custom_region_button" = "אזור מותאם חדש";
+
+/* Title of a toggle that shows experimental (beta) regions. */
+"region_picker.show_experimental_regions_toggle" = "הצג אזורים ניסיוניים";
+
+/* Title of a toggle that shows inactive regions. */
+"region_picker.show_inactive_regions_toggle" = "הצג אזורים לא פעילים";
+
+/* Title of the Region Picker Item, which lets the user choose a new region from the map. */
+"region_picker.title" = "בחירת אזור פעילות";
+
+/* Error message of Custom Region URL if it's invalid or does not point to a functional OBA server */
+"region_url.error_messsage" = "כתובת ה-URL אינה תקינה או שאינה מצביעה על שרת OBA תקין.";
+
+/* Number of rental vehicles available at a station */
+"rental_annotation.vehicles_available_fmt" = "%d זמינים";
+
+/* Title of the sheet listing the members of a rental cluster. Plural forms live in Localizable.stringsdict; the value above is only the not-found fallback. */
+"rental_cluster.title_fmt" = "%d כלי רכב כאן";
+
+/* Label for a rental vehicle's battery charge */
+"rental_detail.battery" = "סוללה";
+
+/* Label for the number of bikes available at a station */
+"rental_detail.bikes_available" = "אופניים";
+
+/* Label for the number of scooters available at a station that only holds scooters */
+"rental_detail.scooters_available" = "קורקינטים";
+
+/* Label for the number of rental vehicles available at a station whose vehicle types are mixed or unknown */
+"rental_detail.vehicles_available" = "זמינים";
+
+/* Label for the number of open docks at a station */
+"rental_detail.docks_available" = "עמדות עגינה";
+
+/* Label for whether dropping off a vehicle is currently allowed */
+"rental_detail.dropoff" = "החזרת כלי רכב";
+
+/* Value shown when pickup or dropoff is not currently allowed */
+"rental_detail.no" = "לא זמין";
+
+/* Shown for a rental vehicle or station that is not operative */
+"rental_detail.not_in_service" = "אינו פעיל כעת";
+
+/* Button opening the rental operator's app or website */
+"rental_detail.open_in_fmt" = "פתח ב-%@";
+
+/* VoiceOver hint on the button opening a rental operator's app. %@ is the operator, e.g. Lime. */
+"rental_detail.open_in_hint_fmt" = "פותח את %@, או את דף היישום ב-App Store אם אינו מותקן.";
+
+/* Button opening a rental operator's app when the operator's name is unknown */
+"rental_detail.open_rental_app" = "פתח יישום השכרה";
+
+/* Label for whether picking up a vehicle is currently allowed */
+"rental_detail.pickup" = "איסוף כלי רכב";
+
+/* Primary action on the rental vehicle sheet */
+"rental_detail.plan_trip" = "תכנן מסלול באמצעות כלי רכב זה";
+
+/* Label for a rental vehicle's propulsion type */
+"rental_detail.propulsion" = "סוג הנעה";
+
+/* Rental vehicle propulsion: combustion */
+"rental_detail.propulsion_combustion" = "בנזין";
+
+/* Rental vehicle propulsion: electric */
+"rental_detail.propulsion_electric" = "חשמלי";
+
+/* Rental vehicle propulsion: human-powered */
+"rental_detail.propulsion_human" = "הנעה רגלית (דיווש)";
+
+/* Label for a rental vehicle's estimated remaining range */
+"rental_detail.range" = "טווח נסיעה";
+
+/* Warning shown when rental data is older than the layer's freshness window */
+"rental_detail.stale_warning" = "מידע זה עשוי שלא להיות מעודכן.";
+
+/* Feed freshness line; the argument is a relative time like '12 seconds ago' */
+"rental_detail.updated_fmt" = "עודכן לפני %@";
+
+/* Estimated walking time to a rental vehicle */
+"rental_detail.walk_time_fmt" = "%d דק' הליכה";
+
+/* Title of the Report Problem view controller. */
+"report_problem.title" = "דיווח על בעיה";
+
+/* Report a problem with the stop at {Stop Name} */
+"report_problem_controller.report_stop_problem_fmt" = "דיווח על בעיה בתחנה ב-%@";
+
+/* Section header for reporting incorrect stop names, numbers, locations, or missing routes or trips, not app bugs. */
+"report_problem_controller.stop_problem.header" = "בעיה בתחנה";
+
+/* Section header for reporting a problem with a specific trip or vehicle service. Feedback helps improve transit data. */
+"report_problem_controller.trip_problem.header" = "בעיה במהלך הנסיעה";
+
+/* Error when location is unavailable in the route picker. */
+"route_picker.error_no_location" = "המיקום אינו זמין. אפשר שירותי מיקום למציאת קווים בסביבתך.";
+
+/* Error when the API service is unavailable in the route picker. */
+"route_picker.error_no_service" = "לא ניתן להתחבר לשירות התחבורה.";
+
+/* Loading message while fetching nearby routes. */
+"route_picker.loading" = "טוען קווים...";
+
+/* Message when no routes are found near the user's location. */
+"route_picker.no_routes" = "לא נמצאו קווים בסביבה.";
+
+/* Placeholder text in the route search field. */
+"route_picker.search_placeholder" = "חפש קו";
+
+/* Title for the route picker screen where the user selects their transit route. */
+"route_picker.title" = "בחירת קו";
+
+/* Title shown when a route's stop list could not be loaded or is empty. */
+"route_stops_sheet.empty.title" = "אין תחנות";
+
+/* Label for date picker in schedule view */
+"schedule_view.date" = "תאריך";
+
+/* Label for direction picker in schedule view */
+"schedule_view.direction" = "כיוון";
+
+/* Default direction label when no headsign is available */
+"schedule_view.direction_number_fmt" = "כיוון %d";
+
+/* Error message shown when the schedule-for-route API endpoint is not available on the server. */
+"schedule_view.feature_not_supported" = "לוחות זמנים אינם זמינים עבור אזור זה.";
+
+/* Accessibility text when there is no departure time */
+"schedule_view.no_departure" = "אין יציאה";
+
+/* Message shown when schedule data is not available */
+"schedule_view.no_schedule_data" = "אין נתוני לוח זמנים זמינים";
+
+/* Message when no stops are available for the selected direction */
+"schedule_view.no_stops_found" = "לא נמצאו תחנות לכיוון זה";
+
+/* Headsign label showing destination */
+"schedule_view.to_headsign_fmt" = "אל: %@";
+
+/* Error message when schedule fails to load */
+"schedule_view.unable_to_load" = "לא ניתן לטעון לוח זמנים";
+
+/* Title of the Bookmarks search header */
+"search_controller.bookmarks.header" = "סימניות";
+
+/* Body for the empty set indicator on the Search controller. */
+"search_controller.empty_set.body" = "הקלד כתובת, שם קו, מק"ט תחנה או מספר רכב לחיפוש.";
+
+/* Title for the empty set indicator on the Search controller. */
+"search_controller.empty_set.title" = "חיפוש";
+
+/* Subtitle on search error row prompting the user to retry. */
+"search_controller.placemarks.error_retry" = "הקש לניסיון חוזר";
+
+/* Placemark search header */
+"search_controller.placemarks.header" = "תוצאות";
+
+/* Loading message for placemark search */
+"search_controller.placemarks.loading" = "מחפש מקומות...";
+
+/* No results message for placemark search */
+"search_controller.placemarks.no_results" = "לא נמצאו תוצאות";
+
+/* Quick Search section header in search */
+"search_controller.quick_search.header" = "חיפוש מהיר";
+
+/* Quick search prefix for Address. */
+"search_interactor.quick_search.address_prefix" = "כתובת:";
+
+/* Quick search prefix for Route. */
+"search_interactor.quick_search.route_prefix" = "קו:";
+
+/* Quick search prefix for Stop. */
+"search_interactor.quick_search.stop_prefix" = "תחנה:";
+
+/* Quick search prefix for Vehicle. */
+"search_interactor.quick_search.vehicle_prefix" = "רכב:";
+
+/* Error shown when vehicle search is attempted with no API service configured (e.g. no region selected). */
+"search_results_controller.no_api_service_error" = "שירות נתוני תחבורה אינו זמין. אנא בחר אזור בהגדרות.";
+
+/* Error message shown when a vehicle has no trips available. */
+"search_results_controller.no_trips_available" = "רכב זה אינו נמצא בנסיעה פעילה כעת.";
+
+/* A format string for address searches. In English, this is just the address itself without any adornment. */
+"search_results_controller.subtitle.address_fmt" = "%@";
+
+/* A format string for route searches. e.g. in english: Route \"{SEARCH TEXT}\" */
+"search_results_controller.subtitle.route_fmt" = "קו %@";
+
+/* A format string for stop number searches. e.g. in english: Stop number \"{SEARCH TEXT}\" */
+"search_results_controller.subtitle.stop_number_fmt" = "תחנה מס' %@";
+
+/* A format string for vehicle ID searches. e.g. in english: Vehicle ID \"{SEARCH TEXT}\" */
+"search_results_controller.subtitle.vehicle_id_fmt" = "רכב %@";
+
+/* The title of the Search Results controller. */
+"search_results_controller.title" = "תוצאות חיפוש";
+
+/* Title shown when a disambiguation sheet has no results to show. */
+"search_results_sheet.empty.title" = "אין תוצאות";
+
+/* Header showing how many results a search matched, e.g. '12 results'. %d is the number of results. Plural forms live in Localizable.stringsdict; the value above is only the not-found fallback. */
+"search_results_sheet.result_count_fmt" = "%d תוצאות";
+
+/* Error shown when a tapped search result cannot be turned into something to display. */
+"search_results_sheet.unresolvable_result" = "לא ניתן לפתוח תוצאה זו.";
+
+/* Accessibility label for the button that clears the search query. */
+"search_sheet.clear_query" = "נקה";
+
+/* The transit agencies affected by this service alert. */
+"service_alert_controller.affected_agencies" = "מפעילים מושפעים";
+
+/* The routes affected by this service alert. */
+"service_alert_controller.affected_routes" = "קווים מושפעים";
+
+/* The stops affected by this service alert. */
+"service_alert_controller.affected_stops" = "תחנות מושפעות";
+
+/* The trips affected by this service alert. */
+"service_alert_controller.affected_trips" = "נסיעות מושפעות";
+
+/* As in 'this is in effect/occurring' from/to */
+"service_alert_controller.in_effect" = "בתוקף";
+
+/* Directs the user to tap on the link that comes at the end of the string. Learn more: <HYPERLINK IS INSERTED HERE> */
+"service_alert_controller.learn_more_fmt" = "מידע נוסף: %@";
+
+/* Settings > Accessibility > Toggle that tightens spacing on the new stop and trip screens */
+"settings_controller.accessibility_section.compact_stop_trip" = "דפי תחנה ונסיעה קומפקטיים";
+
+/* Settings > Accessibility section > Always show full sheet on Voiceover */
+"settings_controller.accessibility_section.default_full_sheet_voiceover" = "פתח חלונית מלאה ב-VoiceOver";
+
+/* Settings > Accessibility section > Haptic feedback on reload */
+"settings_controller.accessibility_section.enable_reload_haptic" = "משוב רטט ברענון נתונים";
+
+/* Settings > Accessibility section > Toggle that renders stop page route badges as a thin color bar beside plain text instead of a colored square */
+"settings_controller.accessibility_section.reduce_stop_colors" = "הפחת צבעים בדף התחנה";
+
+/* Settings > Accessibility section > Show route labels on the map */
+"settings_controller.accessibility_section.show_stop_annotation_labels" = "הצג שמות קווים על גבי המפה";
+
+/* Settings > Accessibility section title */
+"settings_controller.accessibility_section.title" = "נגישות";
+
+/* Settings > Debug section > Display test alerts */
+"settings_controller.alerts_section.display_test_alerts" = "הצג התראות בדיקה";
+
+/* Settings section title for controlling which arrivals/departures are shown */
+"settings_controller.arrival_display_section.title" = "תצוגת הגעות ויציאות";
+
+/* Settings > Arrival & Departure Display > Toggle that shows the Arriving at XX:XX via route banner when opening a stop from a trip */
+"settings_controller.arrival_display_section.transfer_banner" = "הצג באנר הגעה במעבר קווים";
+
+/* Settings > Arrival & Departure Display > Footer describing the transfer banner and region time zone toggles */
+"settings_controller.arrival_display_section.footer" = "באנר הגעה מציג זמנים ביחס לזמן ההגעה שלך לתחנה.";
+
+/* Settings > Arrival & Departure Display > Opt-in toggle for displaying arrival clocks in the transit region's time zone */
+"settings_controller.arrival_display_section.region_time_zone" = "הצג זמנים לפי אזור הזמן של הרשת";
+
+/* Title for the departure filter selection alert */
+"settings_controller.arrival_filter.selector_title" = "הצג יציאות";
+
+/* Title for the departure filter setting row */
+"settings_controller.arrival_filter.title" = "הצג יציאות";
+
+/* Settings > Bike Mode > HealthKit denial or no-data toast */
+"settings_controller.bike_mode.healthkit_unavailable" = "לא ניתן לסנכרן מהירות מ-Health. משתמש במהירות רכיבה סטנדרטית.";
+
+/* Settings > Bike Mode > on/off toggle */
+"settings_controller.bike_mode.title" = "מצב אופניים";
+
+/* Settings > Bike Mode section > HealthKit toggle */
+"settings_controller.bike_mode.use_healthkit" = "השתמש בנתוני Health";
+
+/* Settings > Bike Mode section footer */
+"settings_controller.bike_mode_section.footer" = "משתמש במהירות רכיבה מהירה להערכת זמני הגעה.";
+
+/* Settings > Bike Mode section title */
+"settings_controller.bike_mode_section.title" = "מצב אופניים";
+
+/* Settings > Debug section > Refresh regions on every launch */
+"settings_controller.debug_section.always_refresh_regions" = "רענן אזורים בכל הפעלה";
+
+/* Settings > Debug section > Debug mode */
+"settings_controller.debug_section.debug_mode" = "מצב מפתח (Debug)";
+
+/* Settings > Debug section > Name identifying this device for test push notifications */
+"settings_controller.debug_section.test_device_description" = "שם מכשיר בדיקה";
+
+/* Placeholder example for the test device name field */
+"settings_controller.debug_section.test_device_description.placeholder" = "למשל: אייפון בדיקה";
+
+/* Settings > Debug section title */
+"settings_controller.debug_section.title" = "ניפוי שגיאות (Debug)";
+
+/* Settings > Experimental section > Map panel toggle */
+"settings_controller.experimental_section.map_panel" = "השתמש בחלונית מפה חדשה";
+
+/* Settings > Experimental section > Footer indicating changes apply on relaunch */
+"settings_controller.experimental_section.map_panel.footer" = "יש להפעיל מחדש את האפליקציה.";
+
+/* Settings > Experimental section > New stop page toggle */
+"settings_controller.experimental_section.new_stop_page" = "השתמש בדף תחנה משודרג";
+
+/* Settings > Experimental section title */
+"settings_controller.experimental_section.title" = "ניסיוני";
+
+/* Settings > Feedback section > Debug toggle that bypasses the prompt's gating */
+"settings_controller.feedback_section.always_show" = "הצג תמיד בקשת משוב";
+
+/* Settings > Feedback section > Footer noting that resetting the prompt state does not turn the debug toggle off */
+"settings_controller.feedback_section.footer" = "איפוס מנקה את מצב המשוב השמור.";
+
+/* Settings > Feedback section > Clears all feedback prompt bookkeeping */
+"settings_controller.feedback_section.reset" = "אפס מצב בקשת משוב";
+
+/* Settings > Feedback section title */
+"settings_controller.feedback_section.title" = "משוב";
+
+/* Settings > Map section > Show my current heading */
+"settings_controller.map_section.shows_heading" = "הצג כיוון פנייה נוכחי";
+
+/* Settings > Map section > Show Apple MapKit Points of Interest */
+"settings_controller.map_section.shows_points_of_interest" = "נקודות עניין";
+
+/* Settings > Map section > Shows scale */
+"settings_controller.map_section.shows_scale" = "הצג קנה מידה";
+
+/* Settings > Map section > Shows traffic */
+"settings_controller.map_section.shows_traffic" = "הצג עומסי תנועה";
+
+/* Settings > Map section title */
+"settings_controller.map_section.title" = "מפה";
+
+/* Settings > Privacy section > Send usage data */
+"settings_controller.privacy_section.reporting_enabled" = "שלח נתוני שימוש אנונימיים";
+
+/* Settings > Privacy section title */
+"settings_controller.privacy_section.title" = "פרטיות";
+
+/* Settings > Surveys section > Always show surveys on stops */
+"settings_controller.survey_section.always_show_on_stops" = "הצג תמיד בתחנות";
+
+/* Settings > Surveys section title */
+"settings_controller.survey_section.title" = "סקרים";
+
+/* Settings > Walking Speed > Average preset label */
+"settings_controller.walking_speed.avg" = "ממוצעת (~4.8 קמ"ש)";
+
+/* Settings > Walking Speed > Fast preset label */
+"settings_controller.walking_speed.fast" = "מהירה (~6.4 קמ"ש)";
+
+/* Settings > Walking Speed > HealthKit denial or no-data toast */
+"settings_controller.walking_speed.healthkit_unavailable" = "לא ניתן לסנכרן מהירות מ-Health.";
+
+/* Settings > Walking Speed > Slow preset label */
+"settings_controller.walking_speed.slow" = "מתונה (~3.2 קמ"ש)";
+
+/* Settings > Walking Speed section > Speed picker */
+"settings_controller.walking_speed.title" = "מהירות הליכה";
+
+/* Settings > Walking Speed section > HealthKit toggle */
+"settings_controller.walking_speed.use_healthkit" = "השתמש בנתוני Health";
+
+/* Settings > Walking Speed section title */
+"settings_controller.walking_speed_section.title" = "מהירות הליכה";
+
+/* A message that appears when a user's alarm is created. */
+"stop_controller.alarm_created_message" = "ההתראה נוצרה בהצלחה";
+
+/* A header for the arrivals and departures section of the stop controller. */
+"stop_controller.arrival_departure_header" = "הגעות ויציאות";
+
+/* Title for the menu that filters departures by data type */
+"stop_controller.arrival_filter.menu_title" = "סוג יציאה";
+
+/* Message shown when the Departure Type filter hides every departure at a stop */
+"stop_controller.arrival_filter.no_results" = "No departures match the current filter. Change the יציאה Type in the ⋯ menu.";
+
+/* An error message displayed when a stop is shown by tapping on a bookmark—and the bookmark doesn't seem to point to a valid stop any longer. This problem will occur when a transit agency changes its stop IDs, perhaps as part of an annual transit system realignment. */
+"stop_controller.bad_bookmark_error_message" = "This bookmark may not work anymore. Did your transit agency change something? Please delete and recreate the bookmark.";
+
+/* Title of the error shown when a stop is opened from a bookmark that no longer points to a valid stop. */
+"stop_controller.bad_bookmark_error_title" = "Broken סימנייה";
+
+/* A string listing the data providers (agencies) for this stop's data. It contains one or more providers separated by commas. e.g. Data provided by King County Metro, Sound Transit */
+"stop_controller.data_attribution_format" = "Data provided by %@";
+
+/* Message shown when an external survey link cannot be opened */
+"stop_controller.external_survey_error.message" = "This survey link couldn't be opened. Please try again later.";
+
+/* Title shown when an external survey link cannot be opened */
+"stop_controller.external_survey_error.title" = "Can't Open Survey";
+
+/* Load More button */
+"stop_controller.load_more_button" = "Load More";
+
+/* A header for the past arrivals and departures section of the stop controller. */
+"stop_controller.past_departures_header" = "Past יציאהs";
+
+/* Header for past departures of a specific route */
+"stop_controller.past_departures_route_header" = "Past יציאהs - %@";
+
+/* Title of the message shown when the server has no stop at the requested ID. */
+"stop_controller.stop_not_found_title" = "תחנה Not Found";
+
+/* This is an instruction given to the user the first time they look at a stop view instructing them on how to access more options, including the ability to add alarms. */
+"stop_controller.swipe_spotlight_text.with_alarm" = "Swipe on a row to view more options, including adding alarms.";
+
+/* This is an instruction given to the user the first time they look at a stop view instructing them on how to access more options, EXCLUDING the ability to add alarms. */
+"stop_controller.swipe_spotlight_text.without_alarm" = "Swipe on a row to view more options.";
+
+/* Button to reveal departures that leave before the rider's transfer arrival. Parameter is the count of hidden departures. Plural forms live in Localizable.stringsdict; the value above is only the not-found fallback. */
+"stop_controller.transfer_show_earlier_departures_fmt" = "Show %d earlier departures";
+
+/* Spoken suffix on the currently-focused route chip. */
+"stop_header.chip.highlighted" = "highlighted on map";
+
+/* Spoken suffix on a route chip whose route has a vehicle on the map. */
+"stop_header.chip.live_tracking" = "live tracking";
+
+/* VoiceOver announcement posted when the Departure Type filter changes which departures are visible. */
+"stop_page.a11y.filter_changed" = "יציאה filter changed";
+
+/* VoiceOver announcement when the Past disclosure is closed. */
+"stop_page.a11y.past_hidden" = "Past departures hidden";
+
+/* VoiceOver announcement when the Past disclosure is opened. %d is the count. Plural forms live in Localizable.stringsdict; the value above is only the not-found fallback. */
+"stop_page.a11y.past_shown_fmt" = "Showing %d past departures";
+
+/* VoiceOver announcement posted when a rider-initiated refresh finishes and the departure times have been updated. */
+"stop_page.a11y.refreshed" = "יציאהs updated";
+
+/* VoiceOver announcement posted when the route filter is turned off. */
+"stop_page.a11y.routes_all" = "Showing all routes";
+
+/* VoiceOver announcement posted when the route filter is turned on. */
+"stop_page.a11y.routes_filtered" = "Showing filtered routes";
+
+/* Error shown when a departure alarm can't be cancelled because the region's alarm service is unreachable. */
+"stop_page.alarm_cancel_unavailable" = "This alarm couldn't be cancelled because the alarm service isn't available right now. Please try again later.";
+
+/* Body of the alert shown when the user tries to set a departure alarm but notifications are denied in Settings. %@ is the app name. */
+"stop_page.alarm_permission_denied.message" = "To get departure alarms, allow notifications for %@ in Settings.";
+
+/* Button that opens the system Settings app so the user can enable notifications. */
+"stop_page.alarm_permission_denied.open_settings" = "Open Settings";
+
+/* Title of the alert shown when the user tries to set a departure alarm but notifications are denied in Settings. */
+"stop_page.alarm_permission_denied.title" = "Notifications Are Off";
+
+/* Bike chip on the header card. %d is the bike time in minutes. */
+"stop_page.bike_chip_minutes_fmt" = "%d min bike";
+
+/* VoiceOver description of the bike divider. %d is bike minutes. */
+"stop_page.bike_divider_a11y_fmt" = "יציאהs above this point leave sooner than your %d minute bike ride to the stop";
+
+/* Divider between departures you'd miss on a bike and ones you can still catch. %d is the bike time in minutes. */
+"stop_page.bike_divider_fmt" = "%d MIN BIKE — CATCH BELOW";
+
+/* Shown in place of the minutes countdown when the vehicle is departing now */
+"stop_page.countdown.now" = "NOW";
+
+/* VoiceOver-only heading that anchors the departures list in the Headings rotor, and the title of the rotor itself; not shown on screen. */
+"stop_page.departures_heading" = "יציאהs";
+
+/* Empty state shown when every route at the stop is hidden by the user's filter. */
+"stop_page.empty.all_filtered" = "All routes at this stop are filtered";
+
+/* Empty state shown when the Departure Type filter (real-time only / scheduled only) hides every departure at the stop. */
+"stop_page.empty.departure_filter" = "No departures match the current יציאה Type filter";
+
+/* Empty state shown when the stop has no upcoming departures within the loaded time window. %d is the number of minutes. Plural forms live in Localizable.stringsdict; the value above is only the not-found fallback. */
+"stop_page.empty.no_departures_fmt" = "No departures in the next %d minutes";
+
+/* Button that retries loading departures after an error. */
+"stop_page.empty.retry" = "Retry";
+
+/* Button that resets the Departure Type filter so every departure is shown. */
+"stop_page.empty.show_all_departure_types" = "Show all departure types";
+
+/* Button that clears the route filter so all routes are shown. */
+"stop_page.empty.show_all_routes" = "Show all routes";
+
+/* Empty state shown when the server has no stop at the requested ID and there is no bookmark to repair — the rider arrived from a deep link, a search result or a map pin. */
+"stop_page.empty.stop_not_found" = "This stop isn't in the transit agency's data anymore. It may have been moved or removed.";
+
+/* VoiceOver value of the route-filter bar button when the filter is inactive. */
+"stop_page.filter.a11y_off" = "off";
+
+/* VoiceOver value of the route-filter bar button when the filter is active. */
+"stop_page.filter.a11y_on" = "on";
+
+/* VoiceOver for a grouped route card whose next vehicle is arriving at this stop. */
+"stop_page.grouped.a11y_arrives_fmt" = "קו %1$@ to %2$@, next arrival in %3$d minutes, %4$@. %5$d more departures loaded.";
+
+/* VoiceOver value of a collapsible header or grouped route card whose contents are hidden. */
+"stop_page.grouped.a11y_collapsed" = "collapsed";
+
+/* VoiceOver value of a collapsible header or grouped route card whose contents are showing. */
+"stop_page.grouped.a11y_expanded" = "expanded";
+
+/* VoiceOver for a grouped route card whose next vehicle is departing this stop (first stop or layover). */
+"stop_page.grouped.a11y_fmt" = "קו %1$@ to %2$@, next departure in %3$d minutes, %4$@. %5$d more departures loaded.";
+
+/* VoiceOver custom action on a grouped route card's header that cancels the alarm already set for the next departure. */
+"stop_page.grouped.a11y_remove_alarm" = "Remove alarm";
+
+/* VoiceOver custom action on a grouped route card's header that creates an alarm for the next departure. */
+"stop_page.grouped.a11y_set_alarm" = "Set alarm";
+
+/* Caption above the upcoming-departure minute chips on a grouped route card at accessibility text sizes. */
+"stop_page.grouped.next_departures" = "Next departures";
+
+/* VoiceOver hint on the header card's walk-time button. */
+"stop_page.header.walk_a11y_hint" = "Opens walking directions to this stop.";
+
+/* Button in the trip panel to start a Live Activity for this departure on the Lock Screen and Dynamic Island */
+"stop_page.live_activity.track" = "Track on Lock Screen";
+
+/* Extends the departure time window */
+"stop_page.load_more" = "Load more";
+
+/* Caption under the spinner shown while the stop page's departure list loads. */
+"stop_page.loading_departures" = "Loading departures…";
+
+/* Stop page mode toggle: grouped by route */
+"stop_page.mode.route" = "קו";
+
+/* Stop page mode toggle: flat time-sorted list */
+"stop_page.mode.time" = "Time";
+
+/* Button revealing recently departed trips. %d is the count. */
+"stop_page.past_toggle_fmt" = "Past · %d";
+
+/* Button hiding recently departed trips */
+"stop_page.past_toggle_hide" = "Hide past";
+
+/* VoiceOver label for the button hiding recently departed trips */
+"stop_page.past_toggle_hide_a11y" = "Hide past departures";
+
+/* VoiceOver label for the button revealing recently departed trips. %d is the count. Plural forms live in Localizable.stringsdict; the value above is only the not-found fallback. */
+"stop_page.past_toggle_show_a11y_fmt" = "Show %d past departures";
+
+/* Body of the alert shown when location is denied for the app. %@ is the app name. */
+"stop_page.proximity_alert.location_denied.message_fmt" = "To get nearby alerts, allow location for %@ in Settings.";
+
+/* Title of the alert shown when the rider tries to set a nearby alert but location is denied for the app. */
+"stop_page.proximity_alert.location_denied.title" = "Location Is Off";
+
+/* Body of the alert shown when location access is restricted on the device. */
+"stop_page.proximity_alert.location_restricted.message" = "Nearby alerts need location access, which may be limited by a setting on this device.";
+
+/* Title of the alert shown when location may be limited by a device restriction the rider does not control. */
+"stop_page.proximity_alert.location_restricted.title" = "Location Isn't Available";
+
+/* Body of the alert asking the rider to widen location access from While Using to Always. %@ is the app name. */
+"stop_page.proximity_alert.location_when_in_use.message_fmt" = "%@ has location access only while it's open. Nearby alerts need it in the background too, so they can work with your phone in your pocket.";
+
+/* Title of the alert shown when the rider has granted location only While Using, which nearby alerts cannot work with. */
+"stop_page.proximity_alert.location_when_in_use.title" = "Allow Location Always";
+
+/* Stop Location menu action that takes down the approach notification already set on this stop. */
+"stop_page.proximity_alert.menu.cancel" = "ביטול Nearby Alert";
+
+/* Stop Location menu action that sets a notification for when the rider approaches this stop. */
+"stop_page.proximity_alert.menu.set" = "Alert Me When Nearby";
+
+/* Body of the alert shown when notifications are denied. %@ is the app name. */
+"stop_page.proximity_alert.notifications_denied.message_fmt" = "Nearby alerts arrive as notifications. Allow them for %@ in Settings.";
+
+/* Title of the alert shown when the rider tries to set a nearby alert but notifications are denied in Settings. */
+"stop_page.proximity_alert.notifications_denied.title" = "Notifications Are Off";
+
+/* Button that opens the system Settings app so the rider can grant what a nearby alert needs. */
+"stop_page.proximity_alert.open_settings" = "Open Settings";
+
+/* Body of the alert shown when the app is already monitoring every region iOS allows. %1$@ is the app name and %2$d is the number of regions. */
+"stop_page.proximity_alert.region_limit.message_fmt" = "iOS lets %1$@ watch for %2$d places at once. ביטול one to add another.";
+
+/* Title of the alert shown when iOS will not monitor another region because the app is already at its limit. */
+"stop_page.proximity_alert.region_limit.title" = "Too Many Alerts";
+
+/* Toast confirming the rider's nearby alert for this stop was taken down. */
+"stop_page.proximity_alert.toast.cancelled" = "Nearby alert cancelled";
+
+/* Toast confirming a nearby alert was set. %@ is the name of the stop. */
+"stop_page.proximity_alert.toast.set_fmt" = "We'll let you know when you're near %@";
+
+/* VoiceOver suffix indicating a departure alarm is active */
+"stop_page.row.a11y_alarm_set" = "alarm set";
+
+/* VoiceOver for a stop-page row whose vehicle is arriving at this stop. Route, headsign, minutes, adherence. */
+"stop_page.row.a11y_arrives_fmt" = "קו %1$@ to %2$@, arrives in %3$d minutes, %4$@";
+
+/* VoiceOver for a stop-page row whose vehicle is departing this stop (first stop or layover). Route, headsign, minutes, adherence. */
+"stop_page.row.a11y_fmt" = "קו %1$@ to %2$@, departs in %3$d minutes, %4$@";
+
+/* VoiceOver clause appended to a departure row that's upcoming but not reachable on foot before it leaves. */
+"stop_page.row.a11y_missed" = "likely missed — departs sooner than your walk to the stop";
+
+/* VoiceOver label for a departure row that has already departed: route, headsign, minutes ago, status. */
+"stop_page.row.a11y_past_fmt" = "קו %1$@ to %2$@, departed %3$d minutes ago, %4$@";
+
+/* VoiceOver clause appended to a departure row that matches the rider's inbound transfer trip. */
+"stop_page.row.a11y_transfer_trip" = "your transfer trip";
+
+/* Swipe/context menu action that cancels an existing arrival alarm. */
+"stop_page.row.remove_alarm" = "Remove Alarm";
+
+/* Context menu action opening the full trip screen */
+"stop_page.row.show_trip" = "Show נסיעה Details";
+
+/* VoiceOver label for the button that returns the stop page's departure list to the top. */
+"stop_page.scroll_to_top" = "Scroll to top";
+
+/* Fallback title for a service alert that has no summary text. */
+"stop_page.service_alert_fallback" = "Service alert";
+
+/* VoiceOver value of the service-alerts card header when the alert list is hidden. */
+"stop_page.service_alerts.a11y_collapsed" = "collapsed";
+
+/* VoiceOver value of the service-alerts card header when the alert list is showing. */
+"stop_page.service_alerts.a11y_expanded" = "expanded";
+
+/* Row that expands the service alerts section to show every alert. %d is the total number of alerts. Plural forms live in Localizable.stringsdict; the value above is only the not-found fallback. */
+"stop_page.service_alerts.show_all_fmt" = "Show all %d alerts";
+
+/* Collapsed summary row for the service alerts section. %d is the number of alerts. Plural forms live in Localizable.stringsdict; the value above is only the not-found fallback. */
+"stop_page.service_alerts.summary_fmt" = "%d service alerts";
+
+/* VoiceOver status suffix for a live departure. %@ is the adherence label. */
+"stop_page.status.a11y_live_fmt" = "live tracking, %@";
+
+/* VoiceOver status suffix for a schedule-only departure */
+"stop_page.status.a11y_scheduled" = "scheduled time only, no live data";
+
+/* Adherence label for an early departure. %d is minutes early. */
+"stop_page.status.early_fmt" = "%d min early";
+
+/* Adherence label for a late departure. %d is minutes late. */
+"stop_page.status.late_fmt" = "%d min late";
+
+/* Adherence label for an on-time departure */
+"stop_page.status.on_time" = "on time";
+
+/* Adherence label for a departure with no real-time signal; deliberately avoids claiming the bus is on time. */
+"stop_page.status.schedule_data" = "schedule data";
+
+/* Bottom-toolbar item on the Stop page that opens the Add Bookmark screen. */
+"stop_page.toolbar.bookmark" = "סימנייה";
+
+/* Walk chip on the header card. %d is the walk time in minutes. */
+"stop_page.walk_chip_minutes_fmt" = "%d min walk";
+
+/* VoiceOver description of the walk divider. %d is walk minutes. */
+"stop_page.walk_divider_a11y_fmt" = "יציאהs above this point leave sooner than your %d minute walk to the stop";
+
+/* Divider between departures you'd miss on foot and ones you can still catch. %d is the walk time in minutes. */
+"stop_page.walk_divider_fmt" = "%d MIN WALK — CATCH BELOW";
+
+/* Title of the Sorting section */
+"stop_preferences_controller.sorting_section.header_title" = "Sort By";
+
+/* Sort by route option */
+"stop_preferences_controller.sorting_section.sort_by_route" = "Sort by route";
+
+/* Sort by time option */
+"stop_preferences_controller.sorting_section.sort_by_time" = "Sort by time";
+
+/* Title of the Edit Stop preferences controller */
+"stop_preferences_controller.title" = "העדפות תצוגת קווים";
+
+/* The section header to a free-form comments field that the user does not have to add text to in order to submit this form. */
+"stop_problem_controller.comments_section.section_title" = "Additional comments (optional)";
+
+/* Footer text of the Share Location section in the Stop Problem Controller */
+"stop_problem_controller.location_section.section_footer" = "Sharing your location can help your transit agency fix this problem.";
+
+/* Title of the Share Location section in the Stop Problem Controller. */
+"stop_problem_controller.location_section.section_title" = "Share your location?";
+
+/* Title of the Share Location switch on stop problem controller */
+"stop_problem_controller.location_section.switch_title" = "Share location";
+
+/* Title label for the 'choose a problem type' row. */
+"stop_problem_controller.problem_section.row_label" = "Pick one:";
+
+/* Title of the first section in the Stop Problem Controller. */
+"stop_problem_controller.problem_section.section_title" = "What seems to be the problem?";
+
+/* The 'send' button that actually sends along the problem report. */
+"stop_problem_controller.send_button" = "Send Message";
+
+/* Title for the Report Stop Problem controller */
+"stop_problem_controller.title" = "דיווח על בעיה בתחנה";
+
+/* Accessibility label for schedule type picker */
+"stop_schedule_view.accessibility.choose_schedule_type" = "Choose between stop schedule and full route schedule";
+
+/* Label for date picker in schedule view */
+"stop_schedule_view.date" = "Date";
+
+/* Title for the full route schedule toggle */
+"stop_schedule_view.full_route_schedule" = "Full קו לוח זמנים";
+
+/* Message when no departures are scheduled */
+"stop_schedule_view.no_departures" = "No departures";
+
+/* Message shown when schedule data is not available */
+"stop_schedule_view.no_schedule_data" = "No schedule data available";
+
+/* Label for route picker in schedule view */
+"stop_schedule_view.route" = "קו";
+
+/* Title for the stop schedule toggle */
+"stop_schedule_view.stop_schedule" = "תחנה לוח זמנים";
+
+/* Format string for destination. e.g. To: Downtown */
+"stop_schedule_view.to_destination_fmt" = "To: %@";
+
+/* Error message when schedule fails to load */
+"stop_schedule_view.unable_to_load" = "Unable to load schedule";
+
+/* Message displayed when a new bookmark is created. */
+"stops_controller.created_new_bookmark" = "Added סימנייה";
+
+/* Stop Location menu action that opens the trip planner with this stop as the origin. */
+"stops_controller.directions_from_here" = "Directions from Here";
+
+/* Stop Location menu action that opens the trip planner with this stop as the destination. */
+"stops_controller.directions_to_here" = "Directions to Here";
+
+/* A menu item on a Stop page that toggles the visible list of transit vehicles from a filtered list to all of the list items. e.g. a stop serves routes 1, 2, and 3. The user has filtered the stop to only show route 3. Chooosing this item will show 1, 2, and 3 again. */
+"stops_controller.filter.all_routes" = "All קוs";
+
+/* A menu item on a Stop page that toggles the visible list of transit vehicles from a list of all items to a filtered list. e.g. a stop serves routes 1, 2, and 3. The user wants to only view route 3. Choosing this item would show that subset of routes. */
+"stops_controller.filter.filtered_routes" = "Filtered קוs";
+
+/* Title of the row that will show stops that are near this one. */
+"stops_controller.nearby_stops" = "Nearby תחנהs";
+
+/* Section heading in the stop screen's More menu, over the Add Bookmark and Service Alerts items. */
+"stops_controller.menu.file_title" = "File";
+
+/* Section heading in the stop screen's More menu, over the nearby stops, walking directions and trip planning items. */
+"stops_controller.menu.location_title" = "Location";
+
+/* Section heading in the stop screen's More menu, over the Report a Problem item. */
+"stops_controller.menu.help_title" = "Help";
+
+/* Button that launches the 'Report Problem' UI. */
+"stops_controller.report_problem" = "Report a Problem";
+
+/* Message displayed an existing bookmark is updated. */
+"stops_controller.updated_bookmark" = "Updated סימנייה";
+
+/* Button that launches a maps app with walking directions to this stop */
+"stops_controller.walking_directions" = "Walking Directions";
+
+/* Button that launches Apple's maps.app with walking directions to this stop */
+"stops_controller.walking_directions_apple" = "Walking Directions (Apple Maps)";
+
+/* Button that launches Google Maps with walking directions to this stop */
+"stops_controller.walking_directions_google" = "Walking Directions (Google Maps)";
+
+/* Default prompt when no hero question exists */
+"survey_cell.default_prompt" = "Take survey to help improve transit";
+
+/* Button to dismiss the survey */
+"survey_cell.dismiss_button" = "Dismiss";
+
+/* Button to proceed to next survey question */
+"survey_cell.next_button" = "Next";
+
+/* Button that opens an external survey in the browser */
+"survey_cell.open_external_survey_button" = "Open Survey";
+
+/* Message shown when an external survey link cannot be opened */
+"survey_launcher.external_survey_error.message" = "This survey link couldn't be opened. Please try again later.";
+
+/* Title shown when an external survey link cannot be opened */
+"survey_launcher.external_survey_error.title" = "Can't Open Survey";
+
+/* Secondary button on the survey launcher card; dismisses the prompt. */
+"survey_launcher.not_now_button" = "Not now";
+
+/* Primary button on the survey launcher card; opens the survey. */
+"survey_launcher.take_survey_button" = "Take survey";
+
+/* Title of the survey launcher card on the stop screen. */
+"survey_launcher.title" = "סקר נוסעים";
+
+/* Message shown when an external survey link cannot be opened */
+"survey_vc.external_survey_error.message" = "This survey link couldn't be opened. Please try again later.";
+
+/* Title shown when an external survey link cannot be opened */
+"survey_vc.external_survey_error.title" = "Can't Open Survey";
+
+/* Message when the survey data itself is malformed (no answerable hero question). */
+"survey_vc.malformed_error.message" = "This survey can't be submitted right now. Please try again later.";
+
+/* Title for malformed survey alert */
+"survey_vc.malformed_error.title" = "Survey Unavailable";
+
+/* OK button on survey alerts */
+"survey_vc.ok_button" = "OK";
+
+/* Button that opens an external survey in the browser */
+"survey_vc.open_external_survey_button" = "Open Survey";
+
+/* Section header for survey questions */
+"survey_vc.questions_section_title" = "Questions";
+
+/* Title for survey submission error alert */
+"survey_vc.submission_error.title" = "Submission שגיאה";
+
+/* Button to submit the survey */
+"survey_vc.submit_button" = "Submit Survey";
+
+/* Submit button title while a survey submission is in flight */
+"survey_vc.submitting_button" = "Submitting…";
+
+/* Placeholder for text answer field */
+"survey_vc.text_placeholder" = "Enter your answer...";
+
+/* Message when required survey questions are unanswered */
+"survey_vc.validation_error.message" = "Please answer all required questions before submitting.";
+
+/* Title for incomplete survey alert */
+"survey_vc.validation_error.title" = "Incomplete Survey";
+
+/* A notice when a transit alert doesn't have body text. */
+"transit_alert.no_additional_details.body" = "No additional details available.";
+
+/* Describes the next trip of this vehicle. e.g. Continues as 10 - Downtown Seattle */
+"trip_details_controller.continues_as_fmt" = "Continues as %@";
+
+/* Last report: <TIME> */
+"trip_details_controller.last_report_fmt" = "Last report: %@";
+
+/* Service alerts header in the trip details controller. */
+"trip_details_controller.service_alerts_footer" = "נסיעה Details";
+
+/* Button that moves the map to focus on the selected stop */
+"trip_details_controller.show_on_map" = "Show on Map";
+
+/* Describes the previous trip of this vehicle. e.g. Starts as 10 - Downtown Seattle */
+"trip_details_controller.starts_as_fmt" = "Starts as %@";
+
+/* Header above the trip's full stop list. %d is the number of stops. Plural forms live in Localizable.stringsdict; this value is only the not-found fallback. */
+"trip_page.all_stops_fmt" = "All %d stops";
+
+/* VoiceOver label for the trip page's header card: route, headsign, minutes until arrival, status. */
+"trip_page.card.a11y_fmt" = "קו %1$@ to %2$@, arrives in %3$d minutes, %4$@";
+
+/* VoiceOver label for the trip page's header card when the trip was reached without a stop, so there is no arrival time. */
+"trip_page.card.a11y_no_arrival_fmt" = "קו %1$@ to %2$@";
+
+/* Trip card line shown in place of the vehicle's distance once its next stop is the rider's stop. */
+"trip_page.card.arriving_at_stop" = "Arriving at your stop";
+
+/* VoiceOver version of the trip card's distance line. %1$@ is a distance like '1.2 mi', %2$d the number of stops in between. Plural forms live in Localizable.stringsdict; this value is only the not-found fallback. */
+"trip_page.card.distance_stops_a11y_fmt" = "%1$@ away, %2$d stops away";
+
+/* Trip card line: how far the vehicle is from the rider's stop. %1$@ is a distance like '1.2 mi', %2$d the number of stops in between. Plural forms live in Localizable.stringsdict; this value is only the not-found fallback. */
+"trip_page.card.distance_stops_fmt" = "%1$@ away · %2$d stops";
+
+/* Error shown when a ghost bus report can't be submitted because the region's Obaco service is unreachable. */
+"trip_page.ghost_bus_report_unavailable" = "This report couldn't be submitted because the reporting service isn't available right now. Please try again later.";
+
+/* Trip page button that starts a Live Activity for this trip. */
+"trip_page.live_activity_start" = "Live Activity — track on Lock Screen";
+
+/* Trip page button state once a Live Activity is running for this trip. */
+"trip_page.live_activity_tracking" = "Tracking on Lock Screen";
+
+/* How stale the vehicle's reported position is. %@ is a relative time like '12s ago'. */
+"trip_page.position_updated_fmt" = "position updated %@";
+
+/* Trip page button cancelling this trip's arrival alarm. */
+"trip_page.remove_alarm" = "Remove alarm";
+
+/* Trip page menu item for reporting a scheduled vehicle that never arrived. */
+"trip_page.report_ghost_bus" = "Report Ghost Bus";
+
+/* Trip page button that lowers the sheet to reveal the trip's route on the map behind it. */
+"trip_page.show_on_map" = "Show on Map";
+
+/* VoiceOver clause on a stop the vehicle has already served. */
+"trip_page.stop_list.a11y_passed" = "already passed";
+
+/* VoiceOver clause on the final stop of the trip. */
+"trip_page.stop_list.a11y_terminal" = "last stop";
+
+/* VoiceOver clause on the stop the vehicle is currently at. */
+"trip_page.stop_list.a11y_vehicle_here" = "vehicle is here";
+
+/* VoiceOver clause on the rider's own stop. */
+"trip_page.stop_list.a11y_your_stop" = "your stop";
+
+/* Header above the trip's stop list before the stops are known. */
+"trip_page.stops_header" = "תחנהs";
+
+/* Shown while the trip's stop list is being fetched. */
+"trip_page.stops_loading" = "Loading this trip's stops…";
+
+/* Shown when the trip's stop list could not be loaded. */
+"trip_page.stops_unavailable" = "This trip's stop list isn't available right now.";
+
+/* Identifies a vehicle by its ID on the trip page, e.g. 'Vehicle 6821'. */
+"trip_page.vehicle_label_fmt" = "רכב %@";
+
+/* Trip page button opening the route's schedule. */
+"trip_page.view_schedule" = "View schedule";
+
+/* Shown when the vehicle is arriving at the user's stop */
+"trip_progress.arriving_now" = "Arriving now";
+
+/* Estimated time of arrival to the user's stop. e.g. ~8 min to your stop */
+"trip_progress.eta_to_stop_fmt" = "~%d min to your stop";
+
+/* Shown when the vehicle has already passed the user's destination stop */
+"trip_progress.passed_your_stop" = "Passed your stop";
+
+/* Shows the current stop position. e.g. Stop 5 of 18 */
+"trip_progress.stop_count_fmt" = "תחנה %1$d of %2$d";
+
+/* Alert message when trip sharing fails. */
+"trip_sharing.share_error.message" = "Something went wrong while preparing the trip link. Please try again.";
+
+/* Alert title when trip sharing fails. */
+"trip_sharing.share_error.title" = "Unable to Share";
+
+/* A formatted string for displaying a vehicle's ID on the trip status map. e.g. 'Vehicle ID: 12345' */
+"trip_status_annotation.title_fmt" = "רכב ID: %@";
+
+/* Shown on the map when the user taps on a vehicle to indicate we don't know the vehicle's ID. */
+"trip_status_annotation.vehicle_id_unavailable" = "רכב ID Unavailable";
+
+/* Voiceover text explaining that this stop is where the rider boarded the vehicle */
+"trip_stop.boarding_stop.accessibility_label" = "Boarding stop";
+
+/* Voiceover text explaining that this stop is not part of the shared ride */
+"trip_stop.outside_ride.accessibility_label" = "Not part of the shared ride";
+
+/* Voiceover text explaining that the vehicle has already passed this stop */
+"trip_stop.passed_stop.accessibility_label" = "Passed stop";
+
+/* Voiceover text explaining that this stop is the user's destination */
+"trip_stop.user_destination.accessibility_label" = "Your destination";
+
+/* Voiceover text explaining that the vehicle is currently at this stop */
+"trip_stop.vehicle_location.accessibility_label" = "רכב is here";
+
+/* Suggested invocation phrase for Siri Shortcut */
+"user_activity_builder.show_me_my_bus" = "Show me my bus";
+
+/* Button in the live-vehicle map callout that opens the trip screen. */
+"vehicle_callout.follow_this_trip" = "Follow this trip";
+
+/* Freshness line in the live-vehicle map callout. %@ is a relative time, e.g. '12s ago'. */
+"vehicle_callout.position_updated_fmt" = "Position updated %@";
+
+/* Qualifies the countdown in the live-vehicle map callout, as in '1m to this stop'. */
+"vehicle_callout.to_this_stop" = "to this stop";
+
+/* Label identifying a vehicle by its ID in the map's vehicle callout, e.g. 'Vehicle 1234'. */
+"vehicle_callout.vehicle_label_fmt" = "רכב %@";
+
+/* The section header to a free-form comments field that the user does not have to add text to in order to submit this form. */
+"vehicle_problem_controller.comments_section.section_title" = "Additional comments (optional)";
+
+/* Footer text of the Share Location section in the Vehicle Problem Controller */
+"vehicle_problem_controller.location_section.section_footer" = "Sharing your location can help your transit agency fix this problem.";
+
+/* Title of the Share Location section in the Vehicle Problem Controller. */
+"vehicle_problem_controller.location_section.section_title" = "Share your location?";
+
+/* Title of the Share Location switch */
+"vehicle_problem_controller.location_section.switch_title" = "Share location";
+
+/* Title of the 'on the vehicle' section in the Vehicle Problem Controller. */
+"vehicle_problem_controller.on_vehicle_section.section_title" = "Are you on this vehicle?";
+
+/* Title of the 'on the vehicle' switch in the Vehicle Problem Controller. */
+"vehicle_problem_controller.on_vehicle_section.switch_title" = "On the vehicle";
+
+/* Title of the vehicle ID text field in the Vehicle Problem Controller. */
+"vehicle_problem_controller.on_vehicle_section.vehicle_id_title" = "רכב ID";
+
+/* Title label for the 'choose a problem type' row. */
+"vehicle_problem_controller.problem_section.row_label" = "Pick one";
+
+/* Title of the first section in the Vehicle Problem Controller. */
+"vehicle_problem_controller.problem_section.section_title" = "What seems to be the problem?";
+
+/* The 'send' button that actually sends along the problem report. */
+"vehicle_problem_controller.send_button" = "Send Message";
+
+/* Title for the Report Vehicle Problem controller */
+"vehicle_problem_controller.title" = "דיווח על נסיעה ספציפית";
+
+/* Format string describing a favorite route (or trip) bookmark with a placeholder for the bookmark's name. */
+"voiceover.bookmarkarrivaldata.label.favoriteroutebookmark_fmt" = "Favorite קו סימנייה, %@";
+
+/* Format string describing a normal route (or trip) bookmark with a placeholder for the bookmark's name. */
+"voiceover.bookmarkarrivaldata.label.routebookmark_fmt" = "קו סימנייה, %@";
+
+/* Format string describing a stop bookmark with a placeholder for the bookmark's name. */
+"voiceover.bookmarkarrivaldata.label.stopbookmark_fmt" = "תחנה סימנייה, %@";
+
+/* Voiceover text describing an arrival, then a departure in the near-future, regardless of realtime data availability. */
+"voiceover.bookmarkarrivaldata.value.followingarrivalthendeparture_fmt" = "Following arrival in %1$d minutes and departure in %2$d minutes.";
+
+/* Voiceover text describing a departure, then an arrival in the near-future, regardless of realtime data availability. */
+"voiceover.bookmarkarrivaldata.value.followingdeparturethenarrival_fmt" = "Following departure in %1$d minutes and arrival in %2$d minutes.";
+
+/* Voiceover text describing the one additional arrival in the near-future, regardless of realtime data availability. */
+"voiceover.bookmarkarrivaldata.value.followingonearrival_fmt" = "Following arrival in %d minutes.";
+
+/* Voiceover text describing the one additional departure in the near-future, regardless of realtime data availability. */
+"voiceover.bookmarkarrivaldata.value.followingonedeparture_fmt" = "Following departure in %d minutes.";
+
+/* Voiceover text describing the two additional arrivals in the near-future, regardless of realtime data availability. */
+"voiceover.bookmarkarrivaldata.value.followingtwoarrivals_fmt" = "Following two arrivals in %1$d minutes and %2$d minutes.";
+
+/* Voiceover text describing the two additional departures in the near-future, regardless of realtime data availability. */
+"voiceover.bookmarkarrivaldata.value.followingtwodepartures_fmt" = "Following two departures in %1$d minutes and %2$d minutes.";
+
+/* Voiceover text describing no departures in the near-future. */
+"voiceover.bookmarkarrivaldata.value.noupcomingdepartures_fmt" = "No upcoming departures";
+
+/* A label for blind or low-vision users on the UI element that describes how long it takes to walk to the stop. */
+"walk_time_view.accessibility_label" = "Time to walk to stop";
+
+/* A label for blind or low-vision users on the UI element that describes how long it takes to bike to the stop. */
+"walk_time_view.accessibility_label_bike" = "Time to bike to stop";
+
+/* Accessibility string with placeholders for distance from stop, walking time to stop, and predicted arrival time. e.g. 1.2 miles. Takes 17 minutes to walk, arriving at 9:41 am */
+"walk_time_view.accessibility_value" = "%1$@. Takes %2$@ to walk, arriving at %3$@";
+
+/* Accessibility string with placeholders for distance from stop, biking time to stop, and predicted arrival time. e.g. 1.2 miles. Takes 6 minutes to bike, arriving at 9:41 am */
+"walk_time_view.accessibility_value_bike" = "%1$@. Takes %2$@ to bike, arriving at %3$@";
+
+/* Format string with placeholders for distance from stop, travel time to stop, and predicted arrival time. e.g. 1.2 miles, 17m: arriving at 09:41 A.M. */
+"walk_time_view.distance_time_fmt" = "%1$@, %2$@: arriving at %3$@";
+
+/* Accessibility label for the transfer arrival banner shown when navigating to a connecting stop. */
+"walk_time_view.transfer_accessibility_label" = "Transfer arrival time";
+
+/* Spoken value for the map weather control. First %@ is the temperature, second is the weather condition. */
+"weather.button_accessibility_value_format" = "%1$@, %2$@";
+
+/* Format for the chance-of-rain percentage on the weather card header. %d is the integer percent. */
+"weather.chance_of_rain_format" = "Chance of Rain: %d%%";
+
+/* Format for the high/low temperature line on the weather card. %@ placeholders are temperature strings. */
+"weather.high_low_format" = "H:%1$@  L:%2$@";
+
+/* First column label in the hourly weather strip, indicating the current hour. */
+"weather.now" = "Now";
+
+/* Bare percentage shown in the precipitation stat on the weather card. %d is the integer percent. */
+"weather.percent_format" = "%d%%";
+
+/* VoiceOver label for a weather card stat: {stat name}: {value}, e.g. Wind speed: 10 mph. Use the language's colon convention. */
+"weather.stat.a11y_fmt" = "%1$@: %2$@";
+
+/* VoiceOver label for the feels-like temperature stat on the weather card. */
+"weather.stat.feels_like" = "Feels like";
+
+/* VoiceOver label for the precipitation chance stat on the weather card. */
+"weather.stat.precip" = "Chance of precipitation";
+
+/* VoiceOver label for the wind speed stat on the weather card. */
+"weather.stat.wind" = "Wind speed";
+
+/* Accessibility label for the mic button that starts voice search. */
+"search_sheet.voice_search.start" = "Voice search";
+
+/* Accessibility label for the mic button while voice search is listening. */
+"search_sheet.voice_search.stop" = "תחנה listening";
+
+/* Shown when the user denies speech/mic permission for voice search. */
+"voice_search.permission_denied" = "Microphone or speech recognition access is required for voice search.";
+
+/* Shown when SFSpeechRecognizer cannot run. */
+"voice_search.unavailable" = "Voice search is not available on this device.";
+
+/* Action on the agency action sheet that opens the agency's on-demand services */
+"agencies_controller.on_demand_services" = "On-demand services";
+
+/* Reason shown on a dimmed on-demand zones layer row when the server is unreachable */
+"map_layers.on_demand_unavailable" = "Not available right now";
+
+/* Map sheet row for the on-demand (dial-a-ride) service zones layer */
+"map_layers.on_demand_zones" = "On-demand zones";
+
+/* Shown in place of a time window when a service runs all hours of its service days */
+"on_demand.all_hours" = "בכל שעות הפעילות";
+
+/* Button that opens the agency's online booking page */
+"on_demand.book_online" = "הזמנה מקוונת";
+
+/* Booking deadline line. %1$@ is a formatted date and time (e.g. 'Today at 5:00 PM'), %2$@ is the travel date (e.g. 'Wed, Mar 11') */
+"on_demand.book_by_fmt" = "הזמן עד %1$@ עבור נסיעה ב-%2$@";
+
+/* Shown when every upcoming service day's booking deadline has passed */
+"on_demand.booking_closed" = "ההרשמה נסגרה עבור ימי הפעילות הקרובים";
+
+/* Section header on the on-demand service page with the booking deadline, phone number and links */
+"on_demand.booking_header" = "כיצד להזמין נסיעה";
+
+/* Shown when the next service day cannot be booked yet. %@ is a formatted date and time */
+"on_demand.booking_opens_fmt" = "ההזמנה נפתחת ב-%@";
+
+/* Button that dials the booking phone number. %@ is the phone number as published */
+"on_demand.call_fmt" = "התקשר למספר %@";
+
+/* Title of the list of an agency's on-demand services */
+"on_demand.list_title" = "On-demand services";
+
+/* Button that opens the agency's information page about the service */
+"on_demand.more_info" = "More information";
+
+/* Shown when a service can be booked at ride time */
+"on_demand.no_notice_required" = "No advance booking required";
+
+/* Empty state of the list of an agency's on-demand services */
+"on_demand.no_services" = "No on-demand services";
+
+/* Header of the stop page card listing dial-a-ride services that cover this stop */
+"on_demand.section_title" = "On-demand service";
+
+/* Section header on the on-demand service page listing service days and hours */
+"on_demand.when_header" = "When";
+
+/* Eyebrow above the service name on the zone card */
+"on_demand.card.eyebrow" = "On-demand service here";
+
+/* Primary button on the zone card that dials the booking phone number */
+"on_demand.card.call_to_book" = "Call to Book";
+
+/* Secondary button on the zone card that opens the service page */
+"on_demand.card.details" = "Details";
+
+/* Footer of the zone card; plural forms in Localizable.stringsdict */
+"on_demand.card.more_services" = "ועוד שירותים לפי דרישה";
+
+/* Card and picker status while running. %@ is the end time */
+"on_demand.status.open_until" = "Open · until %@";
+
+/* Service page status while running. %@ is the end time */
+"on_demand.status.open_now_until" = "Open now · until %@";
+
+/* Status of a service that runs continuously */
+"on_demand.status.open" = "Open";
+
+/* Status of a service not running yet. %@ is a relative day and time */
+"on_demand.status.opens" = "Opens %@";
+
+/* Short booking deadline. %@ is a relative day and time */
+"on_demand.status.book_by" = "Book by %@";
+
+/* Status of a service with no upcoming service day */
+"on_demand.status.closed" = "סגורd";
+
+/* Tag for a service booked the same day */
+"on_demand.tag.same_day" = "Same-day booking";
+
+/* Tag for a service booked a day or more ahead */
+"on_demand.tag.advance" = "Advance booking";
+
+/* Tag for a service booked at ride time */
+"on_demand.tag.no_notice" = "No notice needed";
+
+/* Tag for a service that requires rider certification */
+"on_demand.tag.eligibility" = "Eligibility required";
+
+/* Bar title when the rider is inside a zone that is open now */
+"on_demand.bar.inside" = "Pickups available here";
+
+/* Bar title near a zone edge. %@ is a distance */
+"on_demand.bar.inside_near_edge.north" = "Inside · edge %@ north";
+
+/* Bar title near a zone edge. %@ is a distance */
+"on_demand.bar.inside_near_edge.northeast" = "Inside · edge %@ northeast";
+
+/* Bar title near a zone edge. %@ is a distance */
+"on_demand.bar.inside_near_edge.east" = "Inside · edge %@ east";
+
+/* Bar title near a zone edge. %@ is a distance */
+"on_demand.bar.inside_near_edge.southeast" = "Inside · edge %@ southeast";
+
+/* Bar title near a zone edge. %@ is a distance */
+"on_demand.bar.inside_near_edge.south" = "Inside · edge %@ south";
+
+/* Bar title near a zone edge. %@ is a distance */
+"on_demand.bar.inside_near_edge.southwest" = "Inside · edge %@ southwest";
+
+/* Bar title near a zone edge. %@ is a distance */
+"on_demand.bar.inside_near_edge.west" = "Inside · edge %@ west";
+
+/* Bar title near a zone edge. %@ is a distance */
+"on_demand.bar.inside_near_edge.northwest" = "Inside · edge %@ northwest";
+
+/* Bar title outside a zone. %@ is a distance */
+"on_demand.bar.outside.north" = "%@ north of the zone";
+
+/* Bar title outside a zone. %@ is a distance */
+"on_demand.bar.outside.northeast" = "%@ northeast of the zone";
+
+/* Bar title outside a zone. %@ is a distance */
+"on_demand.bar.outside.east" = "%@ east of the zone";
+
+/* Bar title outside a zone. %@ is a distance */
+"on_demand.bar.outside.southeast" = "%@ southeast of the zone";
+
+/* Bar title outside a zone. %@ is a distance */
+"on_demand.bar.outside.south" = "%@ south of the zone";
+
+/* Bar title outside a zone. %@ is a distance */
+"on_demand.bar.outside.southwest" = "%@ southwest of the zone";
+
+/* Bar title outside a zone. %@ is a distance */
+"on_demand.bar.outside.west" = "%@ west of the zone";
+
+/* Bar title outside a zone. %@ is a distance */
+"on_demand.bar.outside.northwest" = "%@ northwest of the zone";
+
+/* Page badge on the bar thumbnail. %1$d is the page, %2$d the count */
+"on_demand.bar.badge" = "%1$d of %2$d";
+
+/* Accessibility label of the bar's chevron when outside a zone */
+"on_demand.bar.a11y.show_edge" = "Show nearest zone edge";
+
+/* Accessibility label of the bar's thumbnail button */
+"on_demand.bar.a11y.zoom_out" = "Show whole zone";
+
+/* Accessibility label of the bar's phone button. %@ is the service name */
+"on_demand.bar.a11y.call" = "Call %@";
+
+/* Accessibility action on the bar that opens the picker */
+"on_demand.bar.a11y.more_services" = "All services here";
+
+/* Picker title for the services containing the point; plural forms in Localizable.stringsdict */
+"on_demand.picker.title" = "בחר שירות";
+
+/* Picker title for every matched service; plural forms in Localizable.stringsdict */
+"on_demand.picker.title_nearby" = "שירותים זמינים בסביבה";
+
+/* Picker subtitle. %@ is a locality */
+"on_demand.picker.subtitle_location" = "%@ · Your location";
+
+/* Picker subtitle. %@ is a locality */
+"on_demand.picker.subtitle_center" = "%@ · Map center";
+
+/* Picker subtitle. %@ is a locality */
+"on_demand.picker.subtitle_point" = "%@ · Selected place";
+
+/* Picker subtitle when no locality is known */
+"on_demand.picker.your_location" = "Your location";
+
+/* Picker subtitle when no locality is known */
+"on_demand.picker.map_center" = "Map center";
+
+/* Picker subtitle when no locality is known */
+"on_demand.picker.selected_place" = "Selected place";
+
+/* Footer of the overlap picker */
+"on_demand.picker.footer" = "Sorted by soonest available.";
+
+/* Location row when the rider's location is inside the zone */
+"on_demand.detail.location_inside" = "Your location is in this zone";
+
+/* Location row when the rider's location is outside the zone */
+"on_demand.detail.location_outside" = "Your location is outside this zone";
+
+/* Location row for the map centre */
+"on_demand.detail.center_inside" = "Map center is in this zone";
+
+/* Location row for the map centre */
+"on_demand.detail.center_outside" = "Map center is outside this zone";
+
+/* Location row for a dropped pin or planner endpoint */
+"on_demand.detail.point_inside" = "This place is in this zone";
+
+/* Location row for a dropped pin or planner endpoint */
+"on_demand.detail.point_outside" = "This place is outside this zone";
+
+/* Sub line of the location row. %@ is a locality */
+"on_demand.detail.location_sub" = "Pickups available in %@";
+
+/* Service area sub line when the rider is inside. %@ is the area names */
+"on_demand.detail.includes_location" = "%@ — includes your location";
+
+/* Section header listing service and drop-off areas */
+"on_demand.detail.where_header" = "Where";
+
+/* Row title for the pickup areas */
+"on_demand.detail.service_area" = "Service area";
+
+/* Row title for the drop-off areas */
+"on_demand.detail.drop_off" = "Drop-off";
+
+/* Fallback for unnamed areas; plural forms in Localizable.stringsdict */
+"on_demand.detail.zone_count" = "אזורי כיסוי";
+
+/* Hours column for weekdays without service */
+"on_demand.detail.no_service" = "No service";
+
+/* Row that opens the service's url */
+"on_demand.detail.open_agency_website" = "Open מפעיל Website";
+
+/* Header of the planner fallback card */
+"on_demand.planner.section" = "On-demand options";
+
+/* First meta line of a qualifying planner fallback service */
+"on_demand.planner.serves_both" = "Serves both locations";
+
+/* Caption under the planner fallback cards */
+"on_demand.planner.caption" = "Services that need eligibility or cover only one end are hidden.";
+
+/* Link under the planner fallback caption */
+"on_demand.planner.show_all" = "Show all in the zone picker";
+
+/* Planner fallback when nothing qualifies and nothing is hidden */
+"on_demand.planner.empty" = "No on-demand service covers both locations.";
+
+/* Caption noting availability is evaluated at the current time */
+"on_demand.planner.status_now" = "Status shown for now.";
+
+/* Row under the planner fallback card when more than one service serves both locations; opens the picker with them. Plural forms live in Localizable.stringsdict; the value is only the not-found fallback. */
+"on_demand.planner.more_serving_both" = "שירותים נוספים המשרתים את המסלול";
+
+/* Map item line when the place is inside a zone. %@ is the service name */
+"on_demand.address.inside" = "Inside %@";
+
+/* Map item line when the place is inside several zones; plural forms in Localizable.stringsdict */
+"on_demand.address.inside_more" = "נמצא בתוך אזור שירות פעיל";
+
+/* Map item line when the place is outside the nearest zone. %@ is the service name */
+"on_demand.address.outside" = "Outside %@";
+
+/* Layers sheet group header */
+"map_layers.group.transit" = "Transit";
+
+/* Layers sheet group header */
+"map_layers.group.rentals" = "Rentals";
+
+/* Layer tile subtitle when enabled */
+"map_layers.state.on" = "On";
+
+/* Layer tile subtitle when disabled */
+"map_layers.state.off" = "Off";
+
+/* Label before the rental range chips */
+"map_layers.min_range" = "Min. range";

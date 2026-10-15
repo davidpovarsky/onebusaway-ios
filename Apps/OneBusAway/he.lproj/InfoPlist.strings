@@ -1,0 +1,14 @@
+/* Shown when a nearby (proximity) alert asks for Always location access. Opens with the When In Use sentence, then names the background use. */
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "הצגת מיקומך ביחס לתחבורה הציבורית ועזרה בניווט בקלות. התראות קרבה לתחנה משתמשות במיקומך ברקע כדי להודיע לך כשאתה מתקרב לתחנה שבחרת, גם כאשר האפליקציה סגורה.";
+"NSLocationWhenInUseUsageDescription" = "הצגת מיקומך ביחס לתחבורה הציבורית ועזרה בניווט בקלות.";
+
+/* Purpose string for the one-time precise location request (NSLocationTemporaryUsageDescriptionDictionary key "MapStatusView"). */
+"MapStatusView" = "הצגת מיקומך ביחס לתחבורה הציבורית ועזרה בניווט בקלות.";
+
+/* Purpose string shown when the app requests HealthKit access to your walking and cycling speed. */
+"NSHealthShareUsageDescription" = "שימוש במהירות ההליכה או הרכיבה שלך מאפליקציית «בריאות» כדי להציג הערכות זמן הגעה מדויקות יותר.";
+"NSHealthUpdateUsageDescription" = "שימוש במהירות ההליכה או הרכיבה שלך מאפליקציית «בריאות» כדי להציג הערכות זמן הגעה מדויקות יותר.";
+
+/* Purpose strings shown when the app requests speech recognition / microphone for voice search. */
+"NSSpeechRecognitionUsageDescription" = "חיפוש קולי ממיר את הדיבור שלך לשאילתת תחבורה ציבורית.";
+"NSMicrophoneUsageDescription" = "חיפוש קולי מאזין כדי שתוכל לחפש תחנות, קווים ומקומות באמצעות דיבור.";

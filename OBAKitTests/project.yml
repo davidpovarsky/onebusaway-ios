@@ -2,7 +2,10 @@ targets:
   OBAKitTests:
     type: bundle.unit-test
     platform: iOS
-    sources: ["."]
+    sources:
+      - path: "."
+      - path: ../IsraelMOT/Tests
+        type: group
     # No settings overrides: this target inherits the Swift 6 language mode,
     # main-actor default isolation, approachable concurrency, and the
     # concurrency-groups-as-errors lock from Apps/Shared/app_shared.yml, like

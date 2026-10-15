@@ -35,6 +35,9 @@ targets:
           - "ThirdParty/MarqueeLabel/LICENSE"
       - path: OBAKit.h
         headerVisibility: public
+      - path: ../IsraelMOT
+        type: group
+        excludes: ["Tests"]
     dependencies:
       - target: OBAKitCore
       - package: FloatingPanel
