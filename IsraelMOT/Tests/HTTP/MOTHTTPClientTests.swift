@@ -20,18 +20,18 @@ struct MOTHTTPClientTests {
 
         // 1. Stop full data URL
         let stopURL = endpoints.stopFullDataURL(stopCode: MOTStopCode(5997))
-        #expect(stopURL.absoluteString.contains("StopData/GetStopFullData"))
+        #expect(stopURL.absoluteString.contains("Stops/GetStopFullData"))
         #expect(stopURL.absoluteString.contains("stopCode=5997"))
 
         // 2. Route full data URL
         let routeURL = endpoints.routeFullDataURL(routeID: MOTRouteID(33285))
-        #expect(routeURL.absoluteString.contains("RouteData/GetRouteFullData"))
+        #expect(routeURL.absoluteString.contains("Routes/GetRouteFullData"))
         #expect(routeURL.absoluteString.contains("routeId=33285"))
 
         // 3. Route stops URL
         let stopsURL = endpoints.routeStopsURL(routeID: MOTRouteID(33285))
-        #expect(stopsURL.absoluteString.contains("RouteData/GetRouteStops"))
-        #expect(stopsURL.absoluteString.contains("routeId=33285"))
+        #expect(stopsURL.absoluteString.contains("Routes/GetRouteStops"))
+        #expect(stopsURL.absoluteString.contains("RouteId=33285"))
 
         // 4. Search locations URL
         let searchURL = endpoints.searchLocationsURL(query: "ירושלים")

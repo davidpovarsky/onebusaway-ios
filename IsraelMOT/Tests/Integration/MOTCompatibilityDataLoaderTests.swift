@@ -134,4 +134,103 @@ struct MOTCompatibilityDataLoaderTests {
         #expect(firstArr["predicted"] as? Bool == true)
         #expect(firstArr["tripStatus"] != nil)
     }
+
+    @Test
+    func testOBACompatibilityBridgeStopDetailEntryEnvelope() {
+        let dummyStop = TransitStop(
+            code: MOTStopCode(5997),
+            internalID: MOTStopInternalID(11622),
+            name: TransitMultiLanguageName(he: "שרי ישראל", en: "Sarei Yisrael", ar: nil),
+            cityName: "ירושלים",
+            location: CLLocationCoordinate2D(latitude: 31.78913, longitude: 35.20465),
+            routes: []
+        )
+
+        let envelope = OBACompatibilityBridge.stopDetailResponse(stop: dummyStop)
+
+        #expect(envelope["code"] as? Int == 200)
+        guard let data = envelope["data"] as? [String: Any] else {
+            Issue.record("Expected data dictionary")
+            return
+        }
+
+        // Single stop MUST be in "entry", NOT "list"
+        #expect(data["entry"] != nil)
+        #expect(data["list"] == nil)
+
+        guard let entry = data["entry"] as? [String: Any] else {
+            Issue.record("Expected entry dictionary")
+            return
+        }
+        #expect(entry["id"] as? String == "mot:stop:5997")
+        #expect(entry["code"] as? String == "5997")
+    }
+
+    @Test
+    func testStableTripIDAcrossRefreshes() {
+        let dummyStop = TransitStop(
+            code: MOTStopCode(5997),
+            name: TransitMultiLanguageName(he: "שרי ישראל", en: nil, ar: nil),
+            cityName: "ירושלים",
+            location: CLLocationCoordinate2D(latitude: 31.78913, longitude: 35.20465),
+            routes: []
+        )
+
+        let fixedDate = Date(timeIntervalSince1970: 1700000000)
+        let arrival = TransitArrival(
+            routeID: MOTRouteID(33285),
+            lineName: "15",
+            destination: "תלפיות",
+            scheduledTime: fixedDate,
+            isRealTime: false
+        )
+
+        let envelope1 = OBACompatibilityBridge.stopArrivalsResponse(stop: dummyStop, arrivals: [arrival])
+        let envelope2 = OBACompatibilityBridge.stopArrivalsResponse(stop: dummyStop, arrivals: [arrival])
+
+        let entry1 = (envelope1["data"] as? [String: Any])?["entry"] as? [String: Any]
+        let entry2 = (envelope2["data"] as? [String: Any])?["entry"] as? [String: Any]
+
+        let arrs1 = entry1?["arrivalsAndDepartures"] as? [[String: Any]]
+        let arrs2 = entry2?["arrivalsAndDepartures"] as? [[String: Any]]
+
+        let tripId1 = arrs1?.first?["tripId"] as? String
+        let tripId2 = arrs2?.first?["tripId"] as? String
+
+        #expect(tripId1 != nil)
+        #expect(tripId1 == tripId2)
+        #expect(tripId1 == "mot:trip:33285_1700000000")
+    }
+
+    @Test
+    func testScheduledArrivalNeverPresentedAsRealTime() {
+        let dummyStop = TransitStop(
+            code: MOTStopCode(5997),
+            name: TransitMultiLanguageName(he: "שרי ישראל", en: nil, ar: nil),
+            cityName: "ירושלים",
+            location: CLLocationCoordinate2D(latitude: 31.78913, longitude: 35.20465),
+            routes: []
+        )
+
+        let arrival = TransitArrival(
+            routeID: MOTRouteID(33285),
+            lineName: "15",
+            destination: "תלפיות",
+            scheduledTime: Date().addingTimeInterval(600),
+            estimatedTime: nil,
+            minutesToArrival: nil,
+            isRealTime: false,
+            vehicleLocation: nil
+        )
+
+        let envelope = OBACompatibilityBridge.stopArrivalsResponse(stop: dummyStop, arrivals: [arrival])
+        let entry = (envelope["data"] as? [String: Any])?["entry"] as? [String: Any]
+        let arrs = entry?["arrivalsAndDepartures"] as? [[String: Any]]
+        let record = arrs?.first
+
+        #expect(record?["predicted"] as? Bool == false)
+        #expect(record?["status"] as? String == "scheduled")
+        #expect(record?["predictedArrivalTime"] == nil)
+        #expect(record?["tripStatus"] == nil)
+    }
 }

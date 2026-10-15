@@ -130,10 +130,10 @@
     {
       "identity": "otpkit",
       "kind": "remoteSourceControl",
-      "location": "https://github.com/OneBusAway/otpkit.git",
+      "location": "https://github.com/davidpovarsky/otpkit.git",
       "state": {
-        "branch": "main",
-        "revision": "22e4f33ee689df8ce46b4ce3d68ef30c8bf5c5c5"
+        "branch": "feature/hebrew-localization",
+        "revision": "52d7eab1582e3c31f4dbdba4b9742ecca5861c7e"
       }
     },
     {

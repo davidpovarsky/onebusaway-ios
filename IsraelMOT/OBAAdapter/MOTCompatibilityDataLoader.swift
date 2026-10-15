@@ -69,15 +69,63 @@ public final class MOTCompatibilityDataLoader: NSObject, URLDataLoader, @uncheck
 
     private func handleStopsForLocation(url: URL) async throws -> (Data, URLResponse) {
         let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        let query = components?.queryItems?.first(where: { $0.name.lowercased() == "query" })?.value?.trimmingCharacters(in: .whitespacesAndNewlines)
         let latStr = components?.queryItems?.first(where: { $0.name.lowercased() == "lat" })?.value
         let lonStr = components?.queryItems?.first(where: { $0.name.lowercased() == "lon" })?.value
+        let latSpanStr = components?.queryItems?.first(where: { $0.name.lowercased() == "latspan" })?.value
+        let lonSpanStr = components?.queryItems?.first(where: { $0.name.lowercased() == "lonspan" })?.value
+        let radiusStr = components?.queryItems?.first(where: { $0.name.lowercased() == "radius" })?.value
 
+        // 1. If search query is provided
+        if let q = query, !q.isEmpty {
+            // If query is a numeric stop code, resolve via GetStopFullData
+            if let stopCodeInt = Int(q) {
+                let code = MOTStopCode(stopCodeInt)
+                let targetURL = endpoints.stopFullDataURL(stopCode: code)
+                if let res: StopFullDataResponseDTOServiceResponse = try? await client.get(targetURL),
+                   let dto = res.data {
+                    let domainStop = MOTStopMapper.map(from: dto)
+                    let envelope = OBACompatibilityBridge.stopsForLocationResponse(stops: [domainStop])
+                    let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
+                    let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
+                    return (data, response)
+                }
+            }
+
+            // General location/station query
+            let searchURL = endpoints.searchLocationsURL(query: q)
+            if let res: LocationAutoCompleteDTOServiceResponse = try? await client.get(searchURL),
+               let items = res.data {
+                let domainStops = items.compactMap { MOTStopMapper.map(from: $0) }
+                let envelope = OBACompatibilityBridge.stopsForLocationResponse(stops: domainStops)
+                let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
+                let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
+                return (data, response)
+            }
+        }
+
+        // 2. Geographic coordinate search
         guard let lat = latStr.flatMap(Double.init), let lon = lonStr.flatMap(Double.init) else {
             return try await emptyStopsResponse(for: url)
         }
 
         let coord = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-        let targetURL = endpoints.stopsCloseToLocationURL(coordinate: coord)
+        let latSpan = latSpanStr.flatMap(Double.init)
+        let lonSpan = lonSpanStr.flatMap(Double.init)
+        let explicitRadius = radiusStr.flatMap(Double.init)
+
+        let targetURL: URL
+        if let explicitRadius = explicitRadius {
+            let radiusMeters = max(250.0, min(15000.0, explicitRadius))
+            targetURL = endpoints.stopsCloseToLocationByRadiusURL(coordinate: coord, radiusMeters: radiusMeters)
+        } else if let latSpan = latSpan, let lonSpan = lonSpan {
+            // Approximate degree to meters: 1 deg lat ~ 111km, 1 deg lon at ~32deg ~ 94km
+            let halfSpanMeters = max(latSpan * 111000.0, lonSpan * 94000.0) / 2.0
+            let radiusMeters = max(250.0, min(10000.0, halfSpanMeters))
+            targetURL = endpoints.stopsCloseToLocationByRadiusURL(coordinate: coord, radiusMeters: radiusMeters)
+        } else {
+            targetURL = endpoints.stopsCloseToLocationURL(coordinate: coord)
+        }
 
         do {
             let res: NearbyStopsResponseDTOServiceResponse = try await client.get(targetURL)
@@ -104,7 +152,7 @@ public final class MOTCompatibilityDataLoader: NSObject, URLDataLoader, @uncheck
                 return try await notFoundResponse(for: url)
             }
             let domainStop = MOTStopMapper.map(from: dto)
-            let envelope = OBACompatibilityBridge.stopsForLocationResponse(stops: [domainStop])
+            let envelope = OBACompatibilityBridge.stopDetailResponse(stop: domainStop)
             let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
             return (data, response)

@@ -133,16 +133,16 @@ public enum MOTItineraryMapper {
                 legGeometry: geometry,
                 distance: legDistance,
                 transitLeg: !isWalk,
-                rentedBike: false,
                 duration: legDuration,
                 realTime: isRealTime,
-                departureDelay: 0,
-                arrivalDelay: 0,
                 streetNames: nil,
                 pathway: nil,
                 steps: nil,
                 headsign: section.transport?.headsign,
-                intermediateStops: []
+                intermediateStops: [],
+                departureDelay: 0,
+                arrivalDelay: 0,
+                rentedBike: false
             )
 
             legs.append(leg)

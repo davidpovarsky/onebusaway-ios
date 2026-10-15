@@ -56,26 +56,32 @@ jobs:
         run: |
           scripts/generate_project OneBusAway --no-watch
 
+      - name: Pick the iOS Simulator
+        run: |
+          set -euo pipefail
+          UDID=$(scripts/resolve_simulator_udid)
+          echo "SIMULATOR_UDID=$UDID" >> "$GITHUB_ENV"
+          echo "Resolved simulator UDID: $UDID"
+
       - name: Run Israel MOT Unit Tests
         run: |
           set -euo pipefail
           xcodebuild test \
-            -project OneBusAway.xcodeproj \
+            -project OBAKit.xcodeproj \
             -scheme 'App' \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination "platform=iOS Simulator,id=${SIMULATOR_UDID}" \
             -derivedDataPath DerivedData \
             -only-testing:OBAKitTests/MOTDTODecodingTests \
             -only-testing:OBAKitTests/MOTMapperTests \
             -only-testing:OBAKitTests/MOTHTTPClientTests \
             -only-testing:OBAKitTests/MOTCompatibilityDataLoaderTests \
-            -only-testing:OBAKitTests/MOTTripPlanningTests \
-            -quiet || true
+            -only-testing:OBAKitTests/MOTTripPlanningTests
 
       - name: Build and Archive iOS App (Unsigned)
         run: |
           set -euo pipefail
           xcodebuild archive \
-            -project OneBusAway.xcodeproj \
+            -project OBAKit.xcodeproj \
             -scheme 'App' \
             -destination 'generic/platform=iOS' \
             -archivePath build/OneBusAway.xcarchive \
@@ -88,10 +94,18 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build/Payload
-          cp -r build/OneBusAway.xcarchive/Products/Applications/OneBusAway.app build/Payload/
+          APP_DIR=$(find build/OneBusAway.xcarchive/Products/Applications -name "*.app" -maxdepth 1 | head -n 1)
+          if [ -z "$APP_DIR" ]; then
+            echo "Error: No .app bundle found in archive!"
+            exit 1
+          fi
+          echo "Found app bundle: $APP_DIR"
+          cp -r "$APP_DIR" build/Payload/
           cd build
           zip -qry OneBusAway-Israel-unsigned.ipa Payload
           ls -lh OneBusAway-Israel-unsigned.ipa
+          # Verify IPA contents
+          unzip -l OneBusAway-Israel-unsigned.ipa | head -n 30
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4

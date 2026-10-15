@@ -64,6 +64,48 @@ public enum OBACompatibilityBridge {
         ]
     }
 
+    public static func stopDetailResponse(
+        stop: TransitStop,
+        currentTime: Date = Date()
+    ) -> [String: Any] {
+        let stopDict = serializeStop(stop)
+        var referencesAgencies: [String: [String: Any]] = [:]
+        var referencesRoutes: [String: [String: Any]] = [:]
+        var referencesStops: [String: [String: Any]] = [stopDict["id"] as! String: stopDict]
+
+        for route in stop.routes {
+            let routeDict = serializeRouteSummary(route)
+            let rId = routeDict["id"] as! String
+            referencesRoutes[rId] = routeDict
+
+            if let agId = route.agencyID {
+                let agDict = serializeAgency(id: agId, name: route.agencyName ?? "משרד התחבורה")
+                referencesAgencies[agDict["id"] as! String] = agDict
+            }
+        }
+
+        let references: [String: Any] = [
+            "agencies": Array(referencesAgencies.values),
+            "routes": Array(referencesRoutes.values),
+            "stops": Array(referencesStops.values),
+            "trips": [],
+            "situations": []
+        ]
+
+        let data: [String: Any] = [
+            "entry": stopDict,
+            "references": references
+        ]
+
+        return [
+            "code": 200,
+            "currentTime": Int(currentTime.timeIntervalSince1970 * 1000),
+            "text": "OK",
+            "version": 2,
+            "data": data
+        ]
+    }
+
     public static func stopArrivalsResponse(
         stop: TransitStop,
         arrivals: [TransitArrival],
@@ -92,7 +134,8 @@ public enum OBACompatibilityBridge {
         // Build ArrivalDeparture records
         for (idx, arr) in arrivals.enumerated() {
             let scopedRouteId = MOTIdentityFormatter.scopedRouteID(id: arr.routeID)
-            let syntheticTripId = "mot:trip:\(arr.routeID.rawValue)_\(idx)"
+            let schedSec = Int(arr.scheduledTime.timeIntervalSince1970)
+            let syntheticTripId = "mot:trip:\(arr.routeID.rawValue)_\(schedSec)"
 
             // Ensure route reference exists
             if referencesRoutes[scopedRouteId] == nil {
@@ -124,7 +167,7 @@ public enum OBACompatibilityBridge {
             referencesTrips[syntheticTripId] = tripDict
 
             let schedMs = Int(arr.scheduledTime.timeIntervalSince1970 * 1000)
-            let predMs = arr.estimatedTime.map { Int($0.timeIntervalSince1970 * 1000) }
+            let predMs = arr.isRealTime ? arr.estimatedTime.map { Int($0.timeIntervalSince1970 * 1000) } : nil
 
             var arrivalDict: [String: Any] = [
                 "routeId": scopedRouteId,
@@ -137,8 +180,6 @@ public enum OBACompatibilityBridge {
                 "scheduledArrivalTime": schedMs,
                 "scheduledDepartureTime": schedMs,
                 "predicted": arr.isRealTime,
-                "predictedArrivalTime": predMs as Any,
-                "predictedDepartureTime": predMs as Any,
                 "serviceDate": Int(Calendar.current.startOfDay(for: arr.scheduledTime).timeIntervalSince1970 * 1000),
                 "distanceFromStop": 0.0,
                 "numberOfStopsAway": 0,
@@ -150,7 +191,12 @@ public enum OBACompatibilityBridge {
                 "situationIds": []
             ]
 
-            if let loc = arr.vehicleLocation {
+            if let predMs = predMs {
+                arrivalDict["predictedArrivalTime"] = predMs
+                arrivalDict["predictedDepartureTime"] = predMs
+            }
+
+            if arr.isRealTime, let loc = arr.vehicleLocation {
                 arrivalDict["tripStatus"] = [
                     "activeTripId": syntheticTripId,
                     "blockTripSequence": 1,
@@ -158,7 +204,7 @@ public enum OBACompatibilityBridge {
                     "scheduledDistanceAlongTrip": 0.0,
                     "totalDistanceAlongTrip": 1000.0,
                     "position": ["lat": loc.latitude, "lon": loc.longitude],
-                    "predicted": arr.isRealTime,
+                    "predicted": true,
                     "status": "default",
                     "phase": "in_progress"
                 ]

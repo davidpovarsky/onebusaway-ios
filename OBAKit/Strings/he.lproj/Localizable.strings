@@ -105,16 +105,16 @@
 "clipboard.copied_text_confirmation" = "הועתק ללוח";
 
 /* Body of the the alert that appears when you try sending an email without Mail.app set up */
-"contact_us_helper.cant_send_email.body_fmt" = "ליצירת קשר, שלח דוא"ל אל %1$@. הקש על 'העתק מידע טכני' להעתקת מידע שיסייע לנו בפתרון הבעיה.";
+"contact_us_helper.cant_send_email.body_fmt" = "ליצירת קשר, שלח דוא\"ל אל %1$@. הקש על 'העתק מידע טכני' להעתקת מידע שיסייע לנו בפתרון הבעיה.";
 
 /* A button that lets the user copy an email address to the clipboard. */
-"contact_us_helper.cant_send_email.copy_email_button" = "העתק כתובת דוא"ל";
+"contact_us_helper.cant_send_email.copy_email_button" = "העתק כתובת דוא\"ל";
 
 /* A button that lets the user copy a default message, including debug info, to the clipboard. */
 "contact_us_helper.cant_send_email.copy_message_button" = "העתק מידע טכני";
 
 /* Title of the alert that appears when the user's device isn't configured to send email. */
-"contact_us_helper.cant_send_email.title" = "לא ניתן לשלוח דוא"ל מ-Mail.app";
+"contact_us_helper.cant_send_email.title" = "לא ניתן לשלוח דוא\"ל מ-Mail.app";
 
 /* Feedback email template subject for the app developers. %@ is the app name. */
 "contact_use_helper.feedback_subject.app" = "משוב על יישום %@";
@@ -183,9 +183,7 @@
 "custom_region_builder_controller.new_title" = "אזור מותאם אישית חדש";
 
 /* An error message displayed when a custom region's server cannot be validated. First parameter is the server URL, second is the underlying error message. */
-"custom_region_builder_controller.server_validation_error_fmt" = "לא ניתן להתחבר לשרת בכתובת %1$@. בדוק את הכתובת ונסה שוב.
-
-%2$@";
+"custom_region_builder_controller.server_validation_error_fmt" = "לא ניתן להתחבר לשרת בכתובת %1$@. בדוק את הכתובת ונסה שוב.\n\n%2$@";
 
 /* An explanation of dragging the map to highlight the service area of a custom region. */
 "custom_region_builder_controller.service_area_section.explanation" = "גרור את המפה לאזור השירות המשוער.";
@@ -284,7 +282,7 @@
 "donation_cell.learn_more_button_title" = "מידע נוסף";
 
 /* Title of the donation widget that appears on the stop view controller. %@ is the app name. */
-"donation_cell.title" = "תמיכה במיזם";
+"donation_cell.title" = "🚨 %@ זקוק לעזרתך";
 
 /* Button on the donation-dismiss alert that permanently stops donation requests. */
 "donations.donations_dismiss_alert.button_dismiss" = "לא כעת";
@@ -323,10 +321,10 @@
 "edit_bookmark_controller.stop_id_section.footer" = "משמש לאחזור זמני הגעה עבור סימנייה זו. הקש להעתקה.";
 
 /* Title of the read-only Stop ID row on the Edit Bookmark screen. */
-"edit_bookmark_controller.stop_id_row.title" = "מק"ט תחנה";
+"edit_bookmark_controller.stop_id_row.title" = "מק\"ט תחנה";
 
 /* VoiceOver hint for the read-only Stop ID row on the Edit Bookmark screen. Activating the row copies the stop ID. */
-"edit_bookmark_controller.stop_id_row.accessibility_hint" = "מעתיק את מק"ט התחנה ללוח.";
+"edit_bookmark_controller.stop_id_row.accessibility_hint" = "מעתיק את מק\"ט התחנה ללוח.";
 
 /* Don't add this bookmark to a group. */
 "edit_bookmark_controller.no_group_row" = "(ללא קבוצה)";
@@ -368,7 +366,7 @@
 "feedback_prompt.positive_button" = "כן!";
 
 /* Title of the alert asking how the rider likes the app. %@ is the app name. */
-"feedback_prompt.title" = "משוב על השירות";
+"feedback_prompt.title" = "נהנה מ-%@?";
 
 /* A voiceover title describing the 'grabber' for controlling the visibility of a card. */
 "floating_panel.controller.accessibility_label" = "חלונית מידע";
@@ -476,7 +474,7 @@
 "locationservices_alert_imprecise.message" = "לדיוק מרבי בזיהוי התחנות הקרובות ביותר אליך, מומלץ לאפשר מיקום מדויק בהגדרות המכשיר.";
 
 /* Title of the alert prompting the user to upgrade from approximate to precise location. %@ is the app name. */
-"locationservices_alert_imprecise.title" = "מיקום מקורב פעיל";
+"locationservices_alert_imprecise.title" = "%@ פועל בצורה מיטבית עם מיקום מדויק";
 
 /* Cancel button in the precise-location alert; dismisses without raising accuracy from reduced to full. */
 "locationservices_alert_keep_precise_location_off.button" = "השאר מיקום מדויק כבוי";
@@ -491,7 +489,7 @@
 "locationservices_alert_off.message" = "שירותי המיקום כבויים. לא נוכל לאתר תחנות קרובות באופן אוטומטי.";
 
 /* Title of the alert prompting the user to turn on location services. %@ is the app name. */
-"locationservices_alert_off.title" = "שירותי מיקום כבויים";
+"locationservices_alert_off.title" = "%@ פועל בצורה מיטבית עם שירותי המיקום שלך.";
 
 /* Button that grants one-time full-accuracy location for the current map session while keeping the default reduced-accuracy setting. */
 "locationservices_alert_request_precise_location_once.button" = "אפשר פעם אחת";
@@ -785,7 +783,7 @@
 "more_controller.privacy_row_title" = "מדיניות פרטיות";
 
 /* A row that opens the App Store review form. %@ is the app name. */
-"more_controller.rate_app" = "דרג את היישום ב-App Store";
+"more_controller.rate_app" = "דרג את %@";
 
 /* Opens the agency's text information service, which may be an sms: link or a web page — so the label names neither. */
 "more_controller.text_agency" = "שלח הודעה למפעיל";
@@ -1247,7 +1245,7 @@
 "search_controller.bookmarks.header" = "סימניות";
 
 /* Body for the empty set indicator on the Search controller. */
-"search_controller.empty_set.body" = "הקלד כתובת, שם קו, מק"ט תחנה או מספר רכב לחיפוש.";
+"search_controller.empty_set.body" = "הקלד כתובת, שם קו, מק\"ט תחנה או מספר רכב לחיפוש.";
 
 /* Title for the empty set indicator on the Search controller. */
 "search_controller.empty_set.title" = "חיפוש";
@@ -1451,16 +1449,16 @@
 "settings_controller.survey_section.title" = "סקרים";
 
 /* Settings > Walking Speed > Average preset label */
-"settings_controller.walking_speed.avg" = "ממוצעת (~4.8 קמ"ש)";
+"settings_controller.walking_speed.avg" = "ממוצעת (~4.8 קמ\"ש)";
 
 /* Settings > Walking Speed > Fast preset label */
-"settings_controller.walking_speed.fast" = "מהירה (~6.4 קמ"ש)";
+"settings_controller.walking_speed.fast" = "מהירה (~6.4 קמ\"ש)";
 
 /* Settings > Walking Speed > HealthKit denial or no-data toast */
 "settings_controller.walking_speed.healthkit_unavailable" = "לא ניתן לסנכרן מהירות מ-Health.";
 
 /* Settings > Walking Speed > Slow preset label */
-"settings_controller.walking_speed.slow" = "מתונה (~3.2 קמ"ש)";
+"settings_controller.walking_speed.slow" = "מתונה (~3.2 קמ\"ש)";
 
 /* Settings > Walking Speed section > Speed picker */
 "settings_controller.walking_speed.title" = "מהירות הליכה";
@@ -2252,7 +2250,7 @@
 "on_demand.card.details" = "Details";
 
 /* Footer of the zone card; plural forms in Localizable.stringsdict */
-"on_demand.card.more_services" = "ועוד שירותים לפי דרישה";
+"on_demand.card.more_services" = "עוד %d שירותים כאן";
 
 /* Card and picker status while running. %@ is the end time */
 "on_demand.status.open_until" = "Open · until %@";
@@ -2351,10 +2349,10 @@
 "on_demand.bar.a11y.more_services" = "All services here";
 
 /* Picker title for the services containing the point; plural forms in Localizable.stringsdict */
-"on_demand.picker.title" = "בחר שירות";
+"on_demand.picker.title" = "%d שירותים כאן";
 
 /* Picker title for every matched service; plural forms in Localizable.stringsdict */
-"on_demand.picker.title_nearby" = "שירותים זמינים בסביבה";
+"on_demand.picker.title_nearby" = "%d שירותים בסביבה";
 
 /* Picker subtitle. %@ is a locality */
 "on_demand.picker.subtitle_location" = "%@ · Your location";
@@ -2411,7 +2409,7 @@
 "on_demand.detail.drop_off" = "Drop-off";
 
 /* Fallback for unnamed areas; plural forms in Localizable.stringsdict */
-"on_demand.detail.zone_count" = "אזורי כיסוי";
+"on_demand.detail.zone_count" = "%d אזורים";
 
 /* Hours column for weekdays without service */
 "on_demand.detail.no_service" = "No service";
@@ -2438,13 +2436,13 @@
 "on_demand.planner.status_now" = "Status shown for now.";
 
 /* Row under the planner fallback card when more than one service serves both locations; opens the picker with them. Plural forms live in Localizable.stringsdict; the value is only the not-found fallback. */
-"on_demand.planner.more_serving_both" = "שירותים נוספים המשרתים את המסלול";
+"on_demand.planner.more_serving_both" = "עוד %d שירותים משרתים את שני המיקומים";
 
 /* Map item line when the place is inside a zone. %@ is the service name */
 "on_demand.address.inside" = "Inside %@";
 
 /* Map item line when the place is inside several zones; plural forms in Localizable.stringsdict */
-"on_demand.address.inside_more" = "נמצא בתוך אזור שירות פעיל";
+"on_demand.address.inside_more" = "בתוך %1$@ ועוד %2$d";
 
 /* Map item line when the place is outside the nearest zone. %@ is the service name */
 "on_demand.address.outside" = "Outside %@";
