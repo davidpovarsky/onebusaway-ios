@@ -215,6 +215,57 @@ struct MapPanelRootView: View {
     }
 
     var body: some View {
+        mapWithGeometryAndOverlays
+            .onChange(of: sheetRoutes.map(\.id)) { _, _ in
+                // The focus hides the dock, and leaving the bar drops the highlight;
+                // a zone detail page keeps it until the page closes (spec 2.3, ruling F15).
+                let heldHighlight = probeController.highlightedServiceID
+                probeController.setSurfaceFocus(coordinator.currentRoute != .home || !coordinator.stackedRoutes.isEmpty)
+                if isOnDemandDetailShown {
+                    probeController.highlightedServiceID = heldHighlight
+                }
+            }
+            .onChange(of: isOnDemandDetailShown) { wasShown, isShown in
+                guard wasShown, !isShown, !isOnDemandPickerShown else { return }
+                probeController.highlightedServiceID = nil
+            }
+            .onChange(of: isOnDemandPickerShown) { wasShown, _ in
+                Self.onDemandPickerStackDidChange(wasShown: wasShown, routes: sheetRoutes, probeController: probeController)
+            }
+            .onChange(of: sheetHeight) { _, newValue in
+                probeController.setMapMostlyCovered(newValue >= halfScreenHeight)
+            }
+            .onChange(of: layersModel.isOnDemandLayerEnabled, initial: true) { _, enabled in
+                probeController.setLayerEnabled(enabled)
+            }
+            .onChange(of: probeController.highlightedServiceID) { _, id in
+                layersModel.setHighlightedService(id)
+            }
+            .floatingSheet(coordinator: coordinator) { route in
+                buildSheetContent(for: route)
+            }
+            .onAppear {
+                mapViewModel.start()
+                applyPendingRentalsFocus()
+            }
+            .onReceive(application.notificationCenter.publisher(for: .rentalsDeepLinkPending)) { _ in
+                applyPendingRentalsFocus()
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    mapViewModel.onAppBecameActive()
+                }
+            }
+            .onChange(of: mapViewModel.didReceiveInitialLocation) { _, received in
+                // Recenter once on the first fix, so granting permission after
+                // launch moves the camera off the last region the user set.
+                guard received else { return }
+                needsInitialRecenter = true
+                attemptInitialRecenter()
+            }
+    }
+
+    private var baseMap: some View {
         Map(position: $cameraPosition, selection: $mapSelection) {
             UserAnnotation()
             onDemandZoneContent
@@ -225,269 +276,220 @@ struct MapPanelRootView: View {
             tripPlannerMapContent(for: tripPlannerDisplay)
             tripFocusMapContent(for: tripFocusDisplay.display)
         }
-        .onMapCameraChange(frequency: .onEnd) { context in
-            viewportRecorder.record(context.rect)
-            visibleRegion = context.region
-            visibleMapRectHeight = context.rect.height
-            // Feed the visible region to the trip planner display model so it can
-            // frame results and answer region queries.
-            tripPlannerDisplay.updateVisibleRegion(context.region)
-            layersModel.viewportDidChange(context.rect)
-            layersModel.updateViewport(mapRect: context.rect, mapSize: mapSize)
-            probeController.mapDidSettle(
-                center: context.region.center,
-                zoomLevel: OnDemandZoomLevel.level(forVisibleHeight: context.rect.height)
-            )
-            // Keep the "Zoom in for stops" pill in sync with the stop-loading
-            // threshold by updating it before the stop-loading early return, so it
-            // also works when the map is zoomed out.
-            mapViewModel.updateZoomWarning(
-                MapRegionManager.shouldShowZoomInWarning(forVisibleMapRectHeight: context.rect.height)
-            )
-            updateRentalZoomHint(visibleMapRectHeight: context.rect.height)
+    }
 
-            // Same stop-loading zoom gate as the UIKit region-change path.
-            isZoomedInForStops = context.rect.height <= MapRegionManager.requiredHeightToShowStops
-            guard isZoomedInForStops else {
-                // Zoomed out: clear stops, drop labels (so bookmark pins don't
-                // keep theirs painted over the map), and cancel any pending
-                // request.
-                showStopLabels = false
-                application.mapRegionManager.cancelScheduledStopsRequest()
-                stopsObserver.reset()
-                return
+    private var mapWithCameraAndInteraction: some View {
+        baseMap
+            .onMapCameraChange(frequency: .onEnd) { context in
+                handleCameraChange(context)
             }
-            recomputeStopLabels()
-            // Both keep running with the stops layer off, like the UIKit map:
-            // its `isStopsLayerEnabled` guard still arms the request timer,
-            // because the nearby stops list reads `mapRegionManager.stops`
-            // directly — and `updateViewport` is the observer's prune step.
-            // Only rendering is gated, in the `ForEach` above.
-            stopsObserver.updateViewport(context.region)
-            guard !searchDisplay.suppressesAmbientStops,
-                  !tripPlannerDisplay.isShowingTrip,
-                  !tripFocusDisplay.isShowingTrip else { return }
-            application.mapRegionManager.scheduleStopsRequest(in: context.region)
-        }
-        // The map-type toggle changes the label gate (labels only show on the
-        // standard map), but doesn't move the camera — re-evaluate here so labels
-        // don't stay stale until the user next pans. The UIKit path has no
-        // equivalent hook: it only re-applies `isHidingExtraStopAnnotationData`
-        // from `reloadStopAnnotations`, i.e. on a region change.
-        .onChange(of: mapViewModel.mapType) { _, _ in
-            recomputeStopLabels()
-        }
-        // Switching Bikes on while zoomed out must raise the rental hint now, not
-        // at the next camera settle. Every layer toggle moves the badge count.
-        .onChange(of: layersModel.enabledLayerCount) { _, _ in
-            guard let visibleMapRectHeight else { return }
-            updateRentalZoomHint(visibleMapRectHeight: visibleMapRectHeight)
-        }
-        .onChange(of: mismatchCamera.applyLaunch) { _, flag in
-            guard flag else { return }
-            mismatchCamera.applyLaunch = false
-            applyLaunchCamera()
-        }
-        .onChange(of: mismatchCamera.showSelectedServiceRect) { _, flag in
-            guard flag else { return }
-            mismatchCamera.showSelectedServiceRect = false
-            guard let selected = application.currentRegion else { return }
-            cameraPosition = .rect(selected.serviceRect)
-            viewportRecorder.record(selected.serviceRect)
-        }
-        .onChange(of: mapSelection) {
-            guard let selection = mapSelection else { return }
-            switch selection {
-            case .stop(let stopID):
-                coordinator.push(.stopDetails(stopID: stopID))
-            case .rental(let rentalID):
-                // Pin before pushing: the rider just tapped this pin, so it is live now,
-                // and the sheet must keep naming it even if the map later moves somewhere
-                // the feed no longer reports it from. See `pinForOpenSheet`.
-                if let rental = layersModel.rental(withID: rentalID) {
-                    layersModel.pinForOpenSheet([rental])
-                }
-                reportRentalSelected(isCluster: false)
-                coordinator.push(.rentalDetail(rentalID: rentalID))
-            case .rentalCluster(let clusterID):
-                let members = layersModel.rentalItems
-                    .first { $0.id == clusterID }?
-                    .members ?? []
-                guard !members.isEmpty else { break }
-                layersModel.pinForOpenSheet(members)
-                reportRentalSelected(isCluster: true)
-                coordinator.push(.rentalCluster(memberIDs: members.map(\.id)))
-            case .onDemandZone(let markerID):
-                guard let route = layersModel.onDemandServiceRoute(forMarkerID: markerID, locationCheck: probeController.locationCheck(forServiceID:)) else { break }
-                coordinator.push(route)
-            case .tripPlannerAnnotation(let identifier):
-                // Hand the tap straight back to OTPKit, which owns what a pin on
-                // its own route means. No route is pushed: the planner sheet is
-                // already on the stack and reacts to this itself.
-                tripPlannerDisplay.handleAnnotationSelection(identifier: identifier)
+            .onChange(of: mapViewModel.mapType) { _, _ in
+                recomputeStopLabels()
             }
-            mapSelection = nil
-        }
-        // A searched result, a trip plan and an open trip stay drawn for exactly as
-        // long as the sheet that owns them is on the stack. Watching the stack —
-        // rather than clearing from the owning sheet's `onDisappear` — keeps the
-        // drawing alive across the content teardowns the sheet system performs
-        // without dismissing anything, and still clears on a real exit, including
-        // the drag-down the OS routes through `truncateStacked`.
-        .onChange(of: coordinator.stackedRoutes) { _, _ in
-            searchDisplay.clearIfOwnerAbsent(from: coordinator.allRoutes)
-            // Clear the trip planner when `.tripPlanner` is no longer on the stack.
-            // Unlike searchDisplay which uses `.clearIfOwnerAbsent`, the trip planner
-            // has no owner concept — it has a plain `clear()`. The check is simple: if
-            // the trip planner route isn't on the stack, clear the model.
-            let hasActiveTripPlanner = coordinator.allRoutes
-                .contains { route in
-                    if case .tripPlanner = route {
-                        return true
-                    }
-                    return false
-                }
-            if !hasActiveTripPlanner {
-                tripPlannerDisplay.clear()
+            .onChange(of: layersModel.enabledLayerCount) { _, _ in
+                guard let visibleMapRectHeight else { return }
+                updateRentalZoomHint(visibleMapRectHeight: visibleMapRectHeight)
             }
-            tripFocusDisplay.clearIfOwnerAbsent(from: coordinator.allRoutes)
-        }
-        .onChange(of: searchDisplay.cameraTarget) { _, target in
-            guard let target else { return }
-            switch target {
-            case .coordinate(let coordinate, let animated):
-                let region = MKCoordinateRegion(
-                    centeredOn: coordinate,
-                    zoomLevel: 16,
-                    mapSize: mapSize
-                )
-                if animated {
-                    withAnimation { cameraPosition = .region(region) }
-                } else {
-                    cameraPosition = .region(region)
-                }
-            case .rect(let rect):
-                withAnimation { cameraPosition = .rect(rect) }
+            .onChange(of: mismatchCamera.applyLaunch) { _, flag in
+                guard flag else { return }
+                mismatchCamera.applyLaunch = false
+                applyLaunchCamera()
             }
-            searchDisplay.consumeCameraTarget()
-        }
-        .onChange(of: tripPlannerDisplay.cameraTarget) { _, target in
-            guard let target else { return }
-            applyTripPlannerCameraTarget(target)
-            tripPlannerDisplay.consumeCameraTarget()
-        }
-        .onChange(of: tripFocusDisplay.cameraTarget) { _, target in
-            guard let target else { return }
-            applyTripFocusCameraTarget(target)
-            tripFocusDisplay.consumeCameraTarget()
-        }
-        .mapStyle(mapViewModel.mapType.styleDescriptor(
-            showingPointsOfInterest: layersModel.showsPointsOfInterest
-        ).mapStyle)
-        .safeAreaPadding(.bottom, 180)
-        .onGeometryChange(for: CGFloat.self) { proxy in
-            proxy.size.height / 2
-        } action: { _, newValue in
-            halfScreenHeight = newValue
-        }
-        // TODO: Detent-aware bottom padding. Pinned to the collapsed sheet
-        // height today, so dragging the sheet up to `.medium` or
-        // `largeDetent` lets the user-location annotation and any future map
-        // overlays slip under the sheet.
-        .overlay(alignment: .topLeading) {
-            weatherButton
-        }
-        .onGeometryChange(for: CGSize.self) { proxy in
-            proxy.size
-        } action: { _, newValue in
-            mapSize = newValue
-            // Clustering is computed in screen space, so it needs this size. The
-            // camera can settle before the first non-zero size is reported, in
-            // which case the `.onMapCameraChange` handler above already ran with
-            // `.zero` and fell back to one marker per vehicle.
-            layersModel.updateMapSize(newValue)
-            // On a cold launch a cached location fix can arrive before the Map
-            // reports its first non-zero size, in which case the recenter in
-            // `.onChange(of: didReceiveInitialLocation)` bails (`centerOnUser`
-            // guards against a `.zero` size). That flag latches exactly once,
-            // so retry here when a real size arrives.
-            attemptInitialRecenter()
-        }
-        .overlay(alignment: .top) {
-            MapStatusPill(
-                state: mapViewModel.topPillState,
-                onZoomInForStops: zoomInForStops,
-                onPermissionTap: handlePermissionTap
-            )
-            .padding(.top, ThemeMetrics.padding)
+            .onChange(of: mismatchCamera.showSelectedServiceRect) { _, flag in
+                guard flag else { return }
+                mismatchCamera.showSelectedServiceRect = false
+                guard let selected = application.currentRegion else { return }
+                cameraPosition = .rect(selected.serviceRect)
+                viewportRecorder.record(selected.serviceRect)
+            }
+            .onChange(of: mapSelection) {
+                handleMapSelection()
+            }
+            .onChange(of: coordinator.stackedRoutes) { _, _ in
+                handleStackedRoutesChange()
+            }
+            .onChange(of: searchDisplay.cameraTarget) { _, target in
+                guard let target else { return }
+                applySearchCameraTarget(target)
+                searchDisplay.consumeCameraTarget()
+            }
+            .onChange(of: tripPlannerDisplay.cameraTarget) { _, target in
+                guard let target else { return }
+                applyTripPlannerCameraTarget(target)
+                tripPlannerDisplay.consumeCameraTarget()
+            }
+            .onChange(of: tripFocusDisplay.cameraTarget) { _, target in
+                guard let target else { return }
+                applyTripFocusCameraTarget(target)
+                tripFocusDisplay.consumeCameraTarget()
+            }
+            .mapStyle(mapViewModel.mapType.styleDescriptor(
+                showingPointsOfInterest: layersModel.showsPointsOfInterest
+            ).mapStyle)
+            .safeAreaPadding(.bottom, 180)
+    }
+
+    private var mapWithGeometryAndOverlays: some View {
+        mapWithCameraAndInteraction
             .onGeometryChange(for: CGFloat.self) { proxy in
-                proxy.size.height
+                proxy.size.height / 2
             } action: { _, newValue in
-                // The pill collapses to `EmptyView` for `.hidden`, but the
-                // enclosing padding modifier can still report a non-zero
-                // height — force to zero here so overlays that offset off
-                // `pillHeight` don't get a phantom top gap.
-                pillHeight = mapViewModel.topPillState == .hidden ? 0 : newValue
+                halfScreenHeight = newValue
             }
-        }
-        .overlay(alignment: .bottomTrailing) {
-            mapControlsCluster
-        }
-        .overlay(alignment: .topTrailing) {
-            moreButton
-        }
-        .overlay(alignment: .bottomLeading) {
-            myTripButton
-        }
-        .overlay(alignment: .bottom) {
-            onDemandDock
-        }
-        .onChange(of: sheetRoutes.map(\.id)) { _, _ in
-            // The focus hides the dock, and leaving the bar drops the highlight;
-            // a zone detail page keeps it until the page closes (spec 2.3, ruling F15).
-            let heldHighlight = probeController.highlightedServiceID
-            probeController.setSurfaceFocus(coordinator.currentRoute != .home || !coordinator.stackedRoutes.isEmpty)
-            if isOnDemandDetailShown {
-                probeController.highlightedServiceID = heldHighlight
+            .onGeometryChange(for: CGSize.self) { proxy in
+                proxy.size
+            } action: { _, newValue in
+                mapSize = newValue
+                layersModel.updateMapSize(newValue)
+                attemptInitialRecenter()
             }
-        }
-        .onChange(of: isOnDemandDetailShown) { wasShown, isShown in
-            guard wasShown, !isShown, !isOnDemandPickerShown else { return }
-            probeController.highlightedServiceID = nil
-        }
-        .onChange(of: isOnDemandPickerShown) { wasShown, _ in
-            Self.onDemandPickerStackDidChange(wasShown: wasShown, routes: sheetRoutes, probeController: probeController)
-        }
-        .onChange(of: sheetHeight) { _, newValue in
-            probeController.setMapMostlyCovered(newValue >= halfScreenHeight)
-        }
-        .onChange(of: layersModel.isOnDemandLayerEnabled, initial: true) { _, enabled in
-            probeController.setLayerEnabled(enabled)
-        }
-        .onChange(of: probeController.highlightedServiceID) { _, id in
-            layersModel.setHighlightedService(id)
-        }
-        .floatingSheet(coordinator: coordinator) { route in
-            buildSheetContent(for: route)
-        }
-        .onAppear {
-            mapViewModel.start()
-            applyPendingRentalsFocus()
-        }
-        .onReceive(application.notificationCenter.publisher(for: .rentalsDeepLinkPending)) { _ in
-            applyPendingRentalsFocus()
-        }
-        .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .active {
-                mapViewModel.onAppBecameActive()
+            .overlay(alignment: .topLeading) {
+                weatherButton
             }
+            .overlay(alignment: .top) {
+                topStatusPillOverlay
+            }
+            .overlay(alignment: .bottomTrailing) {
+                mapControlsCluster
+            }
+            .overlay(alignment: .topTrailing) {
+                moreButton
+            }
+            .overlay(alignment: .bottomLeading) {
+                myTripButton
+            }
+            .overlay(alignment: .bottom) {
+                onDemandDock
+            }
+    }
+
+    private var topStatusPillOverlay: some View {
+        MapStatusPill(
+            state: mapViewModel.topPillState,
+            onZoomInForStops: zoomInForStops,
+            onPermissionTap: handlePermissionTap
+        )
+        .padding(.top, ThemeMetrics.padding)
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.size.height
+        } action: { _, newValue in
+            pillHeight = mapViewModel.topPillState == .hidden ? 0 : newValue
         }
-        .onChange(of: mapViewModel.didReceiveInitialLocation) { _, received in
-            // Recenter once on the first fix, so granting permission after
-            // launch moves the camera off the last region the user set.
-            guard received else { return }
-            needsInitialRecenter = true
-            attemptInitialRecenter()
+    }
+
+    private func handleCameraChange(_ context: MapCameraUpdateContext) {
+        viewportRecorder.record(context.rect)
+        visibleRegion = context.region
+        visibleMapRectHeight = context.rect.height
+        // Feed the visible region to the trip planner display model so it can
+        // frame results and answer region queries.
+        tripPlannerDisplay.updateVisibleRegion(context.region)
+        layersModel.viewportDidChange(context.rect)
+        layersModel.updateViewport(mapRect: context.rect, mapSize: mapSize)
+        probeController.mapDidSettle(
+            center: context.region.center,
+            zoomLevel: OnDemandZoomLevel.level(forVisibleHeight: context.rect.height)
+        )
+        // Keep the "Zoom in for stops" pill in sync with the stop-loading
+        // threshold by updating it before the stop-loading early return, so it
+        // also works when the map is zoomed out.
+        mapViewModel.updateZoomWarning(
+            MapRegionManager.shouldShowZoomInWarning(forVisibleMapRectHeight: context.rect.height)
+        )
+        updateRentalZoomHint(visibleMapRectHeight: context.rect.height)
+
+        // Same stop-loading zoom gate as the UIKit region-change path.
+        isZoomedInForStops = context.rect.height <= MapRegionManager.requiredHeightToShowStops
+        guard isZoomedInForStops else {
+            // Zoomed out: clear stops, drop labels (so bookmark pins don't
+            // keep theirs painted over the map), and cancel any pending
+            // request.
+            showStopLabels = false
+            application.mapRegionManager.cancelScheduledStopsRequest()
+            stopsObserver.reset()
+            return
+        }
+        recomputeStopLabels()
+        // Both keep running with the stops layer off, like the UIKit map:
+        // its `isStopsLayerEnabled` guard still arms the request timer,
+        // because the nearby stops list reads `mapRegionManager.stops`
+        // directly — and `updateViewport` is the observer's prune step.
+        // Only rendering is gated, in the `ForEach` above.
+        stopsObserver.updateViewport(context.region)
+        guard !searchDisplay.suppressesAmbientStops,
+              !tripPlannerDisplay.isShowingTrip,
+              !tripFocusDisplay.isShowingTrip else { return }
+        application.mapRegionManager.scheduleStopsRequest(in: context.region)
+    }
+
+    private func handleMapSelection() {
+        guard let selection = mapSelection else { return }
+        switch selection {
+        case .stop(let stopID):
+            coordinator.push(.stopDetails(stopID: stopID))
+        case .rental(let rentalID):
+            // Pin before pushing: the rider just tapped this pin, so it is live now,
+            // and the sheet must keep naming it even if the map later moves somewhere
+            // the feed no longer reports it from. See `pinForOpenSheet`.
+            if let rental = layersModel.rental(withID: rentalID) {
+                layersModel.pinForOpenSheet([rental])
+            }
+            reportRentalSelected(isCluster: false)
+            coordinator.push(.rentalDetail(rentalID: rentalID))
+        case .rentalCluster(let clusterID):
+            let members = layersModel.rentalItems
+                .first { $0.id == clusterID }?
+                .members ?? []
+            guard !members.isEmpty else { break }
+            layersModel.pinForOpenSheet(members)
+            reportRentalSelected(isCluster: true)
+            coordinator.push(.rentalCluster(memberIDs: members.map(\.id)))
+        case .onDemandZone(let markerID):
+            guard let route = layersModel.onDemandServiceRoute(forMarkerID: markerID, locationCheck: probeController.locationCheck(forServiceID:)) else { break }
+            coordinator.push(route)
+        case .tripPlannerAnnotation(let identifier):
+            // Hand the tap straight back to OTPKit, which owns what a pin on
+            // its own route means. No route is pushed: the planner sheet is
+            // already on the stack and reacts to this itself.
+            tripPlannerDisplay.handleAnnotationSelection(identifier: identifier)
+        }
+        mapSelection = nil
+    }
+
+    private func handleStackedRoutesChange() {
+        searchDisplay.clearIfOwnerAbsent(from: coordinator.allRoutes)
+        // Clear the trip planner when `.tripPlanner` is no longer on the stack.
+        // Unlike searchDisplay which uses `.clearIfOwnerAbsent`, the trip planner
+        // has no owner concept — it has a plain `clear()`. The check is simple: if
+        // the trip planner route isn't on the stack, clear the model.
+        let hasActiveTripPlanner = coordinator.allRoutes
+            .contains { route in
+                if case .tripPlanner = route {
+                    return true
+                }
+                return false
+            }
+        if !hasActiveTripPlanner {
+            tripPlannerDisplay.clear()
+        }
+        tripFocusDisplay.clearIfOwnerAbsent(from: coordinator.allRoutes)
+    }
+
+    private func applySearchCameraTarget(_ target: MapSearchDisplayModel.CameraTarget) {
+        switch target {
+        case .coordinate(let coordinate, let animated):
+            let region = MKCoordinateRegion(
+                centeredOn: coordinate,
+                zoomLevel: 16,
+                mapSize: mapSize
+            )
+            if animated {
+                withAnimation { cameraPosition = .region(region) }
+            } else {
+                cameraPosition = .region(region)
+            }
+        case .rect(let rect):
+            withAnimation { cameraPosition = .rect(rect) }
         }
     }
 
