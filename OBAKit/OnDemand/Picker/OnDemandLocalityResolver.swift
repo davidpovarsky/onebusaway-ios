@@ -56,8 +56,8 @@ struct OnDemandLocalityResolver {
     }
 }
 
-private final class GeocoderBox: @unchecked Sendable {
-    let geocoder = CLGeocoder()
+nonisolated private final class GeocoderBox: @unchecked Sendable {
+    nonisolated(unsafe) let geocoder = CLGeocoder()
 }
 
 /// Resumes a continuation with the first answer only.
