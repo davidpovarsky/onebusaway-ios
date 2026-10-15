@@ -7,13 +7,13 @@
 
 import Foundation
 
-public struct StopFullDataResponseDTOServiceResponse: Codable, Sendable {
+nonisolated public struct StopFullDataResponseDTOServiceResponse: Codable, Sendable {
     public let data: StopFullDataResponseDTO?
     public let success: Bool
     public let message: String?
 }
 
-public struct StopFullDataResponseDTO: Codable, Sendable {
+nonisolated public struct StopFullDataResponseDTO: Codable, Sendable {
     public let name: MultiLanguageDTO?
     public let cityName: String?
     public let streetName: String?
@@ -27,7 +27,7 @@ public struct StopFullDataResponseDTO: Codable, Sendable {
     public let platformNumber: String?
 }
 
-public struct RouteInStopDTO: Codable, Sendable {
+nonisolated public struct RouteInStopDTO: Codable, Sendable {
     public let routeId: Int
     public let oppositeDirectionId: Int?
     public let routeName: String // e.g. "31"
@@ -38,7 +38,7 @@ public struct RouteInStopDTO: Codable, Sendable {
     public let destinationName: String?
 }
 
-public struct NearbyStopsResponseDTOServiceResponse: Codable, Sendable {
+nonisolated public struct NearbyStopsResponseDTOServiceResponse: Codable, Sendable {
     public let data: [StopFullDataResponseDTO]?
     public let success: Bool
     public let message: String?

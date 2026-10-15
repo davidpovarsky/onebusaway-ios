@@ -7,13 +7,13 @@
 
 import Foundation
 
-public struct LocationAutoCompleteDTOServiceResponse: Codable, Sendable {
+nonisolated public struct LocationAutoCompleteDTOServiceResponse: Codable, Sendable {
     public let data: [LocationAutoCompleteDTO]?
     public let success: Bool
     public let message: String?
 }
 
-public struct LocationAutoCompleteDTO: Codable, Sendable {
+nonisolated public struct LocationAutoCompleteDTO: Codable, Sendable {
     public let title: String
     public let id: String?
     public let addressDetails: AddressLocationDTO?
@@ -23,7 +23,7 @@ public struct LocationAutoCompleteDTO: Codable, Sendable {
     public let isCity: Bool?
 }
 
-public struct AddressLocationDTO: Codable, Sendable {
+nonisolated public struct AddressLocationDTO: Codable, Sendable {
     public let label: String?
     public let countryName: String?
     public let city: String?
@@ -31,7 +31,7 @@ public struct AddressLocationDTO: Codable, Sendable {
     public let houseNumber: String?
 }
 
-public struct CoordinateDTO: Codable, Sendable {
+nonisolated public struct CoordinateDTO: Codable, Sendable {
     public let lat: Double
     public let lng: Double
 

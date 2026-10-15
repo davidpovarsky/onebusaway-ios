@@ -8,7 +8,7 @@
 import Foundation
 
 /// Specific errors returned or detected when interacting with the MOT transit API.
-public enum MOTHTTPError: LocalizedError, Sendable {
+nonisolated public enum MOTHTTPError: LocalizedError, Sendable {
     /// The request was rejected by the F5 Web Application Firewall (HTTP 403 Forbidden).
     case wafBlocked(supportID: String?)
 

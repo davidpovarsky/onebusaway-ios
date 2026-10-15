@@ -8,11 +8,15 @@
 import Foundation
 
 /// Represents the public 4-to-5 digit bus stop code displayed on physical signs in Israel (e.g., 5997).
-public struct MOTStopCode: RawRepresentable, Hashable, Codable, Sendable, CustomStringConvertible {
+nonisolated public struct MOTStopCode: RawRepresentable, Hashable, Codable, Sendable, CustomStringConvertible {
     public let rawValue: Int
 
     public init(rawValue: Int) {
         self.rawValue = rawValue
+    }
+
+    public init(_ value: Int) {
+        self.rawValue = value
     }
 
     public init?(_ string: String) {
@@ -26,11 +30,15 @@ public struct MOTStopCode: RawRepresentable, Hashable, Codable, Sendable, Custom
 }
 
 /// Represents the internal database identifier of a stop in the MOT system (e.g., 11622).
-public struct MOTStopInternalID: RawRepresentable, Hashable, Codable, Sendable, CustomStringConvertible {
+nonisolated public struct MOTStopInternalID: RawRepresentable, Hashable, Codable, Sendable, CustomStringConvertible {
     public let rawValue: Int
 
     public init(rawValue: Int) {
         self.rawValue = rawValue
+    }
+
+    public init(_ value: Int) {
+        self.rawValue = value
     }
 
     public var description: String {
@@ -39,11 +47,15 @@ public struct MOTStopInternalID: RawRepresentable, Hashable, Codable, Sendable, 
 }
 
 /// Represents a route identifier in the MOT scheduler system (e.g., 33285).
-public struct MOTRouteID: RawRepresentable, Hashable, Codable, Sendable, CustomStringConvertible {
+nonisolated public struct MOTRouteID: RawRepresentable, Hashable, Codable, Sendable, CustomStringConvertible {
     public let rawValue: Int
 
     public init(rawValue: Int) {
         self.rawValue = rawValue
+    }
+
+    public init(_ value: Int) {
+        self.rawValue = value
     }
 
     public init?(_ string: String) {
@@ -57,11 +69,15 @@ public struct MOTRouteID: RawRepresentable, Hashable, Codable, Sendable, CustomS
 }
 
 /// Represents the route description key (e.g., "15031-1-0"), used for live real-time queries.
-public struct MOTRouteDesc: RawRepresentable, Hashable, Codable, Sendable, CustomStringConvertible {
+nonisolated public struct MOTRouteDesc: RawRepresentable, Hashable, Codable, Sendable, CustomStringConvertible {
     public let rawValue: String
 
     public init(rawValue: String) {
         self.rawValue = rawValue
+    }
+
+    public init(_ value: String) {
+        self.rawValue = value
     }
 
     public var description: String {
@@ -70,11 +86,15 @@ public struct MOTRouteDesc: RawRepresentable, Hashable, Codable, Sendable, Custo
 }
 
 /// Represents a scoped transit agency ID in Israel (e.g. 16 for Superbus, 3 for Egged).
-public struct MOTAgencyID: RawRepresentable, Hashable, Codable, Sendable, CustomStringConvertible {
+nonisolated public struct MOTAgencyID: RawRepresentable, Hashable, Codable, Sendable, CustomStringConvertible {
     public let rawValue: Int
 
     public init(rawValue: Int) {
         self.rawValue = rawValue
+    }
+
+    public init(_ value: Int) {
+        self.rawValue = value
     }
 
     public var description: String {
@@ -83,7 +103,7 @@ public struct MOTAgencyID: RawRepresentable, Hashable, Codable, Sendable, Custom
 }
 
 /// Identifiers namespace and utilities for scoping IDs in OneBusAway
-public enum MOTIdentityFormatter {
+nonisolated public enum MOTIdentityFormatter {
     public static func scopedStopID(code: MOTStopCode) -> String {
         return "mot:stop:\(code.rawValue)"
     }

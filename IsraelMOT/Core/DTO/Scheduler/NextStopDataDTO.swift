@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct GetNextStopDataRequestDTO: Codable, Sendable {
+nonisolated public struct GetNextStopDataRequestDTO: Codable, Sendable {
     public let routeDesc: String
     public let stopCodes: [Int]
 
@@ -17,13 +17,13 @@ public struct GetNextStopDataRequestDTO: Codable, Sendable {
     }
 }
 
-public struct GetNextStopDataResponseDTOServiceResponse: Codable, Sendable {
+nonisolated public struct GetNextStopDataResponseDTOServiceResponse: Codable, Sendable {
     public let data: [NextStopRealTimeDTO]?
     public let success: Bool
     public let message: String?
 }
 
-public struct NextStopRealTimeDTO: Codable, Sendable {
+nonisolated public struct NextStopRealTimeDTO: Codable, Sendable {
     public let stopCode: Int
     public let routeDesc: String?
     public let minutesToArrival: Int?

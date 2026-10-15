@@ -9,7 +9,7 @@ import Foundation
 import CoreLocation
 
 /// URL endpoints and builder for the Ministry of Transport route and scheduler APIs.
-public struct MOTEndpoints: Sendable {
+nonisolated public struct MOTEndpoints: Sendable {
     public nonisolated static let defaultLocaleSegment = "he"
 
     public let plannerBaseURL: URL

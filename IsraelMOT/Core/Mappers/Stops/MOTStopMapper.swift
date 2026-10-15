@@ -8,7 +8,7 @@
 import Foundation
 import CoreLocation
 
-public enum MOTStopMapper {
+nonisolated public enum MOTStopMapper {
     public static func map(from dto: StopFullDataResponseDTO) -> TransitStop {
         let code = MOTStopCode(rawValue: dto.stopcode)
         let internalID = MOTStopInternalID(rawValue: dto.stopid)

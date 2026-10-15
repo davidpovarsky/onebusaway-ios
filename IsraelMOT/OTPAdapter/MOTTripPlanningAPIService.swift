@@ -14,7 +14,7 @@ import OTPKit
 
 /// Adapter conforming to OTPKit's APIService protocol, dispatching requests
 /// to the MOT route planner backend at api.bus.gov.il.
-public final class MOTTripPlanningAPIService: Sendable {
+nonisolated public final class MOTTripPlanningAPIService: Sendable {
     private let client: MOTHTTPClient
     private let endpoints: MOTEndpoints
     public let baseURL: URL

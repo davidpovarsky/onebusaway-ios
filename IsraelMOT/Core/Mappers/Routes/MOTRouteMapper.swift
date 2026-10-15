@@ -8,7 +8,7 @@
 import Foundation
 import CoreLocation
 
-public enum MOTRouteMapper {
+nonisolated public enum MOTRouteMapper {
     public static func map(
         routeDTO: RouteFullDataResponseDTO,
         stopsDTO: RouteWithStopsDTO? = nil

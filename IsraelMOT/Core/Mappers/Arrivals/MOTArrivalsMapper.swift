@@ -8,7 +8,7 @@
 import Foundation
 import CoreLocation
 
-public enum MOTArrivalsMapper {
+nonisolated public enum MOTArrivalsMapper {
     public static func map(
         routesInStop: [RouteInStopDTO],
         realTimeUpdates: [NextStopRealTimeDTO] = []

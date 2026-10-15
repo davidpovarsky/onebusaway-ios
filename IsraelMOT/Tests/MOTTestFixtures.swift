@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum MOTTestFixtures {
+nonisolated public enum MOTTestFixtures {
     public static func loadData(named fileName: String) -> Data {
         // 1. Search across all loaded test bundles
         for bundle in Bundle.allBundles {

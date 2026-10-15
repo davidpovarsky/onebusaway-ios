@@ -8,7 +8,7 @@
 import Foundation
 import CoreLocation
 
-public struct TripPlanQuery: Sendable {
+nonisolated public struct TripPlanQuery: Sendable {
     public let origin: CLLocationCoordinate2D
     public let originName: String?
     public let destination: CLLocationCoordinate2D

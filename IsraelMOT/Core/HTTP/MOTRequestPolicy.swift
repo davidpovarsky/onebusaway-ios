@@ -8,7 +8,7 @@
 import Foundation
 
 /// Request policy defining timeouts, caching headers, and rate limiting rules.
-public struct MOTRequestPolicy: Sendable {
+nonisolated public struct MOTRequestPolicy: Sendable {
     public let timeoutInterval: TimeInterval
     public let maxRetryAttempts: Int
     public let maxConcurrentRequests: Int

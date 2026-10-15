@@ -11,7 +11,7 @@ import Foundation
 import OTPKit
 #endif
 
-public enum MOTTripPlanningError: LocalizedError, Sendable {
+nonisolated public enum MOTTripPlanningError: LocalizedError, Sendable {
     case wafBlocked(supportID: String?)
     case unsupportedTravelMode(String)
     case serverError(String)

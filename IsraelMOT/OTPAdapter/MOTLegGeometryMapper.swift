@@ -12,7 +12,7 @@ import CoreLocation
 import OTPKit
 #endif
 
-public enum MOTLegGeometryMapper {
+nonisolated public enum MOTLegGeometryMapper {
     /// Decodes a Google encoded polyline string into an array of coordinates and count.
     public static func decodePolyline(_ encodedString: String) -> [CLLocationCoordinate2D] {
         guard !encodedString.isEmpty else { return [] }

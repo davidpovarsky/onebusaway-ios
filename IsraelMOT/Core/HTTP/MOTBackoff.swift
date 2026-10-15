@@ -8,7 +8,7 @@
 import Foundation
 
 /// Exponential backoff calculator with jitter to prevent server stampedes.
-public struct MOTBackoff: Sendable {
+nonisolated public struct MOTBackoff: Sendable {
     public let baseDelay: TimeInterval
     public let maxDelay: TimeInterval
     public let multiplier: Double

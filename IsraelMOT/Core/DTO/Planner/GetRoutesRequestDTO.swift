@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct GetRoutesRequestDTO: Codable, Sendable {
+nonisolated public struct GetRoutesRequestDTO: Codable, Sendable {
     public let route: RequestedRouteDTO
     public let returnedRouteOptions: ReturnedRouteOptionsDTO
     public let userIp: String?
@@ -23,7 +23,7 @@ public struct GetRoutesRequestDTO: Codable, Sendable {
     }
 }
 
-public struct RequestedRouteDTO: Codable, Sendable {
+nonisolated public struct RequestedRouteDTO: Codable, Sendable {
     public let origin: AddressResponseDTO
     public let destination: AddressResponseDTO
     public let options: GetRoutesOptionsDTO?
@@ -39,7 +39,7 @@ public struct RequestedRouteDTO: Codable, Sendable {
     }
 }
 
-public struct AddressResponseDTO: Codable, Sendable {
+nonisolated public struct AddressResponseDTO: Codable, Sendable {
     public let addressDetails: AddressLocationDTO?
     public let coordinates: CoordinateDTO?
 
@@ -49,7 +49,7 @@ public struct AddressResponseDTO: Codable, Sendable {
     }
 }
 
-public struct ReturnedRouteOptionsDTO: Codable, Sendable {
+nonisolated public struct ReturnedRouteOptionsDTO: Codable, Sendable {
     public let language: String?
     public let isInterModal: Bool?
     public let isVehicleFirst: Bool?
@@ -71,7 +71,7 @@ public struct ReturnedRouteOptionsDTO: Codable, Sendable {
     }
 }
 
-public struct GetRoutesOptionsDTO: Codable, Sendable {
+nonisolated public struct GetRoutesOptionsDTO: Codable, Sendable {
     public let changes: Bool?
     public let departureTime: String?
     public let arrivalTime: String?

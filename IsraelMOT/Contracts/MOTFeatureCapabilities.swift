@@ -8,7 +8,7 @@
 import Foundation
 
 /// Describes the verified capabilities and constraints of the Israel MOT backend.
-public struct MOTFeatureCapabilities: Sendable {
+nonisolated public struct MOTFeatureCapabilities: Sendable {
     /// True if stop arrival predictions support real-time indicators per record.
     public let supportsPerRecordRealTime: Bool
 

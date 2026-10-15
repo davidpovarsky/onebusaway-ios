@@ -9,7 +9,7 @@ import Foundation
 import CoreLocation
 
 /// Multi-language name container representing official Hebrew, English and Arabic strings.
-public struct TransitMultiLanguageName: Hashable, Codable, Sendable {
+nonisolated public struct TransitMultiLanguageName: Hashable, Codable, Sendable {
     public let he: String?
     public let en: String?
     public let ar: String?
@@ -31,7 +31,7 @@ public struct TransitMultiLanguageName: Hashable, Codable, Sendable {
 }
 
 /// Normalized domain representation of a transit stop in Israel.
-public struct TransitStop: Identifiable, Hashable, Codable, Sendable {
+nonisolated public struct TransitStop: Identifiable, Hashable, Codable, Sendable {
     public var id: MOTStopCode { code }
     public let code: MOTStopCode
     public let internalID: MOTStopInternalID?
@@ -67,7 +67,7 @@ public struct TransitStop: Identifiable, Hashable, Codable, Sendable {
 }
 
 /// Summary of a route serving a particular stop.
-public struct TransitRouteSummary: Identifiable, Hashable, Codable, Sendable {
+nonisolated public struct TransitRouteSummary: Identifiable, Hashable, Codable, Sendable {
     public var id: MOTRouteID { routeID }
     public let routeID: MOTRouteID
     public let lineName: String // e.g. "31"
@@ -94,7 +94,7 @@ public struct TransitRouteSummary: Identifiable, Hashable, Codable, Sendable {
 }
 
 /// Normalized domain representation of a transit route.
-public struct TransitRoute: Identifiable, Hashable, Codable, Sendable {
+nonisolated public struct TransitRoute: Identifiable, Hashable, Codable, Sendable {
     public var id: MOTRouteID { routeID }
     public let routeID: MOTRouteID
     public let lineName: String
@@ -130,7 +130,7 @@ public struct TransitRoute: Identifiable, Hashable, Codable, Sendable {
 }
 
 /// Real-time or scheduled arrival record at a stop.
-public struct TransitArrival: Identifiable, Hashable, Codable, Sendable {
+nonisolated public struct TransitArrival: Identifiable, Hashable, Codable, Sendable {
     public var id: String {
         return "\(routeID.rawValue)_\(scheduledTime.timeIntervalSince1970)"
     }

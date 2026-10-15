@@ -19,7 +19,7 @@ extension URLSession: URLDataLoader {}
 
 /// URLDataLoader implementation that intercepts OneBusAway REST API requests and serves
 /// them by querying the official Israel MOT APIs and wrapping the result in OBA REST envelopes.
-public final class MOTCompatibilityDataLoader: NSObject, URLDataLoader, @unchecked Sendable {
+nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoader, @unchecked Sendable {
     private let client: MOTHTTPClient
     private let endpoints: MOTEndpoints
     private let fallbackLoader: URLDataLoader
@@ -80,7 +80,7 @@ public final class MOTCompatibilityDataLoader: NSObject, URLDataLoader, @uncheck
         if let q = query, !q.isEmpty {
             // If query is a numeric stop code, resolve via GetStopFullData
             if let stopCodeInt = Int(q) {
-                let code = MOTStopCode(stopCodeInt)
+                let code = MOTStopCode(rawValue: stopCodeInt)
                 let targetURL = endpoints.stopFullDataURL(stopCode: code)
                 if let res: StopFullDataResponseDTOServiceResponse = try? await client.get(targetURL),
                    let dto = res.data {

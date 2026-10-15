@@ -10,7 +10,7 @@ import CoreLocation
 
 /// Bridges Israel MOT domain models into valid OneBusAway REST JSON envelopes
 /// with complete and strictly resolved reference graphs (stops, routes, trips, agencies).
-public enum OBACompatibilityBridge {
+nonisolated public enum OBACompatibilityBridge {
 
     // MARK: - Envelopes
 
@@ -71,7 +71,7 @@ public enum OBACompatibilityBridge {
         let stopDict = serializeStop(stop)
         var referencesAgencies: [String: [String: Any]] = [:]
         var referencesRoutes: [String: [String: Any]] = [:]
-        var referencesStops: [String: [String: Any]] = [stopDict["id"] as! String: stopDict]
+        let referencesStops: [String: [String: Any]] = [stopDict["id"] as! String: stopDict]
 
         for route in stop.routes {
             let routeDict = serializeRouteSummary(route)
@@ -114,7 +114,7 @@ public enum OBACompatibilityBridge {
         let stopDict = serializeStop(stop)
         var referencesAgencies: [String: [String: Any]] = [:]
         var referencesRoutes: [String: [String: Any]] = [:]
-        var referencesStops: [String: [String: Any]] = [stopDict["id"] as! String: stopDict]
+        let referencesStops: [String: [String: Any]] = [stopDict["id"] as! String: stopDict]
         var referencesTrips: [String: [String: Any]] = [:]
 
         var obaArrivals: [[String: Any]] = []
@@ -247,7 +247,6 @@ public enum OBACompatibilityBridge {
         currentTime: Date = Date()
     ) -> [String: Any] {
         let routeDict = serializeRoute(route)
-        let scopedRouteId = routeDict["id"] as! String
         let agencyDict = serializeAgency(id: route.agencyID, name: route.agencyName)
 
         var referencesStops: [String: [String: Any]] = [:]

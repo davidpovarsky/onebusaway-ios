@@ -12,7 +12,7 @@ import CoreLocation
 import OBAKitCore
 #endif
 
-public enum MOTRegionFactory {
+nonisolated public enum MOTRegionFactory {
     public static let israelRegionIdentifier = 972
 
     public static let israelCenterCoordinate = CLLocationCoordinate2D(latitude: 31.7683, longitude: 35.2137) // Jerusalem
