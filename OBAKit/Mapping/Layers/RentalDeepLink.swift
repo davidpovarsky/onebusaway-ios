@@ -155,7 +155,7 @@ enum RentalDeepLink {
         let network = rental.rentalNetwork
         let operatorName = network?.displayName
         let webURL = network?.url.flatMap(URL.init(string:))
-        let appStoreID = network.flatMap { appStoreID(forNetworkID: $0.networkId) }
+        let appStoreID: String? = network.flatMap { appStoreID(forNetworkID: $0.networkId) }
 
         // 1. Feed data wins, network block or not: the pre-synthesis behaviour
         //    never required one, and a feed may publish a URI without a network.
