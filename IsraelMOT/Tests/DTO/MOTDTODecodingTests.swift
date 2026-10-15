@@ -29,17 +29,17 @@ struct MOTDTODecodingTests {
         #expect(stop.stopcode == 5997)
         #expect(stop.stopid == 11622)
         #expect(stop.cityName == "ירושלים")
-        #expect(stop.name?.he == "שרי ישראל/חשמונאים")
-        #expect(stop.lat == 31.78913)
-        #expect(stop.lng == 35.204648)
+        #expect(stop.name?.he == "סילבר/שכטמן")
+        #expect(stop.lat == 31.815188)
+        #expect(stop.lng == 35.203022)
 
         guard let routes = stop.routesInStop else {
             Issue.record("Expected routesInStop to be present")
             return
         }
         #expect(!routes.isEmpty)
-        #expect(routes.contains { $0.routeName == "15" })
-        #expect(routes.contains { $0.routeName == "68" })
+        #expect(routes.contains { $0.routeName == "31" })
+        #expect(routes.contains { $0.routeName == "471" })
     }
 
     @Test

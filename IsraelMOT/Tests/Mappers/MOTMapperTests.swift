@@ -30,13 +30,13 @@ struct MOTMapperTests {
         #expect(stop.code.rawValue == 5997)
         #expect(stop.internalID?.rawValue == 11622)
         #expect(stop.cityName == "ירושלים")
-        #expect(stop.name.he == "שרי ישראל/חשמונאים")
-        #expect(abs(stop.location.latitude - 31.78913) < 0.0001)
-        #expect(abs(stop.location.longitude - 35.204648) < 0.0001)
+        #expect(stop.name.he == "סילבר/שכטמן")
+        #expect(abs(stop.location.latitude - 31.815188) < 0.0001)
+        #expect(abs(stop.location.longitude - 35.203022) < 0.0001)
         #expect(!stop.routes.isEmpty)
 
-        let route15 = stop.routes.first { $0.lineName == "15" }
-        #expect(route15 != nil)
+        let route31 = stop.routes.first { $0.lineName == "31" }
+        #expect(route31 != nil)
     }
 
     @Test
