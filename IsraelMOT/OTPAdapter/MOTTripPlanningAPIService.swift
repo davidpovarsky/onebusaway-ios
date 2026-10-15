@@ -30,7 +30,7 @@ nonisolated public final class MOTTripPlanningAPIService: Sendable {
 }
 
 #if canImport(OTPKit)
-extension MOTTripPlanningAPIService: APIService {
+nonisolated extension MOTTripPlanningAPIService: APIService {
     public func fetchPlan(_ request: TripPlanRequest) async throws -> OTPResponse {
         let originDTO = AddressResponseDTO(
             coordinates: CoordinateDTO(lat: request.origin.latitude, lng: request.origin.longitude)

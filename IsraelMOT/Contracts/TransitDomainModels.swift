@@ -165,13 +165,13 @@ nonisolated public struct TransitArrival: Identifiable, Hashable, Codable, Senda
 }
 
 // Retroactive conformance for Hashable and Equatable (Codable is already provided by framework dependencies)
-extension CLLocationCoordinate2D: @retroactive Hashable, @retroactive Equatable {
-    public func hash(into hasher: inout Hasher) {
+nonisolated extension CLLocationCoordinate2D: @retroactive Hashable, @retroactive Equatable {
+    public nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(latitude)
         hasher.combine(longitude)
     }
 
-    public static func == (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
+    public nonisolated static func == (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
         return abs(lhs.latitude - rhs.latitude) < 0.000001 && abs(lhs.longitude - rhs.longitude) < 0.000001
     }
 }
