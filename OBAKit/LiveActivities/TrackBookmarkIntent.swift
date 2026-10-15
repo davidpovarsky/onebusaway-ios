@@ -113,7 +113,7 @@ nonisolated struct OBAAppShortcuts: AppShortcutsProvider {
                 "Track \(.applicationName) bookmark",
                 "Start \(.applicationName) Live Activity"
             ],
-            shortTitle: LocalizedStringResource("track_bookmark_intent.short_title", defaultValue: "Track bookmark", table: "AppIntents", bundle: #bundle),
+            shortTitle: LocalizedStringResource("track_bookmark_intent.short_title", defaultValue: "Track bookmark", table: "AppIntents"),
             systemImageName: "bell"
         )
         AppShortcut(
@@ -124,7 +124,7 @@ nonisolated struct OBAAppShortcuts: AppShortcutsProvider {
                 "When is my next bus in \(.applicationName)",
                 "Do I have time to catch the bus with \(.applicationName)"
             ],
-            shortTitle: LocalizedStringResource("next_departures_intent.short_title", defaultValue: "Next departures", table: "AppIntents", bundle: #bundle),
+            shortTitle: LocalizedStringResource("next_departures_intent.short_title", defaultValue: "Next departures", table: "AppIntents"),
             systemImageName: "clock"
         )
     }
