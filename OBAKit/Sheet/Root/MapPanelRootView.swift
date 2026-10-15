@@ -218,46 +218,10 @@ struct MapPanelRootView: View {
         Map(position: $cameraPosition, selection: $mapSelection) {
             UserAnnotation()
             onDemandZoneContent
-            // Bookmark pins render at every zoom level, like the UIKit map.
-            ForEach(stopsObserver.bookmarks) { bookmark in
-                stopAnnotation(
-                    for: bookmark.stop,
-                    isBookmarked: true,
-                    label: bookmark.name,
-                    accessibilityLabel: Formatters.formattedAccessibilityLabel(
-                        stop: bookmark.stop,
-                        bookmarkName: bookmark.name
-                    )
-                )
-            }
-            // Regular stops show only zoomed in; `renderStops` already excludes
-            // bookmarked stops and precomputes labels. Suppress them if a search
-            // result, a planned trip or an open trip is drawn, as those take over
-            // the map.
-            if isZoomedInForStops,
-               layersModel.isStopsLayerEnabled,
-               !searchDisplay.suppressesAmbientStops,
-               !tripPlannerDisplay.isShowingTrip,
-               !tripFocusDisplay.isShowingTrip {
-                ForEach(stopsObserver.renderStops) { renderStop in
-                    stopAnnotation(
-                        for: renderStop.stop,
-                        isBookmarked: false,
-                        label: renderStop.title,
-                        accessibilityLabel: renderStop.accessibilityLabel
-                    )
-                }
-            }
-
+            bookmarkAnnotations
+            regularStopAnnotations
             rentalAnnotations
-
-            searchResultMapContent(for: searchDisplay.display) { stop in
-                application.stopIconFactory.buildSquircleIcon(
-                    for: stop,
-                    isBookmarked: false,
-                    traits: UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light)
-                )
-            }
+            searchResultsContent
             tripPlannerMapContent(for: tripPlannerDisplay)
             tripFocusMapContent(for: tripFocusDisplay.display)
         }
@@ -557,6 +521,50 @@ struct MapPanelRootView: View {
         switch item {
         case .single(let rental): return .rental(rental.id)
         case .cluster(let id, _, _): return .rentalCluster(id)
+        }
+    }
+
+    @MapContentBuilder
+    private var bookmarkAnnotations: some MapContent {
+        ForEach(stopsObserver.bookmarks) { bookmark in
+            stopAnnotation(
+                for: bookmark.stop,
+                isBookmarked: true,
+                label: bookmark.name,
+                accessibilityLabel: Formatters.formattedAccessibilityLabel(
+                    stop: bookmark.stop,
+                    bookmarkName: bookmark.name
+                )
+            )
+        }
+    }
+
+    @MapContentBuilder
+    private var regularStopAnnotations: some MapContent {
+        if isZoomedInForStops,
+           layersModel.isStopsLayerEnabled,
+           !searchDisplay.suppressesAmbientStops,
+           !tripPlannerDisplay.isShowingTrip,
+           !tripFocusDisplay.isShowingTrip {
+            ForEach(stopsObserver.renderStops) { renderStop in
+                stopAnnotation(
+                    for: renderStop.stop,
+                    isBookmarked: false,
+                    label: renderStop.title,
+                    accessibilityLabel: renderStop.accessibilityLabel
+                )
+            }
+        }
+    }
+
+    @MapContentBuilder
+    private var searchResultsContent: some MapContent {
+        searchResultMapContent(for: searchDisplay.display) { stop in
+            application.stopIconFactory.buildSquircleIcon(
+                for: stop,
+                isBookmarked: false,
+                traits: UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light)
+            )
         }
     }
 
