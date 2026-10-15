@@ -13,13 +13,13 @@ public struct MOTBackoff: Sendable {
     public let maxDelay: TimeInterval
     public let multiplier: Double
 
-    public init(baseDelay: TimeInterval = 0.5, maxDelay: TimeInterval = 10.0, multiplier: Double = 2.0) {
+    public nonisolated init(baseDelay: TimeInterval = 0.5, maxDelay: TimeInterval = 10.0, multiplier: Double = 2.0) {
         self.baseDelay = baseDelay
         self.maxDelay = maxDelay
         self.multiplier = multiplier
     }
 
-    public func delay(forAttempt attempt: Int) -> TimeInterval {
+    public nonisolated func delay(forAttempt attempt: Int) -> TimeInterval {
         guard attempt > 0 else { return 0 }
         let exponential = baseDelay * pow(multiplier, Double(attempt - 1))
         let capped = min(maxDelay, exponential)

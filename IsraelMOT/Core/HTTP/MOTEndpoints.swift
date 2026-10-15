@@ -10,13 +10,13 @@ import CoreLocation
 
 /// URL endpoints and builder for the Ministry of Transport route and scheduler APIs.
 public struct MOTEndpoints: Sendable {
-    public static let defaultLocaleSegment = "he"
+    public nonisolated static let defaultLocaleSegment = "he"
 
     public let plannerBaseURL: URL
     public let schedulerBaseURL: URL
     public let localeSegment: String
 
-    public init(
+    public nonisolated init(
         plannerBase: URL = URL(string: "https://api.bus.gov.il/prod/route-planner-prod/api/")!,
         schedulerBase: URL = URL(string: "https://api.bus.gov.il/prod/mot-scheduler-prod/api/")!,
         locale: String = defaultLocaleSegment

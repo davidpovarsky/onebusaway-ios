@@ -13,7 +13,7 @@ public struct MOTRequestPolicy: Sendable {
     public let maxRetryAttempts: Int
     public let maxConcurrentRequests: Int
 
-    public init(
+    public nonisolated init(
         timeoutInterval: TimeInterval = 15.0,
         maxRetryAttempts: Int = 2,
         maxConcurrentRequests: Int = 4
@@ -23,5 +23,5 @@ public struct MOTRequestPolicy: Sendable {
         self.maxConcurrentRequests = maxConcurrentRequests
     }
 
-    public static let standard = MOTRequestPolicy()
+    public nonisolated static let standard = MOTRequestPolicy()
 }

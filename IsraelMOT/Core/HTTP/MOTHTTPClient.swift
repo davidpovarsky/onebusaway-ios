@@ -12,7 +12,7 @@ import Foundation
 public actor MOTHTTPClient {
     private let session: URLSession
     private let policy: MOTRequestPolicy
-    private let backoff = MOTBackoff()
+    private let backoff: MOTBackoff
 
     public init(
         session: URLSession = .shared,
@@ -20,6 +20,7 @@ public actor MOTHTTPClient {
     ) {
         self.session = session
         self.policy = policy
+        self.backoff = MOTBackoff()
     }
 
     /// Performs a GET request and decodes the response into the specified Decodable type.

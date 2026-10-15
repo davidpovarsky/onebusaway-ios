@@ -164,31 +164,3 @@ public struct TransitArrival: Identifiable, Hashable, Codable, Sendable {
     }
 }
 
-// Extension to allow CLLocationCoordinate2D to conform to Codable/Hashable safely
-extension CLLocationCoordinate2D: Hashable, Codable, @unchecked Sendable {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(latitude)
-        hasher.combine(longitude)
-    }
-
-    public static func == (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
-        return abs(lhs.latitude - rhs.latitude) < 0.000001 && abs(lhs.longitude - rhs.longitude) < 0.000001
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case latitude, longitude
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let lat = try container.decode(Double.self, forKey: .latitude)
-        let lon = try container.decode(Double.self, forKey: .longitude)
-        self.init(latitude: lat, longitude: lon)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(latitude, forKey: .latitude)
-        try container.encode(longitude, forKey: .longitude)
-    }
-}
