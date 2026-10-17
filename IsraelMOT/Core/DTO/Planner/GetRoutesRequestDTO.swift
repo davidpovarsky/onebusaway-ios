@@ -21,21 +21,56 @@ nonisolated public struct GetRoutesRequestDTO: Codable, Sendable {
         self.returnedRouteOptions = returnedRouteOptions
         self.userIp = userIp
     }
+
+    private enum CodingKeys: String, CodingKey {
+        case route
+        case returnedRouteOptions
+        case userIp
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(route, forKey: .route)
+        try container.encode(returnedRouteOptions, forKey: .returnedRouteOptions)
+        try container.encodeIfPresent(userIp, forKey: .userIp)
+    }
 }
 
 nonisolated public struct RequestedRouteDTO: Codable, Sendable {
     public let origin: AddressResponseDTO
     public let destination: AddressResponseDTO
-    public let options: GetRoutesOptionsDTO?
+    public let stop: String?
+    public let options: GetRoutesOptionsDTO
 
     public init(
         origin: AddressResponseDTO,
         destination: AddressResponseDTO,
-        options: GetRoutesOptionsDTO? = nil
+        stop: String? = nil,
+        options: GetRoutesOptionsDTO
     ) {
         self.origin = origin
         self.destination = destination
+        self.stop = stop
         self.options = options
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case origin
+        case destination
+        case stop
+        case options
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(origin, forKey: .origin)
+        try container.encode(destination, forKey: .destination)
+        if let stop = stop {
+            try container.encode(stop, forKey: .stop)
+        } else {
+            try container.encodeNil(forKey: .stop)
+        }
+        try container.encode(options, forKey: .options)
     }
 }
 
@@ -50,45 +85,83 @@ nonisolated public struct AddressResponseDTO: Codable, Sendable {
 }
 
 nonisolated public struct ReturnedRouteOptionsDTO: Codable, Sendable {
-    public let language: String?
-    public let isInterModal: Bool?
-    public let isVehicleFirst: Bool?
-    public let isFutureSearch: Bool?
-    public let isDispatch: Bool?
+    public let language: String
+    public let isFutureSearch: Bool
 
     public init(
-        language: String? = "he",
-        isInterModal: Bool? = true,
-        isVehicleFirst: Bool? = false,
-        isFutureSearch: Bool? = false,
-        isDispatch: Bool? = false
+        language: String = "he",
+        isFutureSearch: Bool = true
     ) {
         self.language = language
-        self.isInterModal = isInterModal
-        self.isVehicleFirst = isVehicleFirst
         self.isFutureSearch = isFutureSearch
-        self.isDispatch = isDispatch
     }
 }
 
 nonisolated public struct GetRoutesOptionsDTO: Codable, Sendable {
-    public let changes: Bool?
-    public let departureTime: String?
+    public let isAccessible: Bool
+    public let changes: Bool
+    public let transportations: [String]
+    public let sortBy: Int
+    public let maxTravelTime: Int
+    public let maxWalkTime: Int
+    public let transportationsForInitialUse: [String]
     public let arrivalTime: String?
-    public let transportations: [String]?
-    public let isAccessible: Bool?
+    public let departureTime: String?
 
     public init(
-        changes: Bool? = true,
-        departureTime: String? = nil,
+        isAccessible: Bool = false,
+        changes: Bool = true,
+        transportations: [String] = ["bus", "privateBus", "lightRail", "regionalTrain"],
+        sortBy: Int = 0,
+        maxTravelTime: Int = 600,
+        maxWalkTime: Int = 120,
+        transportationsForInitialUse: [String] = ["bus", "carmelit", "lightRail", "publicTaxi", "rahbalit", "train"],
         arrivalTime: String? = nil,
-        transportations: [String]? = nil,
-        isAccessible: Bool? = nil
+        departureTime: String? = nil
     ) {
-        self.changes = changes
-        self.departureTime = departureTime
-        self.arrivalTime = arrivalTime
-        self.transportations = transportations
         self.isAccessible = isAccessible
+        self.changes = changes
+        self.transportations = transportations
+        self.sortBy = sortBy
+        self.maxTravelTime = maxTravelTime
+        self.maxWalkTime = maxWalkTime
+        self.transportationsForInitialUse = transportationsForInitialUse
+        self.arrivalTime = arrivalTime
+        self.departureTime = departureTime
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case isAccessible
+        case changes
+        case transportations
+        case sortBy
+        case maxTravelTime
+        case maxWalkTime
+        case transportationsForInitialUse
+        case arrivalTime
+        case departureTime
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(isAccessible, forKey: .isAccessible)
+        try container.encode(changes, forKey: .changes)
+        try container.encode(transportations, forKey: .transportations)
+        try container.encode(sortBy, forKey: .sortBy)
+        try container.encode(maxTravelTime, forKey: .maxTravelTime)
+        try container.encode(maxWalkTime, forKey: .maxWalkTime)
+        try container.encode(transportationsForInitialUse, forKey: .transportationsForInitialUse)
+
+        if let arrivalTime = arrivalTime {
+            try container.encode(arrivalTime, forKey: .arrivalTime)
+        } else {
+            try container.encodeNil(forKey: .arrivalTime)
+        }
+
+        if let departureTime = departureTime {
+            try container.encode(departureTime, forKey: .departureTime)
+        } else {
+            try container.encodeNil(forKey: .departureTime)
+        }
     }
 }
