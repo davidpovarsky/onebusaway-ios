@@ -21,7 +21,7 @@ struct MOTFlexiblePolylineTests {
     @Test
     func testDecodeSampleHEREPolyline() throws {
         // First pedestrian segment from live fixture
-        let sample = "BG4h918Bg30kjCgF4DUvCkIvHoGvH7GjN7LjNkDzFoBrEwH_Eg"
+        let sample = "BG4h918Bg30kjCgF4DUvCkIvHoGvH7GjN7LjNkDzFoBrEwH_EgFwCwHkIgFwCkIUsT3I_JnazZv-B7BrEwC3DUnG7BvHrE_EnG7BrE_O5DjI"
         let coordinates = try HEREFlexiblePolylineDecoder.decode(sample)
 
         #expect(coordinates.count == 25)
@@ -92,7 +92,7 @@ struct MOTFlexiblePolylineTests {
     #if canImport(OTPKit)
     @Test
     func testLegGeometryMapperConvertsHEREToGoogle() {
-        let herePoly = "BG4h918Bg30kjCgF4DUvCkIvHoGvH7GjN7LjNkDzFoBrEwH_Eg"
+        let herePoly = "BG4h918Bg30kjCgF4DUvCkIvHoGvH7GjN7LjNkDzFoBrEwH_EgFwCwHkIgFwCkIUsT3I_JnazZv-B7BrEwC3DUnG7BvHrE_EnG7BrE_O5DjI"
         let fallbackStart = CLLocationCoordinate2D(latitude: 31.8, longitude: 35.2)
         let fallbackEnd = CLLocationCoordinate2D(latitude: 31.7, longitude: 35.2)
 
