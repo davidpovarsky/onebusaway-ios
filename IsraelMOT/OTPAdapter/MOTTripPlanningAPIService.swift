@@ -20,11 +20,11 @@ nonisolated public final class MOTTripPlanningAPIService: Sendable {
     public let baseURL: URL
 
     public init(
-        baseURL: URL = URL(string: "https://api.bus.gov.il/prod/route-planner-prod/api/he/")!,
+        baseURL: URL = URL(string: "https://api.bus.gov.il/prod/route-planner-prod/api/")!,
         client: MOTHTTPClient = MOTHTTPClient()
     ) {
         self.baseURL = baseURL
-        self.endpoints = MOTEndpoints()
+        self.endpoints = MOTEndpoints(plannerBase: baseURL)
         self.client = client
     }
 }
@@ -33,39 +33,50 @@ nonisolated public final class MOTTripPlanningAPIService: Sendable {
 nonisolated extension MOTTripPlanningAPIService: APIService {
     public func fetchPlan(_ request: TripPlanRequest) async throws -> OTPResponse {
         let originDTO = AddressResponseDTO(
+            addressDetails: AddressLocationDTO(label: "Origin"),
             coordinates: CoordinateDTO(lat: request.origin.latitude, lng: request.origin.longitude)
         )
         let destinationDTO = AddressResponseDTO(
+            addressDetails: AddressLocationDTO(label: "Destination"),
             coordinates: CoordinateDTO(lat: request.destination.latitude, lng: request.destination.longitude)
         )
 
-        let isoDate = ISO8601DateFormatter().string(from: request.date)
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        let isoDate = formatter.string(from: request.date)
+
+        let isFuture = request.date > Date()
+
         let optionsDTO = GetRoutesOptionsDTO(
+            isAccessible: request.wheelchairAccessible,
             changes: true,
-            departureTime: request.arriveBy ? nil : isoDate,
+            transportations: ["bus", "privateBus", "lightRail", "regionalTrain"],
+            sortBy: 0,
+            maxTravelTime: 600,
+            maxWalkTime: 120,
+            transportationsForInitialUse: ["bus", "carmelit", "lightRail", "publicTaxi", "rahbalit", "train"],
             arrivalTime: request.arriveBy ? isoDate : nil,
-            transportations: nil,
-            isAccessible: request.wheelchairAccessible
+            departureTime: request.arriveBy ? nil : isoDate
         )
 
         let requestedRoute = RequestedRouteDTO(
             origin: originDTO,
             destination: destinationDTO,
+            stop: nil,
             options: optionsDTO
         )
 
         let returnedOptions = ReturnedRouteOptionsDTO(
             language: "he",
-            isInterModal: true,
-            isVehicleFirst: false,
-            isFutureSearch: false,
-            isDispatch: false
+            isFutureSearch: isFuture
         )
 
         let requestDTO = GetRoutesRequestDTO(
             route: requestedRoute,
             returnedRouteOptions: returnedOptions,
-            userIp: nil // Never spoof or guess user IP
+            userIp: nil
         )
 
         let url = endpoints.getRoutesURL()
@@ -83,7 +94,6 @@ nonisolated extension MOTTripPlanningAPIService: APIService {
         } catch let error as MOTHTTPError {
             switch error {
             case .wafBlocked(let supportID):
-                // Explicit non-negotiable blocker surface
                 throw MOTTripPlanningError.wafBlocked(supportID: supportID)
             default:
                 throw MOTTripPlanningError.serverError(error.localizedDescription)

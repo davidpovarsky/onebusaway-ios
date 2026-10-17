@@ -23,12 +23,24 @@ public actor MOTHTTPClient {
         self.backoff = MOTBackoff()
     }
 
+    private func profile(for url: URL) -> MOTHeaderProfile {
+        let path = url.path.lowercased()
+        if path.contains("route-planner-prod") {
+            return .planner
+        } else if path.contains("mot-scheduler-prod") {
+            return .scheduler
+        }
+        return .default
+    }
+
     /// Performs a GET request and decodes the response into the specified Decodable type.
     public func get<T: Decodable>(_ url: URL, decodeAs: T.Type = T.self) async throws -> T {
-        var request = URLRequest(url: url, cachePolicy: .useProtocolCachePolicy, timeoutInterval: policy.timeoutInterval)
-        request.httpMethod = "GET"
-        request.setValue("application/json, text/plain, */*", forHTTPHeaderField: "Accept")
-        request.setValue("OneBusAway-Israel/1.0 (iOS)", forHTTPHeaderField: "User-Agent")
+        let request = MOTRequestBuilder.buildRequest(
+            url: url,
+            method: "GET",
+            profile: profile(for: url),
+            timeoutInterval: policy.timeoutInterval
+        )
 
         let (data, _) = try await execute(request: request)
         return try decode(data: data, as: T.self)
@@ -36,12 +48,14 @@ public actor MOTHTTPClient {
 
     /// Performs a POST request with an Encodable body and decodes the response.
     public func post<B: Encodable, T: Decodable>(_ url: URL, body: B, decodeAs: T.Type = T.self) async throws -> T {
-        var request = URLRequest(url: url, cachePolicy: .useProtocolCachePolicy, timeoutInterval: policy.timeoutInterval)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("application/json, text/plain, */*", forHTTPHeaderField: "Accept")
-        request.setValue("OneBusAway-Israel/1.0 (iOS)", forHTTPHeaderField: "User-Agent")
-        request.httpBody = try JSONEncoder().encode(body)
+        let bodyData = try JSONEncoder().encode(body)
+        let request = MOTRequestBuilder.buildRequest(
+            url: url,
+            method: "POST",
+            profile: profile(for: url),
+            body: bodyData,
+            timeoutInterval: policy.timeoutInterval
+        )
 
         let (data, _) = try await execute(request: request)
         return try decode(data: data, as: T.self)
@@ -94,6 +108,8 @@ public actor MOTHTTPClient {
                 }
 
                 return (data, httpResponse)
+            } catch is CancellationError {
+                throw CancellationError()
             } catch let error as MOTHTTPError {
                 throw error
             } catch {
@@ -102,7 +118,7 @@ public actor MOTHTTPClient {
                     try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
                     continue
                 }
-                throw MOTHTTPError.networkFailure(message: error.localizedDescription)
+                throw MOTHTTPError.networkFailure(error)
             }
         }
     }
@@ -110,19 +126,22 @@ public actor MOTHTTPClient {
     private func decode<T: Decodable>(data: Data, as type: T.Type) throws -> T {
         do {
             let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
             return try decoder.decode(T.self, from: data)
         } catch {
-            throw MOTHTTPError.decodingError(message: error.localizedDescription)
+            throw MOTHTTPError.decodingError(error)
         }
     }
 
-    /// Extracts support ID from F5 HTML rejection string if present.
-    private func extractF5SupportID(from html: String) -> String? {
-        // Pattern: "Your support ID is <uuid>"
-        guard let range = html.range(of: "Your support ID is ") else { return nil }
-        let sub = html[range.upperBound...]
-        let parts = sub.components(separatedBy: CharacterSet(charactersIn: "< \n\r"))
-        return parts.first?.trimmingCharacters(in: .whitespacesAndNewlines)
+    private func extractF5SupportID(from body: String) -> String? {
+        guard body.contains("The requested URL was rejected") || body.contains("support ID is:") else {
+            return nil
+        }
+        let pattern = "support ID is:\\s*([0-9]+)"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+              let match = regex.firstMatch(in: body, options: [], range: NSRange(location: 0, length: body.utf16.count)) else {
+            return nil
+        }
+        guard let range = Range(match.range(at: 1), in: body) else { return nil }
+        return String(body[range])
     }
 }
