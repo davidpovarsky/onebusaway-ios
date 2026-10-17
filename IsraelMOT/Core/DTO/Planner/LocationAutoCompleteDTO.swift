@@ -21,6 +21,24 @@ nonisolated public struct LocationAutoCompleteDTO: Codable, Sendable {
     public let isStop: Bool?
     public let isPoi: Bool?
     public let isCity: Bool?
+
+    public init(
+        title: String,
+        id: String? = nil,
+        addressDetails: AddressLocationDTO? = nil,
+        coordinates: CoordinateDTO? = nil,
+        isStop: Bool? = nil,
+        isPoi: Bool? = nil,
+        isCity: Bool? = nil
+    ) {
+        self.title = title
+        self.id = id
+        self.addressDetails = addressDetails
+        self.coordinates = coordinates
+        self.isStop = isStop
+        self.isPoi = isPoi
+        self.isCity = isCity
+    }
 }
 
 nonisolated public struct AddressLocationDTO: Codable, Sendable {
@@ -29,6 +47,20 @@ nonisolated public struct AddressLocationDTO: Codable, Sendable {
     public let city: String?
     public let street: String?
     public let houseNumber: String?
+
+    public init(
+        label: String? = nil,
+        countryName: String? = nil,
+        city: String? = nil,
+        street: String? = nil,
+        houseNumber: String? = nil
+    ) {
+        self.label = label
+        self.countryName = countryName
+        self.city = city
+        self.street = street
+        self.houseNumber = houseNumber
+    }
 }
 
 nonisolated public struct CoordinateDTO: Codable, Sendable {

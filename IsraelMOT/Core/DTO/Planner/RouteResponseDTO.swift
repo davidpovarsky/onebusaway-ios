@@ -97,6 +97,12 @@ nonisolated public struct MultiLanguageDTO: Codable, Sendable {
     public let he: String?
     public let en: String?
     public let ar: String?
+
+    public init(he: String? = nil, en: String? = nil, ar: String? = nil) {
+        self.he = he
+        self.en = en
+        self.ar = ar
+    }
 }
 
 nonisolated public struct RouteStopAtStop: Codable, Sendable {
