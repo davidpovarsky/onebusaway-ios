@@ -50,6 +50,82 @@ struct MOTTripPlanningTests {
         #expect(leg.to != nil)
         #expect(leg.duration > 0)
     }
+
+    @Test
+    func testMapLiveScriptableGetRoutesFixture() throws {
+        let response = try MOTTestFixtures.decode(
+            fixture: "ministry_getroutes_live.json",
+            as: RouteResponseDTOListServiceResponse.self
+        )
+
+        #expect(response.success == true)
+        guard let routes = response.data else {
+            Issue.record("Expected routes in data")
+            return
+        }
+
+        #expect(routes.count == 6)
+
+        let allSections = routes.flatMap { $0.sections }
+        #expect(allSections.count == 24)
+
+        let pedestrianSections = allSections.filter { MOTSectionModeMapper.isWalkSection($0) }
+        #expect(pedestrianSections.count == 14)
+
+        let transitSections = allSections.filter { !MOTSectionModeMapper.isWalkSection($0) }
+        #expect(transitSections.count == 10)
+
+        let totalActions = allSections.compactMap { $0.actions }.flatMap { $0 }.count
+        #expect(totalActions == 87)
+
+        var totalVertices = 0
+        for section in allSections {
+            if let poly = section.polyline {
+                let coords = (try? HEREFlexiblePolylineDecoder.decode(poly)) ?? []
+                totalVertices += coords.count
+            }
+        }
+        #expect(totalVertices == 1724)
+
+        let nextStopsRealTimeFlags = allSections.compactMap { $0.departure?.nextStopsTimes }.flatMap { $0 }.compactMap { $0.isRealTime }
+        #expect(!nextStopsRealTimeFlags.isEmpty)
+        for flag in nextStopsRealTimeFlags {
+            #expect(flag == false)
+        }
+
+        let origin = CLLocationCoordinate2D(latitude: 31.815188, longitude: 35.203022)
+        let destination = CLLocationCoordinate2D(latitude: 31.787547, longitude: 35.202639)
+
+        let otpResponse = MOTItineraryMapper.map(
+            from: response,
+            requestOrigin: origin,
+            requestDest: destination
+        )
+
+        #expect(otpResponse.plan != nil)
+        guard let itineraries = otpResponse.plan?.itineraries else {
+            Issue.record("Expected itineraries in plan")
+            return
+        }
+
+        #expect(itineraries.count == 6)
+
+        // Route 1 (index 0): direct line 71 -> 0 transfers
+        let directItinerary = itineraries[0]
+        #expect(directItinerary.transfers == 0)
+        #expect(directItinerary.legs.count == 3) // walk -> transit -> walk
+        #expect(directItinerary.legs[0].mode == "WALK")
+        #expect(directItinerary.legs[0].transitLeg == false)
+        #expect(directItinerary.legs[1].mode == "BUS")
+        #expect(directItinerary.legs[1].transitLeg == true)
+        #expect(directItinerary.legs[2].mode == "WALK")
+        #expect(directItinerary.legs[0].steps?.count == 9)
+
+        // Route 3 (index 2): multi-leg transit 31 -> 78 -> 34 -> 2 transfers
+        let multiTransferItinerary = itineraries[2]
+        #expect(multiTransferItinerary.transfers == 2)
+        #expect(multiTransferItinerary.legs.count == 6)
+    }
     #endif
 
     @Test

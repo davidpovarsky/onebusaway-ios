@@ -13,20 +13,16 @@ import OTPKit
 #endif
 
 nonisolated public enum MOTItineraryMapper {
-    private static func parseDate(_ string: String?) -> Date {
-        guard let s = string, !s.isEmpty else { return Date() }
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let d = formatter.date(from: s) { return d }
-        formatter.formatOptions = [.withInternetDateTime]
-        if let d = formatter.date(from: s) { return d }
-        return Date()
-    }
-
     #if canImport(OTPKit)
-    public static func map(from responseDTO: RouteResponseDTOListServiceResponse, requestOrigin: CLLocationCoordinate2D, requestDest: CLLocationCoordinate2D) -> OTPResponse {
+    public static func map(
+        from responseDTO: RouteResponseDTOListServiceResponse,
+        requestOrigin: CLLocationCoordinate2D,
+        requestDest: CLLocationCoordinate2D
+    ) -> OTPResponse {
         let routes = responseDTO.data ?? []
-        let itineraries = routes.compactMap { mapItinerary(from: $0, fallbackOrigin: requestOrigin, fallbackDest: requestDest) }
+        let itineraries = routes.compactMap {
+            mapItinerary(from: $0, fallbackOrigin: requestOrigin, fallbackDest: requestDest)
+        }
 
         let fromPlace = Place(
             name: "מוצא",
@@ -41,8 +37,9 @@ nonisolated public enum MOTItineraryMapper {
             vertexType: "NORMAL"
         )
 
+        let firstPlanDate = itineraries.first?.startTime ?? Date()
         let plan = Plan(
-            date: Date(),
+            date: firstPlanDate,
             from: fromPlace,
             to: toPlace,
             itineraries: itineraries
@@ -57,34 +54,47 @@ nonisolated public enum MOTItineraryMapper {
         )
     }
 
-    public static func mapItinerary(from dto: RouteResponseDTO, fallbackOrigin: CLLocationCoordinate2D, fallbackDest: CLLocationCoordinate2D) -> Itinerary? {
+    public static func mapItinerary(
+        from dto: RouteResponseDTO,
+        fallbackOrigin: CLLocationCoordinate2D,
+        fallbackDest: CLLocationCoordinate2D
+    ) -> Itinerary? {
         guard !dto.sections.isEmpty else { return nil }
 
         var legs: [Leg] = []
         var totalWalkTime = 0
         var totalTransitTime = 0
         var totalWalkDistance = 0.0
-        var transferCount = 0
+        var transitLegCount = 0
 
         for section in dto.sections {
-            let legStartTime = parseDate(section.departure?.time)
-            let legEndTime = parseDate(section.arrival?.time)
+            guard let legStartTime = MOTDateParser.parse(section.departure?.time),
+                  let legEndTime = MOTDateParser.parse(section.arrival?.time) else {
+                return nil
+            }
+
+            let isWalk = MOTSectionModeMapper.isWalkSection(section)
+            let mode = MOTSectionModeMapper.modeString(for: section)
+            let routeType = MOTSectionModeMapper.routeType(for: section)
+
             let legDuration = section.travelSummary?.duration ?? max(Int(legEndTime.timeIntervalSince(legStartTime)), 0)
             let legDistance = Double(section.travelSummary?.length ?? 0)
-
-            let isWalk = (section.type?.lowercased() == "walk" || section.transport == nil)
-            let mode = isWalk ? "WALK" : (section.transport?.mode?.uppercased() ?? "BUS")
 
             if isWalk {
                 totalWalkTime += legDuration
                 totalWalkDistance += legDistance
             } else {
                 totalTransitTime += legDuration
-                transferCount += 1
+                transitLegCount += 1
             }
 
-            let originCoord = section.departure?.place?.location.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng) } ?? fallbackOrigin
-            let destCoord = section.arrival?.place?.location.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng) } ?? fallbackDest
+            let originCoord = section.departure?.place?.location.map {
+                CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng)
+            } ?? fallbackOrigin
+
+            let destCoord = section.arrival?.place?.location.map {
+                CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng)
+            } ?? fallbackDest
 
             let fromPlace = Place(
                 name: section.departure?.place?.name ?? "",
@@ -110,9 +120,8 @@ nonisolated public enum MOTItineraryMapper {
                 fallbackDest: destCoord
             )
 
-            let routeType: RouteType = isWalk ? .nonTransit : (mode == "RAIL" ? .train : (mode == "TRAM" ? .tram : .bus))
-
             let isRealTime = section.departure?.nextStopsTimes?.first?.isRealTime ?? false
+            let steps = mapSteps(from: section.actions, polyline: section.polyline, fallbackCoord: originCoord)
 
             let leg = Leg(
                 startTime: legStartTime,
@@ -132,7 +141,7 @@ nonisolated public enum MOTItineraryMapper {
                 realTime: isRealTime,
                 streetNames: nil,
                 pathway: nil,
-                steps: nil,
+                steps: steps.isEmpty ? nil : steps,
                 headsign: section.transport?.headsign,
                 intermediateStops: [],
                 departureDelay: 0,
@@ -143,8 +152,11 @@ nonisolated public enum MOTItineraryMapper {
             legs.append(leg)
         }
 
-        let firstStartTime = legs.first?.startTime ?? Date()
-        let lastEndTime = legs.last?.endTime ?? Date()
+        guard let firstStartTime = legs.first?.startTime,
+              let lastEndTime = legs.last?.endTime else {
+            return nil
+        }
+
         let totalDuration = max(Int(lastEndTime.timeIntervalSince(firstStartTime)), totalWalkTime + totalTransitTime)
 
         return Itinerary(
@@ -158,9 +170,51 @@ nonisolated public enum MOTItineraryMapper {
             walkLimitExceeded: false,
             elevationLost: 0,
             elevationGained: 0,
-            transfers: max(transferCount - 1, 0),
+            transfers: max(transitLegCount - 1, 0),
             legs: legs
         )
+    }
+
+    private static func mapSteps(
+        from actions: [MOTActionDTO]?,
+        polyline: String?,
+        fallbackCoord: CLLocationCoordinate2D
+    ) -> [Step] {
+        guard let actions = actions, !actions.isEmpty else { return [] }
+        let coordinates = MOTLegGeometryMapper.decodeToCoordinates(polyline: polyline)
+
+        return actions.map { action in
+            let relativeDir: String?
+            if let dir = action.direction?.lowercased() {
+                if dir == "left" {
+                    relativeDir = "LEFT"
+                } else if dir == "right" {
+                    relativeDir = "RIGHT"
+                } else {
+                    relativeDir = nil
+                }
+            } else if action.action?.lowercased() == "depart" {
+                relativeDir = "DEPART"
+            } else {
+                relativeDir = nil
+            }
+
+            let coord: CLLocationCoordinate2D
+            if let offset = action.offset, offset >= 0, offset < coordinates.count {
+                coord = coordinates[offset]
+            } else {
+                coord = fallbackCoord
+            }
+
+            return Step(
+                distance: action.length ?? 0.0,
+                streetName: action.instruction ?? "",
+                relativeDirection: relativeDir,
+                elevationChange: nil,
+                lon: coord.longitude,
+                lat: coord.latitude
+            )
+        }
     }
     #endif
 }

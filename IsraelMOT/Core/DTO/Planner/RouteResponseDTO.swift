@@ -19,6 +19,8 @@ nonisolated public struct RouteResponseDTO: Codable, Sendable {
     public let sections: [SectionDTO]
     public let isFutureSearch: Bool?
     public let isRouteCanceled: Bool?
+    public let routeCrowdedness: Int?
+    public let travelSummary: TravelSummaryDTO?
 }
 
 nonisolated public struct SectionDTO: Codable, Sendable {
@@ -30,6 +32,18 @@ nonisolated public struct SectionDTO: Codable, Sendable {
     public let agency: AgencyDTO?
     public let travelSummary: TravelSummaryDTO?
     public let intermediateStops: [IntermediateStopDTO]?
+    public let actions: [MOTActionDTO]?
+    public let arialDistance: Double?
+}
+
+nonisolated public struct MOTActionDTO: Codable, Sendable {
+    public let action: String?
+    public let duration: Double?
+    public let instruction: String?
+    public let length: Double?
+    public let offset: Int?
+    public let direction: String?
+    public let severity: String?
 }
 
 nonisolated public struct StationDataDTO: Codable, Sendable {
