@@ -118,7 +118,7 @@ public actor MOTHTTPClient {
                     try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
                     continue
                 }
-                throw MOTHTTPError.networkFailure(error)
+                throw MOTHTTPError.networkFailure(message: error.localizedDescription)
             }
         }
     }
@@ -128,7 +128,7 @@ public actor MOTHTTPClient {
             let decoder = JSONDecoder()
             return try decoder.decode(T.self, from: data)
         } catch {
-            throw MOTHTTPError.decodingError(error)
+            throw MOTHTTPError.decodingError(message: error.localizedDescription)
         }
     }
 

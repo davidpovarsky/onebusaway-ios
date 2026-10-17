@@ -181,20 +181,14 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
 
             let uniqueRouteDescs = Array(Set(routesInStop.compactMap { $0.routeDesc }.filter { !$0.isEmpty })).prefix(8)
 
+            let client = self.client
             await withTaskGroup(of: (String, [NextStopTimeDTO]).self) { group in
                 for routeDesc in uniqueRouteDescs {
                     group.addTask {
                         let reqBody = GetNextStopDataRequestDTO(routeDesc: routeDesc, stopCodes: [stopCode.rawValue])
-                        guard let bodyData = try? JSONEncoder().encode(reqBody) else {
-                            return (routeDesc, [])
-                        }
-                        var request = URLRequest(url: nextStopURL)
-                        request.httpMethod = "POST"
-                        request.httpBody = bodyData
-
-                        let responseDTO: GetNextStopDataResponseDTOServiceResponse? = try? await self.client.execute(request: request)
+                        let responseDTO: GetNextStopDataResponseDTOServiceResponse? = try? await client.post(nextStopURL, body: reqBody, decodeAs: GetNextStopDataResponseDTOServiceResponse.self)
                         let stopKey = String(stopCode.rawValue)
-                        let times = responseDTO?.data?[stopKey]??.stopTimes ?? []
+                        let times: [NextStopTimeDTO] = responseDTO?.data?[stopKey]??.stopTimes ?? []
                         return (routeDesc, times)
                     }
                 }
