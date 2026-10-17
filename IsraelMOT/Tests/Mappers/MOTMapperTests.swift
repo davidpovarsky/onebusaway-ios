@@ -116,10 +116,11 @@ struct MOTMapperTests {
         #expect(arr.isRealTime == true)
         #expect(arr.minutesToArrival == 5)
         #expect(arr.vehicleLocation != nil)
+        #expect(arr.estimatedTime != nil)
     }
 
     @Test
-    func testMOTArrivalsMapperScheduledFallback() {
+    func testMOTArrivalsMapperTruthfulNoPlaceholderWhenEmpty() {
         let routeInStop = RouteInStopDTO(
             routeId: 102,
             oppositeDirectionId: nil,
@@ -131,10 +132,40 @@ struct MOTMapperTests {
             destinationName: "תלפיות"
         )
 
-        // No real-time updates provided
+        // No real-time updates or schedule records provided -> MUST NOT invent arrivals (no now+600)
         let arrivals = MOTArrivalsMapper.map(
             routesInStop: [routeInStop],
             realTimeUpdates: []
+        )
+
+        #expect(arrivals.isEmpty)
+    }
+
+    @Test
+    func testMOTArrivalsMapperScheduledWithoutRealTime() {
+        let routeInStop = RouteInStopDTO(
+            routeId: 102,
+            oppositeDirectionId: nil,
+            routeName: "15",
+            routeLongName: "תלפיות",
+            routeDesc: "15015-1-0",
+            agencyId: 3,
+            agencyName: "אגד",
+            destinationName: "תלפיות"
+        )
+
+        let scheduledUpdate = NextStopRealTimeDTO(
+            stopCode: 5997,
+            routeDesc: "15015-1-0",
+            minutesToArrival: nil,
+            arrivalTime: "2026-10-18T10:15:00",
+            isRealTime: false,
+            vehicleLocation: nil
+        )
+
+        let arrivals = MOTArrivalsMapper.map(
+            routesInStop: [routeInStop],
+            realTimeUpdates: [scheduledUpdate]
         )
 
         #expect(arrivals.count == 1)
@@ -143,6 +174,7 @@ struct MOTMapperTests {
         #expect(arr.isRealTime == false)
         #expect(arr.minutesToArrival == nil)
         #expect(arr.vehicleLocation == nil)
+        #expect(arr.estimatedTime == nil)
     }
 
     @Test

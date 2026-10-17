@@ -175,8 +175,36 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             let domainStop = MOTStopMapper.map(from: dto)
             let routesInStop = dto.routesInStop ?? []
 
-            // Live updates or fallback
-            let arrivals = MOTArrivalsMapper.map(routesInStop: routesInStop, realTimeUpdates: [])
+            // Query live arrivals/departures for lines serving this stop (bounded concurrency)
+            var stopTimesByRouteDesc: [String: [NextStopTimeDTO]] = [:]
+            let nextStopURL = endpoints.nextStopTimesAndLocationURL()
+
+            let uniqueRouteDescs = Array(Set(routesInStop.compactMap { $0.routeDesc }.filter { !$0.isEmpty })).prefix(8)
+
+            await withTaskGroup(of: (String, [NextStopTimeDTO]).self) { group in
+                for routeDesc in uniqueRouteDescs {
+                    group.addTask {
+                        let reqBody = GetNextStopDataRequestDTO(routeDesc: routeDesc, stopCodes: [stopCode.rawValue])
+                        guard let bodyData = try? JSONEncoder().encode(reqBody) else {
+                            return (routeDesc, [])
+                        }
+                        var request = URLRequest(url: nextStopURL)
+                        request.httpMethod = "POST"
+                        request.httpBody = bodyData
+
+                        let responseDTO: GetNextStopDataResponseDTOServiceResponse? = try? await self.client.execute(request: request)
+                        let stopKey = String(stopCode.rawValue)
+                        let times = responseDTO?.data?[stopKey]??.stopTimes ?? []
+                        return (routeDesc, times)
+                    }
+                }
+
+                for await (routeDesc, times) in group {
+                    stopTimesByRouteDesc[routeDesc] = times
+                }
+            }
+
+            let arrivals = MOTArrivalsMapper.map(routesInStop: routesInStop, stopTimesByRouteDesc: stopTimesByRouteDesc)
             let envelope = OBACompatibilityBridge.stopArrivalsResponse(stop: domainStop, arrivals: arrivals)
             let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!

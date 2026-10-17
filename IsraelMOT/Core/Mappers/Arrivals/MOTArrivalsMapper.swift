@@ -11,49 +11,57 @@ import CoreLocation
 nonisolated public enum MOTArrivalsMapper {
     public static func map(
         routesInStop: [RouteInStopDTO],
-        realTimeUpdates: [NextStopRealTimeDTO] = []
+        stopTimesByRouteDesc: [String: [NextStopTimeDTO]] = [:]
     ) -> [TransitArrival] {
-        let updatesByRouteDesc = Dictionary(grouping: realTimeUpdates, by: { $0.routeDesc ?? "" })
-
         var arrivals: [TransitArrival] = []
-        let now = Date()
 
         for route in routesInStop {
             let routeID = MOTRouteID(rawValue: route.routeId)
             let routeDesc = route.routeDesc ?? ""
-            let updates = updatesByRouteDesc[routeDesc] ?? []
+            let stopTimes = stopTimesByRouteDesc[routeDesc] ?? []
 
-            if let liveUpdate = updates.first {
-                let mins = liveUpdate.minutesToArrival ?? 0
-                let est = Calendar.current.date(byAdding: .minute, value: mins, to: now) ?? now
-                let loc = liveUpdate.vehicleLocation.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng) }
+            for st in stopTimes {
+                guard let arrivalDate = MOTDateParser.parse(st.arrivalTime) else {
+                    continue
+                }
+
+                let isRealTime = st.isRealTime ?? false
+                let staticDate = MOTDateParser.parse(st.staticArrivalTime) ?? arrivalDate
+                let estimatedDate: Date? = isRealTime ? arrivalDate : nil
+                let mins = st.minutesToArrival.map { Int($0.rounded()) }
+
+                let vehicleLoc: CLLocationCoordinate2D? = (isRealTime ? st.routeLocation : nil).map {
+                    CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng)
+                }
+
                 let arrival = TransitArrival(
                     routeID: routeID,
                     lineName: route.routeName,
                     destination: route.destinationName ?? route.routeLongName ?? "",
-                    scheduledTime: est,
-                    estimatedTime: est,
+                    scheduledTime: staticDate,
+                    estimatedTime: estimatedDate,
                     minutesToArrival: mins,
-                    isRealTime: liveUpdate.isRealTime ?? true,
-                    vehicleLocation: loc
-                )
-                arrivals.append(arrival)
-            } else {
-                // Scheduled fallback
-                let arrival = TransitArrival(
-                    routeID: routeID,
-                    lineName: route.routeName,
-                    destination: route.destinationName ?? route.routeLongName ?? "",
-                    scheduledTime: now.addingTimeInterval(600), // Default 10 min placeholder
-                    estimatedTime: nil,
-                    minutesToArrival: nil,
-                    isRealTime: false,
-                    vehicleLocation: nil
+                    isRealTime: isRealTime,
+                    vehicleLocation: vehicleLoc
                 )
                 arrivals.append(arrival)
             }
         }
 
         return arrivals.sorted { $0.scheduledTime < $1.scheduledTime }
+    }
+
+    /// Compatibility overload mapping an array of updates grouped by routeDesc.
+    public static func map(
+        routesInStop: [RouteInStopDTO],
+        realTimeUpdates: [NextStopTimeDTO]
+    ) -> [TransitArrival] {
+        var dict: [String: [NextStopTimeDTO]] = [:]
+        for update in realTimeUpdates {
+            if let rd = routesInStop.first?.routeDesc {
+                dict[rd, default: []].append(update)
+            }
+        }
+        return map(routesInStop: routesInStop, stopTimesByRouteDesc: dict)
     }
 }
