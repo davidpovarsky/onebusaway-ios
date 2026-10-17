@@ -34,8 +34,12 @@ struct MOTFlexiblePolylineTests {
     @Test
     func testDecodeAll24PolylinesFromLiveFixture() throws {
         let fixtureData = try MOTTestFixtures.loadFixture(named: "ministry_getroutes_live.json")
-        let json = try JSONSerialization.jsonObject(with: fixtureData) as? [String: Any]
-        let routes = json?["data"] as? [[String: Any]] ?? []
+        let jsonObject = try JSONSerialization.jsonObject(with: fixtureData)
+        guard let json = jsonObject as? [String: Any],
+              let routes = json["data"] as? [[String: Any]] else {
+            Issue.record("Failed to parse fixture JSON")
+            return
+        }
 
         var polylineStrings: [String] = []
         for route in routes {

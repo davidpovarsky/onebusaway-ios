@@ -161,11 +161,9 @@ struct MOTTripPlanningTests {
             coordinates: CoordinateDTO(lat: 31.77800, lng: 35.21000)
         )
         let options = GetRoutesOptionsDTO(
+            isAccessible: false,
             changes: true,
-            departureTime: "2026-10-15T12:00:00Z",
-            arrivalTime: nil,
-            transportations: nil,
-            isAccessible: false
+            departureTime: "2026-10-15T12:00:00Z"
         )
         let route = RequestedRouteDTO(
             origin: origin,
@@ -174,10 +172,7 @@ struct MOTTripPlanningTests {
         )
         let returnedOptions = ReturnedRouteOptionsDTO(
             language: "he",
-            isInterModal: true,
-            isVehicleFirst: false,
-            isFutureSearch: false,
-            isDispatch: false
+            isFutureSearch: false
         )
         let requestDTO = GetRoutesRequestDTO(
             route: route,
@@ -187,16 +182,18 @@ struct MOTTripPlanningTests {
 
         let encoder = JSONEncoder()
         let data = try encoder.encode(requestDTO)
-        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let jsonObject = try JSONSerialization.jsonObject(with: data)
+        guard let json = jsonObject as? [String: Any],
+              let routeDict = json["route"] as? [String: Any] else {
+            Issue.record("Expected JSON dictionary")
+            return
+        }
 
-        #expect(json != nil)
-        #expect(json?["route"] != nil)
-        #expect(json?["returnedRouteOptions"] != nil)
-
-        let routeDict = json?["route"] as? [String: Any]
-        #expect(routeDict?["origin"] != nil)
-        #expect(routeDict?["destination"] != nil)
-        #expect(routeDict?["options"] != nil)
+        #expect(json["route"] != nil)
+        #expect(json["returnedRouteOptions"] != nil)
+        #expect(routeDict["origin"] != nil)
+        #expect(routeDict["destination"] != nil)
+        #expect(routeDict["options"] != nil)
     }
 
     @Test

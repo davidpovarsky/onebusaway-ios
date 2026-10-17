@@ -48,6 +48,10 @@ nonisolated public enum MOTTestFixtures {
         fatalError("Failed to find fixture file: \(fileName)")
     }
 
+    public static func loadFixture(named fileName: String) throws -> Data {
+        return loadData(named: fileName)
+    }
+
     public static func decode<T: Decodable>(fixture named: String, as type: T.Type = T.self) throws -> T {
         let data = loadData(named: named)
         let decoder = JSONDecoder()

@@ -95,13 +95,12 @@ struct MOTMapperTests {
             destinationName: "גילה"
         )
 
-        let liveUpdate = NextStopRealTimeDTO(
-            stopCode: 5997,
-            routeDesc: "15031-1-0",
-            minutesToArrival: 5,
-            arrivalTime: "14:30",
+        let liveUpdate = NextStopTimeDTO(
+            staticArrivalTime: "2026-10-18T14:25:00",
+            arrivalTime: "2026-10-18T14:30:00",
+            minutesToArrival: 5.0,
             isRealTime: true,
-            vehicleLocation: CoordinateDTO(lat: 31.78, lng: 35.20)
+            routeLocation: CoordinateDTO(lat: 31.78, lng: 35.20)
         )
 
         let arrivals = MOTArrivalsMapper.map(
@@ -154,13 +153,12 @@ struct MOTMapperTests {
             destinationName: "תלפיות"
         )
 
-        let scheduledUpdate = NextStopRealTimeDTO(
-            stopCode: 5997,
-            routeDesc: "15015-1-0",
-            minutesToArrival: nil,
+        let scheduledUpdate = NextStopTimeDTO(
+            staticArrivalTime: "2026-10-18T10:15:00",
             arrivalTime: "2026-10-18T10:15:00",
+            minutesToArrival: nil,
             isRealTime: false,
-            vehicleLocation: nil
+            routeLocation: nil
         )
 
         let arrivals = MOTArrivalsMapper.map(
