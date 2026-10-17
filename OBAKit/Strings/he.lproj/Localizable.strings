@@ -105,7 +105,7 @@
 "clipboard.copied_text_confirmation" = "הועתק ללוח";
 
 /* Body of the the alert that appears when you try sending an email without Mail.app set up */
-"contact_us_helper.cant_send_email.body_fmt" = "ליצירת קשר, שלח דוא\"ל אל %1$@. הקש על 'העתק מידע טכני' להעתקת מידע שיסייע לנו בפתרון הבעיה.";
+"contact_us_helper.cant_send_email.body_fmt" = "ליצירת קשר, שלח דוא\"ל אל %@. הקש על 'העתק מידע טכני' להעתקת מידע שיסייע לנו בפתרון הבעיה.";
 
 /* A button that lets the user copy an email address to the clipboard. */
 "contact_us_helper.cant_send_email.copy_email_button" = "העתק כתובת דוא\"ל";

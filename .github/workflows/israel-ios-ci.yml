@@ -75,7 +75,9 @@ jobs:
             -only-testing:OBAKitTests/MOTMapperTests \
             -only-testing:OBAKitTests/MOTHTTPClientTests \
             -only-testing:OBAKitTests/MOTCompatibilityDataLoaderTests \
-            -only-testing:OBAKitTests/MOTTripPlanningTests
+            -only-testing:OBAKitTests/MOTTripPlanningTests \
+            -only-testing:OBAKitTests/MOTGetRoutesEncodingTests \
+            -only-testing:OBAKitTests/MOTFlexiblePolylineTests
 
       - name: Build and Archive iOS App (Unsigned)
         run: |
