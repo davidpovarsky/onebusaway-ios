@@ -566,18 +566,15 @@ struct MOTCompatibilityDataLoaderTests {
         let response = try decoder.decode(RESTAPIResponse<StopsForRoute>.self, from: jsonData)
         #expect(response.code == 200)
 
-        guard let entry = response.entry else {
-            Issue.record("Expected StopsForRoute entry")
-            return
-        }
+        let entry = response.entry
 
         #expect(entry.id == "mot:route:33285")
         #expect(entry.stopGroupings.count == 1)
         #expect(entry.stopGroupings[0].stopGroups.count == 1)
         #expect(entry.stopGroupings[0].stopGroups[0].stopIDs.count == 2)
-        #expect(response.references.stops.count == 2)
-        #expect(response.references.routes.count == 1)
-        #expect(response.references.agencies.count == 1)
+        #expect(response.references?.stops.count == 2)
+        #expect(response.references?.routes.count == 1)
+        #expect(response.references?.agencies.count == 1)
     }
 
     @Test
@@ -606,10 +603,7 @@ struct MOTCompatibilityDataLoaderTests {
         let response = try decoder.decode(RESTAPIResponse<ScheduleForRoute>.self, from: jsonData)
         #expect(response.code == 200)
 
-        guard let entry = response.entry else {
-            Issue.record("Expected ScheduleForRoute entry")
-            return
-        }
+        let entry = response.entry
 
         #expect(entry.id == "mot:route:33285")
         #expect(entry.stopTripGroupings.count == 1)

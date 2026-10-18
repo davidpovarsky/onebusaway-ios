@@ -144,7 +144,7 @@ struct IsraelStopCatalogTests {
         let decoder = JSONDecoder()
         let response = try decoder.decode(RESTAPIResponse<ScheduleForRoute>.self, from: data)
 
-        let schedule = response.data.entry
+        let schedule = response.entry
         #expect(schedule.routeID == "mot:route:33287")
         #expect(!schedule.stopTripGroupings.isEmpty)
 
