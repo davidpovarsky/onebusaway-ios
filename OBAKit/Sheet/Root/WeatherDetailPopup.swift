@@ -119,6 +119,14 @@ private struct WeatherCard: View {
             StatsRow(stats: display.stats)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
+
+            if let attribution = display.sourceAttribution {
+                Text(attribution)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 10)
+            }
         }
         .background(.ultraThinMaterial, in: shape)
         .clearGlassEffectIfAvailable(in: shape)
