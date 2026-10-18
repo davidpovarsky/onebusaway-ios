@@ -66,7 +66,40 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             return try await handleRouteDetail(url: url)
         }
 
-        // Fallback for everything else
+        // The official MOT server does NOT implement the OneBusAway REST API.
+        // Agency-coverage geometry is unavailable: return an explicit empty
+        // OBA-compatible list rather than sending a nonexistent endpoint to MOT.
+        if path.contains("/api/where/agencies-with-coverage.json") {
+            let payload: [String: Any] = [
+                "code": 200,
+                "text": "MOT does not provide OBA agency-coverage polygons",
+                "version": 2,
+                "currentTime": Int(Date().timeIntervalSince1970 * 1000),
+                "data": [
+                    "list": [] as [[String: Any]],
+                    "references": [
+                        "agencies": [] as [[String: Any]],
+                        "routes": [] as [[String: Any]],
+                        "stops": [] as [[String: Any]],
+                        "trips": [] as [[String: Any]],
+                        "situations": [] as [[String: Any]]
+                    ] as [String: Any]
+                ] as [String: Any]
+            ]
+            let data = try JSONSerialization.data(withJSONObject: payload)
+            let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
+            return (data, response)
+        }
+
+        // Never leak an unsupported OBA path to api.bus.gov.il. Otherwise an
+        // invalid /prod/api/where or /prod/api/ondemand URL returns HTTP 403
+        // and misleadingly looks like a failure of a supported ministry API.
+        if url.host?.lowercased() == "api.bus.gov.il",
+           path.hasPrefix("/prod/api/") {
+            throw MOTCompatibilityError.unsupportedOneBusAwayEndpoint(url.path)
+        }
+
+        // Non-MOT URLs preserve the caller's normal URLSession behaviour.
         return try await fallbackLoader.data(for: request)
     }
 
@@ -311,5 +344,18 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
     private func notFoundResponse(for url: URL) async throws -> (Data, URLResponse) {
         let response = HTTPURLResponse(url: url, statusCode: 404, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "text/plain"])!
         return (Data(), response)
+    }
+}
+
+/// Deliberate capability rejection: an unsupported OneBusAway endpoint is NOT
+/// an HTTP 403 from the official Ministry of Transport API.
+nonisolated public enum MOTCompatibilityError: LocalizedError, Sendable {
+    case unsupportedOneBusAwayEndpoint(String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .unsupportedOneBusAwayEndpoint(let path):
+            return "OneBusAway endpoint is not implemented for Israel MOT: \(path)"
+        }
     }
 }
