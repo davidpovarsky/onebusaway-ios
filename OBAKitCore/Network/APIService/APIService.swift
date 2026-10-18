@@ -23,7 +23,7 @@ public struct APIServiceConfiguration: Sendable {
     let apiKey: String
     let uuid: String
     let appVersion: String
-    let regionIdentifier: Int?
+    public let regionIdentifier: Int?
 
     /// Survey API base URL - different from regular OBA API base URL
     let surveyBaseURL: URL?
