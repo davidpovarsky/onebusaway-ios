@@ -33,10 +33,13 @@ nonisolated public enum OBACompatibilityBridge {
                 let rId = routeDict["id"] as! String
                 referencesRoutes[rId] = routeDict
 
-                if let agId = route.agencyID {
-                    let agDict = serializeAgency(id: agId, name: route.agencyName ?? "משרד התחבורה")
-                    referencesAgencies[agDict["id"] as! String] = agDict
-                }
+                let agency = serializeAgency(
+                id: route.agencyID ?? MOTAgencyID(rawValue: 1),
+                name: route.agencyName ?? "משרד התחבורה"
+            )
+            if let id = agency["id"] as? String {
+                referencesAgencies[id] = agency
+            }
             }
         }
 
@@ -76,14 +79,12 @@ nonisolated public enum OBACompatibilityBridge {
 
         for route in routes {
             routeEntries.append(serializeRouteSummary(route))
-            if let agencyID = route.agencyID {
-                let agency = serializeAgency(
-                    id: agencyID,
-                    name: route.agencyName ?? "משרד התחבורה"
-                )
-                if let key = agency["id"] as? String {
-                    agenciesByID[key] = agency
-                }
+            let agency = serializeAgency(
+                id: route.agencyID ?? MOTAgencyID(rawValue: 1),
+                name: route.agencyName ?? "משרד התחבורה"
+            )
+            if let key = agency["id"] as? String {
+                agenciesByID[key] = agency
             }
         }
 
@@ -121,9 +122,12 @@ nonisolated public enum OBACompatibilityBridge {
             let rId = routeDict["id"] as! String
             referencesRoutes[rId] = routeDict
 
-            if let agId = route.agencyID {
-                let agDict = serializeAgency(id: agId, name: route.agencyName ?? "משרד התחבורה")
-                referencesAgencies[agDict["id"] as! String] = agDict
+            let agency = serializeAgency(
+                id: route.agencyID ?? MOTAgencyID(rawValue: 1),
+                name: route.agencyName ?? "משרד התחבורה"
+            )
+            if let id = agency["id"] as? String {
+                referencesAgencies[id] = agency
             }
         }
 
@@ -168,9 +172,12 @@ nonisolated public enum OBACompatibilityBridge {
             let rId = routeDict["id"] as! String
             referencesRoutes[rId] = routeDict
 
-            if let agId = route.agencyID {
-                let agDict = serializeAgency(id: agId, name: route.agencyName ?? "משרד התחבורה")
-                referencesAgencies[agDict["id"] as! String] = agDict
+            let agency = serializeAgency(
+                id: route.agencyID ?? MOTAgencyID(rawValue: 1),
+                name: route.agencyName ?? "משרד התחבורה"
+            )
+            if let id = agency["id"] as? String {
+                referencesAgencies[id] = agency
             }
         }
 
