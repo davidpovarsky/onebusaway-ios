@@ -142,7 +142,7 @@ public actor MOTHTTPClient {
     private func extractF5SupportID(from body: String) -> String? {
         guard body.localizedCaseInsensitiveContains("support ID") else { return nil }
         // Real F5 responses can use hexadecimal UUIDs, not only digits.
-        let pattern = "support\\\\s+ID(?:\\\\s+is)?\\\\s*[:#]?\\\\s*([A-Fa-f0-9-]{8,})"
+        let pattern = "support\\s+ID(?:\\s+is)?\\s*[:#]?\\s*([A-Fa-f0-9-]{8,})"
         guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
               let match = regex.firstMatch(in: body, options: [], range: NSRange(location: 0, length: body.utf16.count)) else {
             return nil
