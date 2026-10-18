@@ -150,11 +150,28 @@ class MapViewModel: NSObject, ObservableObject, LocationServiceDelegate {
     /// `true` when the host should render any weather UI. Mirrors the gate at
     /// `MapViewController.toolbar` so UIKit and SwiftUI agree on availability.
     var isWeatherFeatureAvailable: Bool {
-        // GPS weather is independent of OneBusAway's Obaco transit-region backend.
-        true
+        // Dedicated Israel edition uses GPS weather; international OBA editions
+        // keep their original region-based Obaco weather behaviour.
+        application.config.fixedRegionName == "Israel"
+            || application.features.obaco == .running
     }
 
     func loadWeather() async {
+        if application.config.fixedRegionName != "Israel" {
+            // No changes to upstream/international weather behaviour.
+            guard let apiService = application.obacoService else {
+                weatherDisplay = nil
+                return
+            }
+            do {
+                let forecast = try await apiService.getWeather()
+                weatherDisplay = WeatherDisplay(forecast: forecast, locale: application.locale)
+            } catch {
+                Logger.error("Failed to load regional Obaco weather: \(error)")
+            }
+            return
+        }
+
         // Never display New York weather just because the current OBA region is stale.
         // Without a usable location fix, there is no truthful location-specific forecast.
         guard let gps = application.locationService.currentLocation,
