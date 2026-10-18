@@ -249,19 +249,10 @@ nonisolated public enum OBACompatibilityBridge {
                 arrivalDict["predictedDepartureTime"] = predMs
             }
 
-            if arr.isRealTime, let loc = arr.vehicleLocation {
-                arrivalDict["tripStatus"] = [
-                    "activeTripId": syntheticTripId,
-                    "blockTripSequence": 1,
-                    "serviceDate": Int(Calendar.current.startOfDay(for: arr.scheduledTime).timeIntervalSince1970 * 1000),
-                    "scheduledDistanceAlongTrip": 0.0,
-                    "totalDistanceAlongTrip": 1000.0,
-                    "position": ["lat": loc.latitude, "lon": loc.longitude],
-                    "predicted": true,
-                    "status": "default",
-                    "phase": "in_progress"
-                ]
-            }
+            // Do not fabricate a partial OBA TripStatus with invented distance
+            // and orientation values. It cannot decode as a native TripStatus
+            // and silently disappears. Scheduled/predicted arrival times are
+            // still truthfully represented by `predictedArrivalTime` above.
 
             obaArrivals.append(arrivalDict)
         }
