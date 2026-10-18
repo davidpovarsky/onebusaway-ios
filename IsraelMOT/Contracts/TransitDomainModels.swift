@@ -132,30 +132,6 @@ nonisolated public struct TransitRoute: Identifiable, Hashable, Codable, Sendabl
         self.polyline = polyline
         self.stops = stops
     }
-
-    public init(
-        routeID: MOTRouteID,
-        lineName: String,
-        longName: String? = nil,
-        routeDesc: MOTRouteDesc? = nil,
-        agencyID: MOTAgencyID,
-        agencyName: String,
-        cityName: String? = nil,
-        polyline: [CLLocationCoordinate2D]?,
-        stops: [TransitStop] = []
-    ) {
-        self.init(
-            routeID: routeID,
-            lineName: lineName,
-            longName: longName,
-            routeDesc: routeDesc,
-            agencyID: agencyID,
-            agencyName: agencyName,
-            cityName: cityName,
-            polyline: nil,
-            stops: stops
-        )
-    }
 }
 
 /// Real-time or scheduled arrival record at a stop.

@@ -343,9 +343,8 @@ nonisolated public enum OBACompatibilityBridge {
         }
 
         var polylineEntities: [[String: Any]] = []
-        if let polylineCoords = route.polyline, !polylineCoords.isEmpty {
-            let encoded = GooglePolylineEncoder.encode(polylineCoords)
-            polylineEntities.append(["points": encoded])
+        if let polylineString = route.polyline, !polylineString.isEmpty {
+            polylineEntities.append(["points": polylineString])
         }
 
         let headsign = route.destinationName ?? route.longName ?? route.lineName
