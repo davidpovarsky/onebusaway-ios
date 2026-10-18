@@ -29,8 +29,8 @@
 
 ---
 
-## 3. Mandatory Subagent Delegation & Approval Gates
-- **חובת האצלה:** הסוכן הראשי פועל כמתאם בלבד ומחויב להפעיל סוכני משנה (`invoke_subagent`). כל קוד מועבר לרוני לאימות.
+## 3. Two-Tier Execution Policy & Approval Gates
+- **מדיניות ביצוע (NORMAL מול TEAM):** ברירת המחדל היא ביצוע ישיר בסשן הראשי (`[MAIN_SESSION]`) תוך טעינת הוראות התפקיד מ-`.agents/roles/<role>.md` ו-`PROJECT_ASSIGNMENTS.md`. הפעלת סוכני משנה (`invoke_subagent` / `[SUBAGENT]`) מתבצעת אך ורק לפי בקשה מפורשת של המשתמש ("עבוד במצב צוות" / "הפעל סוכני משנה").
 - **Release Readiness:** Release gate tasks remain OPEN until verified on physical iPad via SideStore with green CI.
 - **Physical Device:** Tasks with physical iPad runtime verification remain open until verified on hardware.
 - **Asana Policy:** Autonomous updates and verified completion are authorized per `docs/ai-team/ASANA_POLICY.md`.
