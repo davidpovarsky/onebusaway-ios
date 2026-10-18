@@ -12,7 +12,10 @@
 #import "OBARootInterfaceLauncher.h"
 @import OBAKitCore;
 @import OBAKit;
+@import Security;
 #import <FirebaseCrashlytics/FirebaseCrashlytics.h>
+#import <dlfcn.h>
+#import <TargetConditionals.h>
 #import "App-Swift.h"
 
 @interface AppDelegate ()<OBAApplicationDelegate>
@@ -21,6 +24,37 @@
 @property(nonatomic,strong) OBAAnalyticsOrchestrator *analyticsClient;
 @property(nonatomic,strong) OBACloudPushService *pushService;
 @end
+
+// Unsigned IPAs installed via SideStore cannot register for APNs without a
+// real, valid aps-environment entitlement. Do not attempt remote registration
+// in the Israel edition when the installed binary lacks that entitlement.
+// A properly signed IPA with APNs entitlement retains the push integration.
+static BOOL OBAHasAPNsEntitlement(void) {
+#if TARGET_OS_SIMULATOR
+    return NO;
+#else
+    typedef struct __SecTask *SecTaskRef;
+    typedef SecTaskRef (*SecTaskCreateFromSelfFunc)(CFAllocatorRef);
+    typedef CFTypeRef (*SecTaskCopyValueForEntitlementFunc)(SecTaskRef, CFStringRef, CFErrorRef *);
+
+    SecTaskCreateFromSelfFunc createFunc = (SecTaskCreateFromSelfFunc)dlsym(RTLD_DEFAULT, "SecTaskCreateFromSelf");
+    SecTaskCopyValueForEntitlementFunc copyFunc = (SecTaskCopyValueForEntitlementFunc)dlsym(RTLD_DEFAULT, "SecTaskCopyValueForEntitlement");
+
+    if (!createFunc || !copyFunc) {
+        return NO;
+    }
+
+    SecTaskRef task = createFunc(kCFAllocatorDefault);
+    if (task == NULL) { return NO; }
+    CFTypeRef value = copyFunc(task, CFSTR("aps-environment"), NULL);
+    BOOL result = value != NULL
+        && CFGetTypeID(value) == CFStringGetTypeID()
+        && CFStringGetLength((CFStringRef)value) > 0;
+    if (value != NULL) { CFRelease(value); }
+    CFRelease(task);
+    return result;
+#endif
+}
 
 @implementation AppDelegate
 
@@ -50,8 +84,16 @@
 
         OBAAppConfig *appConfig = [[OBAAppConfig alloc] initWithAppBundle:NSBundle.mainBundle userDefaults:_userDefaults analytics:_analyticsClient];
 
-        _pushService = [[OBACloudPushService alloc] init];
-        appConfig.pushServiceProvider = _pushService;
+        NSDictionary *obaConfig = [NSBundle.mainBundle.infoDictionary objectForKey:@"OBAKitConfig"];
+        BOOL isIsraelEdition = [[obaConfig objectForKey:@"FixedRegionName"] isEqualToString:@"Israel"];
+        if (!isIsraelEdition || OBAHasAPNsEntitlement()) {
+            _pushService = [[OBACloudPushService alloc] init];
+            appConfig.pushServiceProvider = _pushService;
+        } else {
+            // No invalid aps-environment registration attempt, no misleading
+            // runtime error. Local notification features remain independent.
+            NSLog(@"Israel MOT: APNs unavailable in unsigned build; remote push disabled.");
+        }
 
         _app = [[OBAApplication alloc] initWithConfig:appConfig];
         _app.delegate = self;

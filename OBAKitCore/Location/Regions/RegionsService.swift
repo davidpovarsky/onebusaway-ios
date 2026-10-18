@@ -45,6 +45,9 @@ public class RegionsService: NSObject, LocationServiceDelegate {
     private let fileStorage: RegionsFileStorageProtocol
     private let fixedRegionName: String?
     private let fixedRegionOBABaseURL: URL?
+    /// Bundled region IDs preserved even if the public regions server omits them.
+    /// Opt-in, so other white-label clients retain upstream refresh semantics.
+    private let pinnedBundledRegionIdentifiers: Set<RegionIdentifier>
 
     /// In-memory cache for custom regions. Loaded lazily and invalidated whenever a custom region is added or deleted.
     /// Access must be performed under `customRegionsCacheLock` to prevent data races between
@@ -63,7 +66,7 @@ public class RegionsService: NSObject, LocationServiceDelegate {
     ///   - delegate: A delegate object for callbacks.
     ///   - fixedRegionName: A region name from `OBAKitConfig` to auto-select, bypassing the region picker.
     ///   - fixedRegionOBABaseURL: A fallback OBA base URL used when `fixedRegionName` doesn't match any known region.
-    public init(apiService: RegionsAPIService?, locationService: LocationService, userDefaults: UserDefaults, bundledRegionsFilePath: String, apiPath: String?, fileStorage: RegionsFileStorageProtocol = RegionsFileStorage(), delegate: RegionsServiceDelegate? = nil, fixedRegionName: String? = nil, fixedRegionOBABaseURL: URL? = nil) {
+    public init(apiService: RegionsAPIService?, locationService: LocationService, userDefaults: UserDefaults, bundledRegionsFilePath: String, apiPath: String?, fileStorage: RegionsFileStorageProtocol = RegionsFileStorage(), delegate: RegionsServiceDelegate? = nil, fixedRegionName: String? = nil, fixedRegionOBABaseURL: URL? = nil, pinnedBundledRegionIdentifiers: Set<RegionIdentifier> = []) {
         self.apiService = apiService
         self.locationService = locationService
         self.userDefaults = userDefaults
@@ -73,6 +76,7 @@ public class RegionsService: NSObject, LocationServiceDelegate {
 
         self.fixedRegionName = fixedRegionName
         self.fixedRegionOBABaseURL = fixedRegionOBABaseURL
+        self.pinnedBundledRegionIdentifiers = pinnedBundledRegionIdentifiers
 
         self.userDefaults.register(defaults: [
             RegionsService.automaticallySelectRegionUserDefaultsKey: true,
@@ -82,12 +86,15 @@ public class RegionsService: NSObject, LocationServiceDelegate {
         // One-time migration from UserDefaults to disk-based storage.
         RegionsService.migrateFromUserDefaultsIfNeeded(userDefaults: userDefaults, fileStorage: fileStorage)
 
-        if let regions = RegionsService.loadStoredRegions(from: fileStorage), regions.count > 0 {
-            self.regions = regions
-        }
-        else {
-            self.regions = RegionsService.bundledRegions(path: bundledRegionsFilePath)
-        }
+        // Stored/remote lists can lack local regions (e.g. Israel MOT region 972).
+        // Reapply opt-in pinned bundled regions at launch, not only on network refresh.
+        let bundled = RegionsService.bundledRegions(path: bundledRegionsFilePath)
+        let stored = RegionsService.loadStoredRegions(from: fileStorage) ?? []
+        self.regions = Self.withPinnedBundledRegions(
+            stored.isEmpty ? bundled : stored,
+            bundled: bundled,
+            pinnedIDs: pinnedBundledRegionIdentifiers
+        )
 
         super.init()
 
@@ -102,14 +109,25 @@ public class RegionsService: NSObject, LocationServiceDelegate {
         }
 
         // Fixed region from OBAKitConfig: match by name, then fall back to URL.
-        // See: https://github.com/OneBusAway/onebusaway-ios/issues/608
-        if currentRegion == nil, let fixedName = fixedRegionName {
+        // The Israel fork uses the fixed-region config as a one-time onboarding
+        // repair for installations that previously selected MTA New York because
+        // the remote region list omitted Israel. It keeps auto-location enabled.
+        // Other clients retain the upstream semantics.
+        if let fixedName = fixedRegionName {
             let match = self.regions.first(where: { $0.name == fixedName })
                 ?? self.regions.first(where: { fixedRegionOBABaseURL != nil && $0.OBABaseURL == fixedRegionOBABaseURL })
-
             if let match {
-                currentRegion = match
-                userDefaults.set(false, forKey: RegionsService.automaticallySelectRegionUserDefaultsKey)
+                let isIsraelFork = fixedName == "Israel" && pinnedBundledRegionIdentifiers.contains(match.regionIdentifier)
+                let needsIsraelRepair = isIsraelFork && !userDefaults.bool(forKey: "OBAIsraelInitialRegionRepairV1")
+                if currentRegion == nil || needsIsraelRepair {
+                    currentRegion = match
+                    if !isIsraelFork {
+                        userDefaults.set(false, forKey: RegionsService.automaticallySelectRegionUserDefaultsKey)
+                    }
+                }
+                if isIsraelFork {
+                    userDefaults.set(true, forKey: "OBAIsraelInitialRegionRepairV1")
+                }
             } else {
                 Logger.error("Fixed region '\(fixedName)' not found in bundled or stored regions")
             }
@@ -465,6 +483,31 @@ public class RegionsService: NSObject, LocationServiceDelegate {
 
     // swiftlint:disable force_try
 
+    private static func withPinnedBundledRegions(
+        _ regions: [Region], bundled: [Region], pinnedIDs: Set<RegionIdentifier>
+    ) -> [Region] {
+        guard !pinnedIDs.isEmpty else { return regions }
+
+        // The bundled definition is canonical for a pinned fork region. If an
+        // older IPA persisted region 972 with a bogus Obaco sidecar or planner
+        // URL, merely appending a missing region will NOT repair it.
+        let canonical = Dictionary(uniqueKeysWithValues: bundled
+            .filter { pinnedIDs.contains($0.regionIdentifier) }
+            .map { ($0.regionIdentifier, $0) })
+        var seen = Set<RegionIdentifier>()
+        var result: [Region] = []
+        for candidate in regions {
+            guard seen.insert(candidate.regionIdentifier).inserted else { continue }
+            result.append(canonical[candidate.regionIdentifier] ?? candidate)
+        }
+        for candidate in bundled where pinnedIDs.contains(candidate.regionIdentifier) {
+            if seen.insert(candidate.regionIdentifier).inserted {
+                result.append(candidate)
+            }
+        }
+        return result
+    }
+
     private static func bundledRegions(path: String) -> [Region] {
         let data = try! NSData(contentsOfFile: path) as Data
         let response = try! JSONDecoder.RESTDecoder().decode(RESTAPIResponse<[Region]>.self, from: data)
@@ -508,7 +551,10 @@ public class RegionsService: NSObject, LocationServiceDelegate {
             return
         }
 
-        self.regions = regions
+        let bundled = Self.bundledRegions(path: bundledRegionsFilePath)
+        self.regions = Self.withPinnedBundledRegions(
+            regions, bundled: bundled, pinnedIDs: pinnedBundledRegionIdentifiers
+        )
     }
 
     /// Fetches the current list of `Region`s from the network.

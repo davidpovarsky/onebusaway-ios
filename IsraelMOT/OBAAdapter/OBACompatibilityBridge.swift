@@ -33,10 +33,13 @@ nonisolated public enum OBACompatibilityBridge {
                 let rId = routeDict["id"] as! String
                 referencesRoutes[rId] = routeDict
 
-                if let agId = route.agencyID {
-                    let agDict = serializeAgency(id: agId, name: route.agencyName ?? "משרד התחבורה")
-                    referencesAgencies[agDict["id"] as! String] = agDict
-                }
+                let agency = serializeAgency(
+                id: route.agencyID ?? MOTAgencyID(rawValue: 1),
+                name: route.agencyName ?? "משרד התחבורה"
+            )
+            if let id = agency["id"] as? String {
+                referencesAgencies[id] = agency
+            }
             }
         }
 
@@ -64,6 +67,47 @@ nonisolated public enum OBACompatibilityBridge {
         ]
     }
 
+    /// Full OBA routes-for-location response used by the native route-search UI.
+    /// SearchLines is a public MOT autocomplete endpoint; scoped route IDs can
+    /// subsequently be resolved by handleRouteDetail in the Israel adapter.
+    public static func routesForLocationResponse(
+        routes: [TransitRouteSummary],
+        currentTime: Date = Date()
+    ) -> [String: Any] {
+        var routeEntries: [[String: Any]] = []
+        var agenciesByID: [String: [String: Any]] = [:]
+
+        for route in routes {
+            routeEntries.append(serializeRouteSummary(route))
+            let agency = serializeAgency(
+                id: route.agencyID ?? MOTAgencyID(rawValue: 1),
+                name: route.agencyName ?? "משרד התחבורה"
+            )
+            if let key = agency["id"] as? String {
+                agenciesByID[key] = agency
+            }
+        }
+
+        return [
+            "code": 200,
+            "currentTime": Int(currentTime.timeIntervalSince1970 * 1000),
+            "text": "OK",
+            "version": 2,
+            "data": [
+                "limitExceeded": routes.count >= 100,
+                "list": routeEntries,
+                "outOfRange": false,
+                "references": [
+                    "agencies": Array(agenciesByID.values),
+                    "routes": routeEntries,
+                    "stops": [],
+                    "trips": [],
+                    "situations": []
+                ]
+            ] as [String: Any]
+        ]
+    }
+
     public static func stopDetailResponse(
         stop: TransitStop,
         currentTime: Date = Date()
@@ -78,9 +122,12 @@ nonisolated public enum OBACompatibilityBridge {
             let rId = routeDict["id"] as! String
             referencesRoutes[rId] = routeDict
 
-            if let agId = route.agencyID {
-                let agDict = serializeAgency(id: agId, name: route.agencyName ?? "משרד התחבורה")
-                referencesAgencies[agDict["id"] as! String] = agDict
+            let agency = serializeAgency(
+                id: route.agencyID ?? MOTAgencyID(rawValue: 1),
+                name: route.agencyName ?? "משרד התחבורה"
+            )
+            if let id = agency["id"] as? String {
+                referencesAgencies[id] = agency
             }
         }
 
@@ -125,9 +172,12 @@ nonisolated public enum OBACompatibilityBridge {
             let rId = routeDict["id"] as! String
             referencesRoutes[rId] = routeDict
 
-            if let agId = route.agencyID {
-                let agDict = serializeAgency(id: agId, name: route.agencyName ?? "משרד התחבורה")
-                referencesAgencies[agDict["id"] as! String] = agDict
+            let agency = serializeAgency(
+                id: route.agencyID ?? MOTAgencyID(rawValue: 1),
+                name: route.agencyName ?? "משרד התחבורה"
+            )
+            if let id = agency["id"] as? String {
+                referencesAgencies[id] = agency
             }
         }
 
@@ -159,6 +209,7 @@ nonisolated public enum OBACompatibilityBridge {
                 "serviceId": "mot:service:default",
                 "tripHeadsign": arr.destination,
                 "tripShortName": arr.lineName,
+                "routeShortName": arr.lineName,
                 "directionId": "0",
                 "blockId": "",
                 "shapeId": "",
@@ -180,6 +231,8 @@ nonisolated public enum OBACompatibilityBridge {
                 "scheduledArrivalTime": schedMs,
                 "scheduledDepartureTime": schedMs,
                 "predicted": arr.isRealTime,
+                "lastUpdateTime": Int(currentTime.timeIntervalSince1970 * 1000),
+                "vehicleId": "", // OBA decoder requires the key; MOT often has no vehicle ID.
                 "serviceDate": Int(Calendar.current.startOfDay(for: arr.scheduledTime).timeIntervalSince1970 * 1000),
                 "distanceFromStop": 0.0,
                 "numberOfStopsAway": 0,
@@ -196,19 +249,10 @@ nonisolated public enum OBACompatibilityBridge {
                 arrivalDict["predictedDepartureTime"] = predMs
             }
 
-            if arr.isRealTime, let loc = arr.vehicleLocation {
-                arrivalDict["tripStatus"] = [
-                    "activeTripId": syntheticTripId,
-                    "blockTripSequence": 1,
-                    "serviceDate": Int(Calendar.current.startOfDay(for: arr.scheduledTime).timeIntervalSince1970 * 1000),
-                    "scheduledDistanceAlongTrip": 0.0,
-                    "totalDistanceAlongTrip": 1000.0,
-                    "position": ["lat": loc.latitude, "lon": loc.longitude],
-                    "predicted": true,
-                    "status": "default",
-                    "phase": "in_progress"
-                ]
-            }
+            // Do not fabricate a partial OBA TripStatus with invented distance
+            // and orientation values. It cannot decode as a native TripStatus
+            // and silently disappears. Scheduled/predicted arrival times are
+            // still truthfully represented by `predictedArrivalTime` above.
 
             obaArrivals.append(arrivalDict)
         }
@@ -335,7 +379,8 @@ nonisolated public enum OBACompatibilityBridge {
             "url": "https://bus.gov.il",
             "timezone": "Asia/Jerusalem",
             "lang": "he",
-            "phone": "*8787"
+            "phone": "*8787",
+            "privateService": false
         ]
     }
 }

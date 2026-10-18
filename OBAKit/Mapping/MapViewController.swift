@@ -45,7 +45,10 @@ class MapViewController: UIViewController,
         hover.stackView.addArrangedSubview(toggleMapTypeButton)
         updateMapTypeButton(mapType: viewModel.mapType)
 
-        if application.features.obaco == .running {
+        // Dedicated Israel edition uses GPS weather; other OBA editions keep
+        // the original Obaco-dependent visibility behaviour.
+        if Bundle.main.fixedRegionName == "Israel"
+            || application.features.obaco == .running {
             hover.stackView.addArrangedSubview(HoverBarSeparator())
             hover.stackView.addArrangedSubview(weatherButton)
         }
@@ -465,6 +468,7 @@ class MapViewController: UIViewController,
         config.contentInsets.leading = 0
         config.contentInsets.trailing = 0
         let button = UIButton(configuration: config)
+        button.isHidden = true
         // The title can't grow past what fits in 42pt, so it stops at the largest
         // non-accessibility size; beyond that the large content viewer (set up
         // with the toolbar) shows it full size. The font has to be built against

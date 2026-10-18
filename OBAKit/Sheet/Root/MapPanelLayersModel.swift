@@ -114,7 +114,9 @@ import OTPKit
         isStopsLayerEnabled = mapRegionManager.isStopsLayerEnabled
         showsPointsOfInterest = mapRegionManager.mapViewShowsPointsOfInterest
         enabledLayerCount = mapRegionManager.enabledMapLayerCount
-        isOnDemandLayerEnabled = mapRegionManager.isMapLayerEnabled(id: OnDemandMapLayer.layerID)
+        // Disabled/unsupported layers must not drive point probes in SwiftUI.
+        isOnDemandLayerEnabled = mapRegionManager.mapLayer(id: OnDemandMapLayer.layerID) != nil
+            && mapRegionManager.isMapLayerEnabled(id: OnDemandMapLayer.layerID)
         subscribeToRentalCoordinator()
         bindOnDemandLayer()
 

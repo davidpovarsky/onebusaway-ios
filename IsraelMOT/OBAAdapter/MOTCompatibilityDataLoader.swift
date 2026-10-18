@@ -56,12 +56,51 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             return try await handleArrivalsAndDepartures(url: url)
         }
 
-        // 4. Route Detail: /api/where/route/{id}.json
+        // 4. Route search: /api/where/routes-for-location.json
+        if path.contains("routes-for-location") {
+            return try await handleRoutesForLocation(url: url)
+        }
+
+        // 5. Route Detail: /api/where/route/{id}.json
         if path.contains("/where/route/") {
             return try await handleRouteDetail(url: url)
         }
 
-        // Fallback for everything else
+        // The official MOT server does NOT implement the OneBusAway REST API.
+        // Agency-coverage geometry is unavailable: return an explicit empty
+        // OBA-compatible list rather than sending a nonexistent endpoint to MOT.
+        if (url.host?.lowercased() == "api.bus.gov.il" || url.host?.lowercased().contains("bus.gov.il") == true),
+           path.contains("/api/where/agencies-with-coverage.json") {
+            let payload: [String: Any] = [
+                "code": 200,
+                "text": "MOT does not provide OBA agency-coverage polygons",
+                "version": 2,
+                "currentTime": Int(Date().timeIntervalSince1970 * 1000),
+                "data": [
+                    "list": [] as [[String: Any]],
+                    "references": [
+                        "agencies": [] as [[String: Any]],
+                        "routes": [] as [[String: Any]],
+                        "stops": [] as [[String: Any]],
+                        "trips": [] as [[String: Any]],
+                        "situations": [] as [[String: Any]]
+                    ] as [String: Any]
+                ] as [String: Any]
+            ]
+            let data = try JSONSerialization.data(withJSONObject: payload)
+            let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
+            return (data, response)
+        }
+
+        // Never leak an unsupported OBA path to api.bus.gov.il. Otherwise an
+        // invalid /prod/api/where or /prod/api/ondemand URL returns HTTP 403
+        // and misleadingly looks like a failure of a supported ministry API.
+        if url.host?.lowercased() == "api.bus.gov.il",
+           path.hasPrefix("/prod/api/") {
+            throw MOTCompatibilityError.unsupportedOneBusAwayEndpoint(url.path)
+        }
+
+        // Non-MOT URLs preserve the caller's normal URLSession behaviour.
         return try await fallbackLoader.data(for: request)
     }
 
@@ -129,6 +168,9 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
 
         do {
             let res: NearbyStopsResponseDTOServiceResponse = try await client.get(targetURL)
+            guard res.success else {
+                throw MOTHTTPError.serviceError(message: res.message ?? "MOT nearby stops request was unsuccessful")
+            }
             let stopsDTO = res.data ?? []
             let domainStops = stopsDTO.map { MOTStopMapper.map(from: $0) }
             let envelope = OBACompatibilityBridge.stopsForLocationResponse(stops: domainStops)
@@ -136,7 +178,9 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
             return (data, response)
         } catch {
-            return try await emptyStopsResponse(for: url)
+            // A failed MOT request must NOT masquerade as a successful search
+            // that found zero stops. Surface the real error to the map.
+            throw error
         }
     }
 
@@ -156,8 +200,14 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
             return (data, response)
+        } catch let error as MOTHTTPError {
+            // Only a genuine 404 means the resource is absent.
+            if case .httpError(statusCode: 404, responseBody: _) = error {
+                return try await notFoundResponse(for: url)
+            }
+            throw error
         } catch {
-            return try await notFoundResponse(for: url)
+            throw error
         }
     }
 
@@ -203,9 +253,67 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
             return (data, response)
+        } catch let error as MOTHTTPError {
+            // Only a genuine 404 means the resource is absent.
+            if case .httpError(statusCode: 404, responseBody: _) = error {
+                return try await notFoundResponse(for: url)
+            }
+            throw error
         } catch {
-            return try await notFoundResponse(for: url)
+            throw error
         }
+    }
+
+    private func handleRoutesForLocation(url: URL) async throws -> (Data, URLResponse) {
+        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        let rawQuery = components?.queryItems?.first {
+            $0.name.lowercased() == "query"
+        }?.value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        // OBA's route search sends a route number (e.g. "31").
+        // Unlike searching stations/locations, routes have a separate MOT endpoint.
+        let query = rawQuery.replacingOccurrences(
+            of: "^קו\\s*",
+            with: "",
+            options: [.regularExpression, .caseInsensitive]
+        )
+        let routeSummaries: [TransitRouteSummary]
+        if query.isEmpty {
+            routeSummaries = []
+        } else {
+            let response: MOTSearchLinesServiceResponse = try await client.get(
+                endpoints.searchLinesURL(query: query)
+            )
+            guard response.success else {
+                throw MOTHTTPError.serviceError(message: response.message ?? "SearchLines failed")
+            }
+
+            // Prefer exact line number to substring matches, and retain
+            // descriptions/city for disambiguating many Israeli lines named "31".
+            let matching = (response.data ?? []).filter { line in
+                line.routeName.localizedCaseInsensitiveContains(query)
+                    || line.routeLongName?.localizedCaseInsensitiveContains(query) == true
+            }
+            let sorted = matching.sorted { first, second in
+                let firstExact = first.routeName.compare(query, options: .caseInsensitive) == .orderedSame
+                let secondExact = second.routeName.compare(query, options: .caseInsensitive) == .orderedSame
+                if firstExact != secondExact { return firstExact }
+                return first.cityName ?? "" < second.cityName ?? ""
+            }
+            var seen = Set<Int>()
+            routeSummaries = sorted.compactMap { line in
+                guard seen.insert(line.routeId).inserted else { return nil }
+                return line.toTransitRouteSummary()
+            }
+        }
+
+        let envelope = OBACompatibilityBridge.routesForLocationResponse(routes: routeSummaries)
+        let data = try JSONSerialization.data(withJSONObject: envelope)
+        let response = HTTPURLResponse(
+            url: url, statusCode: 200, httpVersion: "HTTP/1.1",
+            headerFields: ["Content-Type": "application/json; charset=utf-8"]
+        )!
+        return (data, response)
     }
 
     private func handleRouteDetail(url: URL) async throws -> (Data, URLResponse) {
@@ -227,8 +335,14 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
             return (data, response)
+        } catch let error as MOTHTTPError {
+            // Only a genuine 404 means the resource is absent.
+            if case .httpError(statusCode: 404, responseBody: _) = error {
+                return try await notFoundResponse(for: url)
+            }
+            throw error
         } catch {
-            return try await notFoundResponse(for: url)
+            throw error
         }
     }
 
@@ -254,5 +368,18 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
     private func notFoundResponse(for url: URL) async throws -> (Data, URLResponse) {
         let response = HTTPURLResponse(url: url, statusCode: 404, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "text/plain"])!
         return (Data(), response)
+    }
+}
+
+/// Deliberate capability rejection: an unsupported OneBusAway endpoint is NOT
+/// an HTTP 403 from the official Ministry of Transport API.
+nonisolated public enum MOTCompatibilityError: LocalizedError, Sendable {
+    case unsupportedOneBusAwayEndpoint(String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .unsupportedOneBusAwayEndpoint(let path):
+            return "OneBusAway endpoint is not implemented for Israel MOT: \(path)"
+        }
     }
 }

@@ -11,7 +11,7 @@ import CoreLocation
 @testable import OBAKit
 @testable import OBAKitCore
 
-private final class TestMockDataLoader: NSObject, URLDataLoader, @unchecked Sendable {
+private nonisolated final class TestMockDataLoader: NSObject, URLDataLoader, @unchecked Sendable {
     var handledRequests: [URLRequest] = []
     var responseData: Data = "{\"code\": 200, \"text\": \"OK\"}".data(using: .utf8)!
 
@@ -25,6 +25,46 @@ private final class TestMockDataLoader: NSObject, URLDataLoader, @unchecked Send
         )!
         return (responseData, response)
     }
+}
+
+/// In-memory official-MOT reply, served through URLSession so this test
+/// exercises the real OBA REST API -> MOT loader -> MOTHTTPClient -> MOT
+/// JSON -> OBA model pipeline without relying on a live external server.
+private nonisolated final class MOTRouteSearchStubProtocol: URLProtocol {
+    override class func canInit(with request: URLRequest) -> Bool {
+        request.url?.host == "api.bus.gov.il"
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        request
+    }
+
+    override func startLoading() {
+        guard let url = request.url else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+            return
+        }
+        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        let isExpected = url.path.hasSuffix("/AutoComplete/SearchLines")
+            && components?.queryItems?.contains(where: {
+                $0.name == "searchTerm" && $0.value == "31"
+            }) == true
+
+        let body = isExpected
+            ? #"{"data":[{"routeId":33287,"agencyId":16,"agencyName":"סופרבוס","routeName":"31","routeLongName":"מסוף גילה/המרגלית<->רמות","cityName":"ירושלים"}],"success":true,"message":""}"#
+            : #"{"error":"Unexpected MOT endpoint"}"#
+        let response = HTTPURLResponse(
+            url: url,
+            statusCode: isExpected ? 200 : 404,
+            httpVersion: "HTTP/1.1",
+            headerFields: ["Content-Type": "application/json"]
+        )!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Data(body.utf8))
+        client?.urlProtocolDidFinishLoading(self)
+    }
+
+    override func stopLoading() {}
 }
 
 @Suite(.serialized)
@@ -132,7 +172,8 @@ struct MOTCompatibilityDataLoaderTests {
         let firstArr = arrivalsAndDepartures[0]
         #expect(firstArr["routeShortName"] as? String == "31")
         #expect(firstArr["predicted"] as? Bool == true)
-        #expect(firstArr["tripStatus"] != nil)
+        #expect(firstArr["tripStatus"] == nil)
+        #expect(firstArr["predictedArrivalTime"] != nil)
     }
 
     @Test
@@ -232,5 +273,260 @@ struct MOTCompatibilityDataLoaderTests {
         #expect(record?["status"] as? String == "scheduled")
         #expect(record?["predictedArrivalTime"] == nil)
         #expect(record?["tripStatus"] == nil)
+    }
+
+    // These are INTEGRATION decoder tests, not just JSON-shape assertions.
+    // They exercise exactly the OneBusAway RESTAPIResponse<...> classes used
+    // by the real map, stop page, arrival panel and route-search UI.
+    private func decodeAppResponse<T: Decodable>(
+        _ envelope: [String: Any], as type: T.Type
+    ) throws -> RESTAPIResponse<T> {
+        let bytes = try JSONSerialization.data(withJSONObject: envelope)
+        return try JSONDecoder.RESTDecoder(regionIdentifier: 972)
+            .decode(RESTAPIResponse<T>.self, from: bytes)
+    }
+
+    private var jerusalemStop: TransitStop {
+        TransitStop(
+            code: MOTStopCode(5997),
+            internalID: MOTStopInternalID(11622),
+            name: TransitMultiLanguageName(he: "סילבר/שכטמן", en: "Silver/Shechtman", ar: nil),
+            cityName: "ירושלים",
+            location: CLLocationCoordinate2D(latitude: 31.81642, longitude: 35.20312),
+            routes: [
+                TransitRouteSummary(
+                    routeID: MOTRouteID(33287),
+                    lineName: "31",
+                    routeDesc: MOTRouteDesc("15031-1-0"),
+                    destinationName: "רמות",
+                    agencyID: MOTAgencyID(16),
+                    agencyName: "סופרבוס"
+                )
+            ]
+        )
+    }
+
+    @Test
+    func testNativeRouteSearchAcrossEntireMOTAdapterPipeline() async throws {
+        let sessionConfiguration = URLSessionConfiguration.ephemeral
+        sessionConfiguration.protocolClasses = [MOTRouteSearchStubProtocol.self]
+        let session = URLSession(configuration: sessionConfiguration)
+        defer { session.invalidateAndCancel() }
+
+        let client = MOTHTTPClient(session: session)
+        let fallback = TestMockDataLoader()
+        let bridge = MOTCompatibilityDataLoader(
+            client: client, fallbackLoader: fallback
+        )
+        let config = APIServiceConfiguration(
+            baseURL: URL(string: "https://api.bus.gov.il/prod/")!,
+            apiKey: "org.onebusaway.iphone",
+            uuid: "test-user",
+            appVersion: "26.4.0",
+            regionIdentifier: 972
+        )
+        let appAPI = RESTAPIService(config, dataLoader: bridge)
+        let searchRegion = CLCircularRegion(
+            center: CLLocationCoordinate2D(latitude: 31.8164, longitude: 35.2031),
+            radius: 3_000,
+            identifier: "Jerusalem"
+        )
+        let result = try await appAPI.getRoute(query: "31", region: searchRegion)
+        let route = try #require(result.list.first)
+        #expect(route.id == "mot:route:33287")
+        #expect(route.shortName == "31")
+        #expect(route.agency?.name == "סופרבוס")
+        #expect(fallback.handledRequests.isEmpty)
+    }
+
+    @Test
+    func testFallbackAgencyReferenceIsAlwaysResolved() throws {
+        let anonymousOperator = TransitRouteSummary(
+            routeID: MOTRouteID(33287),
+            lineName: "31",
+            destinationName: "רמות",
+            agencyID: nil,
+            agencyName: nil
+        )
+        let stop = TransitStop(
+            code: MOTStopCode(5997),
+            name: TransitMultiLanguageName(he: "סילבר/שכטמן", en: nil, ar: nil),
+            location: CLLocationCoordinate2D(latitude: 31.8164, longitude: 35.2031),
+            routes: [anonymousOperator]
+        )
+        let decoded = try decodeAppResponse(
+            OBACompatibilityBridge.stopsForLocationResponse(stops: [stop]),
+            as: [Stop].self
+        )
+        let route = try #require(decoded.list.first?.routes.first)
+        #expect(route.agencyID == "mot:agency:1")
+        #expect(route.agency?.name == "משרד התחבורה")
+    }
+
+    @Test
+    func testNativeOBAStopListDecoderResolvesAgencyAndRoutes() throws {
+        let json = OBACompatibilityBridge.stopsForLocationResponse(stops: [jerusalemStop])
+        let response = try decodeAppResponse(json, as: [Stop].self)
+        let stop = try #require(response.list.first)
+        #expect(stop.code == "5997")
+        #expect(stop.name.contains("סילבר") || stop.name.contains("Silver"))
+        #expect(stop.regionIdentifier == 972)
+
+        // This failed on the real iPad when agency.privateService was missing.
+        let route = try #require(stop.routes.first)
+        #expect(route.shortName == "31")
+        let agency = try #require(route.agency)
+        #expect(agency.name == "סופרבוס")
+        #expect(!agency.isPrivateService)
+        #expect(agency.timeZone == "Asia/Jerusalem")
+    }
+
+    @Test
+    func testNativeOBAStopDetailDecoderWithReferences() throws {
+        let payload = OBACompatibilityBridge.stopDetailResponse(stop: jerusalemStop)
+        let response = try decodeAppResponse(payload, as: Stop.self)
+        #expect(response.entry.id == "mot:stop:5997")
+        #expect(response.entry.routes.count == 1)
+        #expect(response.entry.routes[0].agency?.name == "סופרבוס")
+    }
+
+    @Test
+    func testNativeOBARouteSearchDecoderAndAgencyReference() throws {
+        let payload = OBACompatibilityBridge.routesForLocationResponse(routes: jerusalemStop.routes)
+        let response = try decodeAppResponse(payload, as: [Route].self)
+        #expect(response.list.count == 1)
+        let route = try #require(response.list.first)
+        #expect(route.id == "mot:route:33287")
+        #expect(route.shortName == "31")
+        #expect(route.agency?.name == "סופרבוס")
+    }
+
+    @Test
+    func testNativeOBAArrivalsDecoderAndTripReferences() throws {
+        let scheduled = Date().addingTimeInterval(300)
+        let arrival = TransitArrival(
+            routeID: MOTRouteID(33287),
+            lineName: "31",
+            destination: "רמות",
+            scheduledTime: scheduled,
+            estimatedTime: scheduled.addingTimeInterval(60),
+            minutesToArrival: 5,
+            isRealTime: true,
+            vehicleLocation: CLLocationCoordinate2D(latitude: 31.82, longitude: 35.20)
+        )
+        let json = OBACompatibilityBridge.stopArrivalsResponse(
+            stop: jerusalemStop, arrivals: [arrival]
+        )
+        let response = try decodeAppResponse(json, as: StopArrivals.self)
+        #expect(response.entry.stop?.id == "mot:stop:5997")
+        let first = try #require(response.entry.arrivalsAndDepartures.first)
+        #expect(first.predicted)
+        #expect(first.route?.shortName == "31")
+        #expect(first.trip?.shortName == "31")
+        #expect(first.trip?.route?.agency?.name == "סופרבוס")
+        #expect(first.lastUpdated.timeIntervalSince1970 > 0)
+        // Current adapter lacks a complete authoritative TripStatus. Do not
+        // silently assume vehicle tracking works merely because a key exists.
+        #expect(first.tripStatus == nil)
+    }
+
+    @Test
+    func testNativeOBAScheduledArrivalsDecodeWithoutRealTimeData() throws {
+        let when = Date().addingTimeInterval(300)
+        let scheduled = TransitArrival(
+            routeID: MOTRouteID(33287),
+            lineName: "31",
+            destination: "רמות",
+            scheduledTime: when,
+            isRealTime: false
+        )
+        let payload = OBACompatibilityBridge.stopArrivalsResponse(
+            stop: jerusalemStop, arrivals: [scheduled]
+        )
+        let decoded = try decodeAppResponse(payload, as: StopArrivals.self)
+        let arrival = try #require(decoded.entry.arrivalsAndDepartures.first)
+        #expect(!arrival.predicted)
+        #expect(arrival.route?.shortName == "31")
+        #expect(arrival.trip?.shortName == "31")
+    }
+
+    @Test
+    func testNativeOBARouteDetailDecoderWithStopReferences() throws {
+        let route = TransitRoute(
+            routeID: MOTRouteID(33287),
+            lineName: "31",
+            longName: "גילה – רמות",
+            routeDesc: MOTRouteDesc("15031-1-0"),
+            agencyID: MOTAgencyID(16),
+            agencyName: "סופרבוס",
+            cityName: "ירושלים",
+            polyline: nil,
+            stops: [jerusalemStop]
+        )
+        let decoded = try decodeAppResponse(
+            OBACompatibilityBridge.routeDetailResponse(route: route),
+            as: Route.self
+        )
+        #expect(decoded.entry.id == "mot:route:33287")
+        #expect(decoded.entry.agency?.name == "סופרבוס")
+    }
+
+    @Test
+    func testIsraelAgencyCoverageCompatibilityDoesNotLeakToMinistry() async throws {
+        let fallback = TestMockDataLoader()
+        let loader = MOTCompatibilityDataLoader(fallbackLoader: fallback)
+        let configuration = APIServiceConfiguration(
+            baseURL: URL(string: "https://api.bus.gov.il/prod/")!,
+            apiKey: "org.onebusaway.iphone",
+            uuid: "test-user",
+            appVersion: "26.4.0",
+            regionIdentifier: 972
+        )
+        let appAPI = RESTAPIService(configuration, dataLoader: loader)
+        let result = try await appAPI.getAgenciesWithCoverage()
+        #expect(result.list.isEmpty)
+        #expect(fallback.handledRequests.isEmpty)
+    }
+
+    @Test
+    func testUnsupportedOBAEndpointNeverGoesToMinistry() async {
+        let fallback = TestMockDataLoader()
+        let loader = MOTCompatibilityDataLoader(fallbackLoader: fallback)
+        let url = URL(string: "https://api.bus.gov.il/prod/api/ondemand/services-for-location.json?lat=31.78&lon=35.20")!
+        do {
+            _ = try await loader.data(for: URLRequest(url: url))
+            Issue.record("Expected rejection of a nonexistent OBA endpoint")
+        } catch is MOTCompatibilityError {
+            // Expected: a capability error, not a fabricated F5 rejection.
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
+        }
+        #expect(fallback.handledRequests.isEmpty)
+    }
+
+    @Test
+    func testIsraelSearchLinesBridgeWithOfficialResponseShape() throws {
+        let sample = """
+        {"data":[{"routeId":33287,"agencyId":16,"agencyName":"סופרבוס","routeName":"31","routeLongName":"מסוף גילה/המרגלית<->רמות","cityName":"ירושלים"}],"success":true,"message":""}
+        """
+        let decoded = try JSONDecoder().decode(
+            MOTSearchLinesServiceResponse.self, from: Data(sample.utf8)
+        )
+        #expect(decoded.success)
+        let routes = (decoded.data ?? []).map { $0.toTransitRouteSummary() }
+        #expect(routes.count == 1)
+
+        let envelope = OBACompatibilityBridge.routesForLocationResponse(routes: routes)
+        let data = try JSONSerialization.data(withJSONObject: envelope)
+        let output = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let responseData = output?["data"] as? [String: Any]
+        let results = responseData?["list"] as? [[String: Any]]
+        let references = responseData?["references"] as? [String: Any]
+        #expect(results?.count == 1)
+        #expect(results?.first?["id"] as? String == "mot:route:33287")
+        #expect(results?.first?["shortName"] as? String == "31")
+        #expect((results?.first?["longName"] as? String)?.contains("ירושלים") == true)
+        #expect((references?["routes"] as? [[String: Any]])?.count == 1)
+        #expect((references?["agencies"] as? [[String: Any]])?.count == 1)
     }
 }

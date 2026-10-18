@@ -80,6 +80,14 @@ public final class SurveyService: ObservableObject {
     /// Fetches surveys from the API for the current user.
     /// - Parameter force: If `true`, bypasses the staleness cooldown and fetches regardless.
     public func fetchSurveys(force: Bool = false) async {
+        // MOT has no OneBusAway /api/v1/regions/{id}/surveys endpoint.
+        // Do not call the public ministry API with an unrelated API path.
+        if apiService?.configuration.regionIdentifier == 972 {
+            allSurveys = []
+            visibleSurveys = []
+            lastError = nil
+            return
+        }
         guard !isLoading else {
             Logger.info("fetchSurveys skipped: already loading")
             return
@@ -137,6 +145,7 @@ public final class SurveyService: ObservableObject {
     /// When `alwaysShowSurveysOnStops` is set, bypasses launch count and reminder checks
     /// but still respects the global `isSurveyEnabled` toggle.
     public func shouldShowSurvey() -> Bool {
+        guard apiService?.configuration.regionIdentifier != 972 else { return false }
         guard userDataStore.isSurveyEnabled else { return false }
         if userDataStore.alwaysShowSurveysOnStops { return true }
 

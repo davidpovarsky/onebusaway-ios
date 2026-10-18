@@ -71,7 +71,7 @@ open class CoreApplication: NSObject,
     @objc public let locationService: LocationService
 
     /// Responsible for managing `Region`s and determining the correct `Region` for the user.
-    @objc public lazy var regionsService = RegionsService(apiService: regionsAPIService, locationService: locationService, userDefaults: userDefaults, bundledRegionsFilePath: self.config.bundledRegionsFilePath, apiPath: self.config.regionsAPIPath, fixedRegionName: self.config.fixedRegionName, fixedRegionOBABaseURL: self.config.fixedRegionOBABaseURL)
+    @objc public lazy var regionsService = RegionsService(apiService: regionsAPIService, locationService: locationService, userDefaults: userDefaults, bundledRegionsFilePath: self.config.bundledRegionsFilePath, apiPath: self.config.regionsAPIPath, fixedRegionName: self.config.fixedRegionName, fixedRegionOBABaseURL: self.config.fixedRegionOBABaseURL, pinnedBundledRegionIdentifiers: self.config.fixedRegionName == "Israel" ? [972] : [])
 
     /// Helper property that returns `regionsService.currentRegion`.
     @objc public var currentRegion: Region? {
@@ -307,6 +307,9 @@ open class CoreApplication: NSObject,
     /// Reloads the Obaco Service stack, including the network queue, api service manager, and model service manager.
     /// This must be called when the region changes.
     private func refreshObacoService() {
+        // Never reuse a previous US region's Obaco service after switching to
+        // a region with no sidecar (e.g. Israel MOT).
+        obacoService = nil
         guard
             let region = regionsService.currentRegion,
             let baseURL = region.sidecarBaseURL

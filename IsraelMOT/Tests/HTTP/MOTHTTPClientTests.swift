@@ -90,6 +90,34 @@ struct MOTHTTPClientTests {
     }
 
     @Test
+    func testNormal403IsNotMisclassifiedAsF5() {
+        let result = MOTHTTPClient.classifyForbiddenResponse(
+            #"{"error":"Forbidden","status":403}"#
+        )
+        if case .httpError(let statusCode, _) = result {
+            #expect(statusCode == 403)
+        } else {
+            Issue.record("An ordinary JSON 403 was incorrectly reported as an F5 firewall block")
+        }
+    }
+
+    @Test
+    func testRealF5HTMLExtractsUUIDSupportID() {
+        let body = """
+        The requested URL was rejected. Please consult with your administrator.
+        Your support ID is 4a23d2ee-e048-4ca2-9c91-661591630882
+        Error 403 - Forbidden
+        F5 site: sds3-tel
+        """
+        let result = MOTHTTPClient.classifyForbiddenResponse(body)
+        if case .wafBlocked(let supportID) = result {
+            #expect(supportID == "4a23d2ee-e048-4ca2-9c91-661591630882")
+        } else {
+            Issue.record("Genuine F5 HTML must be classified as a firewall block")
+        }
+    }
+
+    @Test
     func testMOTHTTPErrorDescriptions() {
         let wafError = MOTHTTPError.wafBlocked(supportID: "test-support-1234")
         #expect(wafError.localizedDescription.contains("test-support-1234") || wafError.localizedDescription.contains("F5"))

@@ -89,6 +89,9 @@ class MapViewModel: NSObject, ObservableObject, LocationServiceDelegate {
 
     private let application: Application
     private var cancellables = Set<AnyCancellable>()
+    private let coordinateWeatherService = MOTLocationWeatherService()
+    private var lastWeatherLocation: CLLocation?
+    private var lastWeatherRetrievedAt: Date?
 
     // MARK: - Init
 
@@ -147,28 +150,77 @@ class MapViewModel: NSObject, ObservableObject, LocationServiceDelegate {
     /// `true` when the host should render any weather UI. Mirrors the gate at
     /// `MapViewController.toolbar` so UIKit and SwiftUI agree on availability.
     var isWeatherFeatureAvailable: Bool {
-        application.features.obaco == .running
+        // Dedicated Israel edition uses GPS weather; international OBA editions
+        // keep their original region-based Obaco weather behaviour.
+        Bundle.main.fixedRegionName == "Israel"
+            || application.features.obaco == .running
     }
 
     func loadWeather() async {
-        guard let apiService = application.obacoService else {
-            // Clear so an out-of-region transition doesn't leave a stale
-            // forecast on screen — this is configuration-shaped (no Obaco for
-            // this region), so the button SHOULD disappear.
+        if Bundle.main.fixedRegionName != "Israel" {
+            // No changes to upstream/international weather behaviour.
+            guard let apiService = application.obacoService else {
+                weatherDisplay = nil
+                return
+            }
+            do {
+                let forecast = try await apiService.getWeather()
+                weatherDisplay = WeatherDisplay(forecast: forecast, locale: application.locale)
+            } catch {
+                Logger.error("Failed to load regional Obaco weather: \(error)")
+            }
+            return
+        }
+
+        // Never display New York weather just because the current OBA region is stale.
+        // Without a usable location fix, there is no truthful location-specific forecast.
+        guard let gps = application.locationService.currentLocation,
+              application.locationService.isLocationUseAuthorized,
+              gps.timestamp.timeIntervalSinceNow > -1800 else {
             weatherDisplay = nil
             return
         }
+
+        let hasRecentLocalForecast = lastWeatherLocation.map { $0.distance(from: gps) < 1500 } == true
+            && lastWeatherRetrievedAt.map { Date().timeIntervalSince($0) < 900 } == true
+            && weatherDisplay != nil
+        if hasRecentLocalForecast { return }
+
         do {
-            let forecast = try await apiService.getWeather()
-            weatherDisplay = WeatherDisplay(forecast: forecast, locale: application.locale)
+            let snapshot = try await coordinateWeatherService.forecast(
+                latitude: gps.coordinate.latitude,
+                longitude: gps.coordinate.longitude
+            )
+
+            // The user can move while the network request is pending.
+            if let newest = application.locationService.currentLocation,
+               newest.distance(from: gps) > 5000 {
+                return
+            }
+
+            // Reverse-geocode only after a successful data fetch. Failure is fine:
+            // show "my location" rather than an unrelated agency's city.
+            let resolved = try? await CLGeocoder().reverseGeocodeLocation(
+                gps, preferredLocale: Locale(identifier: "he_IL")
+            )
+            let name = resolved?.first?.locality
+                ?? resolved?.first?.subAdministrativeArea
+                ?? OBALoc("weather.my_location", value: "המיקום שלי", comment: "GPS-based weather forecast location")
+            weatherDisplay = WeatherDisplay(
+                locationForecast: snapshot,
+                locationName: name,
+                locale: application.locale
+            )
+            lastWeatherLocation = gps
+            lastWeatherRetrievedAt = snapshot.retrievedAt
+        } catch is CancellationError {
+            return
         } catch {
-            // Keep the last-known forecast on a transient failure (network
-            // blip, 5xx during scene reactivation) so the floating button
-            // doesn't flicker out and come back. The next successful refresh
-            // — `start()`, `onAppBecameActive`, or the next manual trigger —
-            // will overwrite this with fresh data; until then a slightly
-            // stale forecast is better than a missing UI element.
-            Logger.error("Failed to load weather: \(error)")
+            Logger.error("GPS weather lookup failed: \(error)")
+            // Keep cached weather only while still nearby and less than 1 hour old.
+            let nearby = lastWeatherLocation.map { $0.distance(from: gps) < 2000 } == true
+            let recent = lastWeatherRetrievedAt.map { Date().timeIntervalSince($0) < 3600 } == true
+            if !nearby || !recent { weatherDisplay = nil }
         }
     }
 
@@ -373,11 +425,17 @@ class MapViewModel: NSObject, ObservableObject, LocationServiceDelegate {
         }
     }
 
-    /// Latches `didReceiveInitialLocation` on the first fix; later fixes are no-ops.
+    /// Refresh weather when the device gets a first fix or moves far enough.
     nonisolated func locationService(_ service: LocationService, locationChanged location: CLLocation) {
         Task { @MainActor in
-            guard !self.didReceiveInitialLocation else { return }
             self.didReceiveInitialLocation = true
+            if let previous = self.lastWeatherLocation,
+               previous.distance(from: location) < 1500,
+               let retrieved = self.lastWeatherRetrievedAt,
+               Date().timeIntervalSince(retrieved) < 900 {
+                return
+            }
+            await self.loadWeather()
         }
     }
 }

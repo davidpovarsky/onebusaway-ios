@@ -72,11 +72,11 @@ public actor MOTHTTPClient {
                     throw MOTHTTPError.invalidResponse(expected: "HTTPURLResponse", actual: nil)
                 }
 
-                // Check for F5 WAF 403 Forbidden
+                // HTTP 403 alone does not establish F5/WAF interference.
+                // F5 HTML includes "The requested URL was rejected" and a
+                // support ID; normal APIs can also return 403 for other reasons.
                 if httpResponse.statusCode == 403 {
-                    let bodyString = String(data: data, encoding: .utf8) ?? ""
-                    let supportID = extractF5SupportID(from: bodyString)
-                    throw MOTHTTPError.wafBlocked(supportID: supportID)
+                    throw Self.classifyForbiddenResponse(String(data: data, encoding: .utf8) ?? "")
                 }
 
                 // Check for Rate Limiting 429
@@ -132,11 +132,21 @@ public actor MOTHTTPClient {
         }
     }
 
-    private func extractF5SupportID(from body: String) -> String? {
-        guard body.contains("The requested URL was rejected") || body.contains("support ID is:") else {
-            return nil
+    /// Offline-testable classification: an HTTP 403 is not necessarily F5.
+    public nonisolated static func classifyForbiddenResponse(_ body: String) -> MOTHTTPError {
+        let looksLikeF5 = body.localizedCaseInsensitiveContains("The requested URL was rejected")
+            || body.localizedCaseInsensitiveContains("F5 site:")
+            || body.localizedCaseInsensitiveContains("Please consult with your administrator")
+        if looksLikeF5 {
+            return .wafBlocked(supportID: extractF5SupportID(from: body))
         }
-        let pattern = "support ID is:\\s*([0-9]+)"
+        return .httpError(statusCode: 403, responseBody: body)
+    }
+
+    private nonisolated static func extractF5SupportID(from body: String) -> String? {
+        guard body.localizedCaseInsensitiveContains("support ID") else { return nil }
+        // Real F5 responses can use hexadecimal UUIDs, not only digits.
+        let pattern = "support\\s+ID(?:\\s+is)?\\s*[:#]?\\s*([A-Fa-f0-9-]{8,})"
         guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
               let match = regex.firstMatch(in: body, options: [], range: NSRange(location: 0, length: body.utf16.count)) else {
             return nil
