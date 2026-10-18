@@ -64,6 +64,49 @@ nonisolated public enum OBACompatibilityBridge {
         ]
     }
 
+    /// Full OBA routes-for-location response used by the native route-search UI.
+    /// SearchLines is a public MOT autocomplete endpoint; scoped route IDs can
+    /// subsequently be resolved by handleRouteDetail in the Israel adapter.
+    public static func routesForLocationResponse(
+        routes: [TransitRouteSummary],
+        currentTime: Date = Date()
+    ) -> [String: Any] {
+        var routeEntries: [[String: Any]] = []
+        var agenciesByID: [String: [String: Any]] = [:]
+
+        for route in routes {
+            routeEntries.append(serializeRouteSummary(route))
+            if let agencyID = route.agencyID {
+                let agency = serializeAgency(
+                    id: agencyID,
+                    name: route.agencyName ?? "משרד התחבורה"
+                )
+                if let key = agency["id"] as? String {
+                    agenciesByID[key] = agency
+                }
+            }
+        }
+
+        return [
+            "code": 200,
+            "currentTime": Int(currentTime.timeIntervalSince1970 * 1000),
+            "text": "OK",
+            "version": 2,
+            "data": [
+                "limitExceeded": routes.count >= 100,
+                "list": routeEntries,
+                "outOfRange": false,
+                "references": [
+                    "agencies": Array(agenciesByID.values),
+                    "routes": routeEntries,
+                    "stops": [],
+                    "trips": [],
+                    "situations": []
+                ]
+            ] as [String: Any]
+        ]
+    }
+
     public static func stopDetailResponse(
         stop: TransitStop,
         currentTime: Date = Date()
