@@ -45,6 +45,9 @@ public class RegionsService: NSObject, LocationServiceDelegate {
     private let fileStorage: RegionsFileStorageProtocol
     private let fixedRegionName: String?
     private let fixedRegionOBABaseURL: URL?
+    /// Bundled region IDs preserved even if the public regions server omits them.
+    /// Opt-in, so other white-label clients retain upstream refresh semantics.
+    private let pinnedBundledRegionIdentifiers: Set<RegionIdentifier>
 
     /// In-memory cache for custom regions. Loaded lazily and invalidated whenever a custom region is added or deleted.
     /// Access must be performed under `customRegionsCacheLock` to prevent data races between
@@ -63,7 +66,7 @@ public class RegionsService: NSObject, LocationServiceDelegate {
     ///   - delegate: A delegate object for callbacks.
     ///   - fixedRegionName: A region name from `OBAKitConfig` to auto-select, bypassing the region picker.
     ///   - fixedRegionOBABaseURL: A fallback OBA base URL used when `fixedRegionName` doesn't match any known region.
-    public init(apiService: RegionsAPIService?, locationService: LocationService, userDefaults: UserDefaults, bundledRegionsFilePath: String, apiPath: String?, fileStorage: RegionsFileStorageProtocol = RegionsFileStorage(), delegate: RegionsServiceDelegate? = nil, fixedRegionName: String? = nil, fixedRegionOBABaseURL: URL? = nil) {
+    public init(apiService: RegionsAPIService?, locationService: LocationService, userDefaults: UserDefaults, bundledRegionsFilePath: String, apiPath: String?, fileStorage: RegionsFileStorageProtocol = RegionsFileStorage(), delegate: RegionsServiceDelegate? = nil, fixedRegionName: String? = nil, fixedRegionOBABaseURL: URL? = nil, pinnedBundledRegionIdentifiers: Set<RegionIdentifier> = []) {
         self.apiService = apiService
         self.locationService = locationService
         self.userDefaults = userDefaults
@@ -73,6 +76,7 @@ public class RegionsService: NSObject, LocationServiceDelegate {
 
         self.fixedRegionName = fixedRegionName
         self.fixedRegionOBABaseURL = fixedRegionOBABaseURL
+        self.pinnedBundledRegionIdentifiers = pinnedBundledRegionIdentifiers
 
         self.userDefaults.register(defaults: [
             RegionsService.automaticallySelectRegionUserDefaultsKey: true,
@@ -82,12 +86,15 @@ public class RegionsService: NSObject, LocationServiceDelegate {
         // One-time migration from UserDefaults to disk-based storage.
         RegionsService.migrateFromUserDefaultsIfNeeded(userDefaults: userDefaults, fileStorage: fileStorage)
 
-        if let regions = RegionsService.loadStoredRegions(from: fileStorage), regions.count > 0 {
-            self.regions = regions
-        }
-        else {
-            self.regions = RegionsService.bundledRegions(path: bundledRegionsFilePath)
-        }
+        // Stored/remote lists can lack local regions (e.g. Israel MOT region 972).
+        // Reapply opt-in pinned bundled regions at launch, not only on network refresh.
+        let bundled = RegionsService.bundledRegions(path: bundledRegionsFilePath)
+        let stored = RegionsService.loadStoredRegions(from: fileStorage)
+        self.regions = Self.withPinnedBundledRegions(
+            stored?.isEmpty == false ? stored! : bundled,
+            bundled: bundled,
+            pinnedIDs: pinnedBundledRegionIdentifiers
+        )
 
         super.init()
 
@@ -465,6 +472,15 @@ public class RegionsService: NSObject, LocationServiceDelegate {
 
     // swiftlint:disable force_try
 
+    private static func withPinnedBundledRegions(
+        _ regions: [Region], bundled: [Region], pinnedIDs: Set<RegionIdentifier>
+    ) -> [Region] {
+        guard !pinnedIDs.isEmpty else { return regions }
+        let existingIDs = Set(regions.map(\.regionIdentifier))
+        let additions = bundled.filter { pinnedIDs.contains($0.regionIdentifier) && !existingIDs.contains($0.regionIdentifier) }
+        return regions + additions
+    }
+
     private static func bundledRegions(path: String) -> [Region] {
         let data = try! NSData(contentsOfFile: path) as Data
         let response = try! JSONDecoder.RESTDecoder().decode(RESTAPIResponse<[Region]>.self, from: data)
@@ -508,7 +524,10 @@ public class RegionsService: NSObject, LocationServiceDelegate {
             return
         }
 
-        self.regions = regions
+        let bundled = Self.bundledRegions(path: bundledRegionsFilePath)
+        self.regions = Self.withPinnedBundledRegions(
+            regions, bundled: bundled, pinnedIDs: pinnedBundledRegionIdentifiers
+        )
     }
 
     /// Fetches the current list of `Region`s from the network.
