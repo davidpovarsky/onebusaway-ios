@@ -233,4 +233,30 @@ struct MOTCompatibilityDataLoaderTests {
         #expect(record?["predictedArrivalTime"] == nil)
         #expect(record?["tripStatus"] == nil)
     }
+
+    @Test
+    func testIsraelSearchLinesBridgeWithOfficialResponseShape() throws {
+        let sample = """
+        {"data":[{"routeId":33287,"agencyId":16,"agencyName":"סופרבוס","routeName":"31","routeLongName":"מסוף גילה/המרגלית<->רמות","cityName":"ירושלים"}],"success":true,"message":""}
+        """
+        let decoded = try JSONDecoder().decode(
+            MOTSearchLinesServiceResponse.self, from: Data(sample.utf8)
+        )
+        #expect(decoded.success)
+        let routes = (decoded.data ?? []).map { $0.toTransitRouteSummary() }
+        #expect(routes.count == 1)
+
+        let envelope = OBACompatibilityBridge.routesForLocationResponse(routes: routes)
+        let data = try JSONSerialization.data(withJSONObject: envelope)
+        let output = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let responseData = output?["data"] as? [String: Any]
+        let results = responseData?["list"] as? [[String: Any]]
+        let references = responseData?["references"] as? [String: Any]
+        #expect(results?.count == 1)
+        #expect(results?.first?["id"] as? String == "mot:route:33287")
+        #expect(results?.first?["shortName"] as? String == "31")
+        #expect((results?.first?["longName"] as? String)?.contains("ירושלים") == true)
+        #expect((references?["routes"] as? [[String: Any]])?.count == 1)
+        #expect((references?["agencies"] as? [[String: Any]])?.count == 1)
+    }
 }
