@@ -89,9 +89,9 @@ public class RegionsService: NSObject, LocationServiceDelegate {
         // Stored/remote lists can lack local regions (e.g. Israel MOT region 972).
         // Reapply opt-in pinned bundled regions at launch, not only on network refresh.
         let bundled = RegionsService.bundledRegions(path: bundledRegionsFilePath)
-        let stored = RegionsService.loadStoredRegions(from: fileStorage)
+        let stored = RegionsService.loadStoredRegions(from: fileStorage) ?? []
         self.regions = Self.withPinnedBundledRegions(
-            stored?.isEmpty == false ? stored! : bundled,
+            stored.isEmpty ? bundled : stored,
             bundled: bundled,
             pinnedIDs: pinnedBundledRegionIdentifiers
         )
@@ -109,14 +109,25 @@ public class RegionsService: NSObject, LocationServiceDelegate {
         }
 
         // Fixed region from OBAKitConfig: match by name, then fall back to URL.
-        // See: https://github.com/OneBusAway/onebusaway-ios/issues/608
-        if currentRegion == nil, let fixedName = fixedRegionName {
+        // The Israel fork uses the fixed-region config as a one-time onboarding
+        // repair for installations that previously selected MTA New York because
+        // the remote region list omitted Israel. It keeps auto-location enabled.
+        // Other clients retain the upstream semantics.
+        if let fixedName = fixedRegionName {
             let match = self.regions.first(where: { $0.name == fixedName })
                 ?? self.regions.first(where: { fixedRegionOBABaseURL != nil && $0.OBABaseURL == fixedRegionOBABaseURL })
-
             if let match {
-                currentRegion = match
-                userDefaults.set(false, forKey: RegionsService.automaticallySelectRegionUserDefaultsKey)
+                let isIsraelFork = fixedName == "Israel" && pinnedBundledRegionIdentifiers.contains(match.regionIdentifier)
+                let needsIsraelRepair = isIsraelFork && !userDefaults.bool(forKey: "OBAIsraelInitialRegionRepairV1")
+                if currentRegion == nil || needsIsraelRepair {
+                    currentRegion = match
+                    if !isIsraelFork {
+                        userDefaults.set(false, forKey: RegionsService.automaticallySelectRegionUserDefaultsKey)
+                    }
+                }
+                if isIsraelFork {
+                    userDefaults.set(true, forKey: "OBAIsraelInitialRegionRepairV1")
+                }
             } else {
                 Logger.error("Fixed region '\(fixedName)' not found in bundled or stored regions")
             }
