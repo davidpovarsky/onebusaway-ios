@@ -69,7 +69,8 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
         // The official MOT server does NOT implement the OneBusAway REST API.
         // Agency-coverage geometry is unavailable: return an explicit empty
         // OBA-compatible list rather than sending a nonexistent endpoint to MOT.
-        if path.contains("/api/where/agencies-with-coverage.json") {
+        if (url.host?.lowercased() == "api.bus.gov.il" || url.host?.lowercased().contains("bus.gov.il") == true),
+           path.contains("/api/where/agencies-with-coverage.json") {
             let payload: [String: Any] = [
                 "code": 200,
                 "text": "MOT does not provide OBA agency-coverage polygons",

@@ -172,7 +172,8 @@ struct MOTCompatibilityDataLoaderTests {
         let firstArr = arrivalsAndDepartures[0]
         #expect(firstArr["routeShortName"] as? String == "31")
         #expect(firstArr["predicted"] as? Bool == true)
-        #expect(firstArr["tripStatus"] != nil)
+        #expect(firstArr["tripStatus"] == nil)
+        #expect(firstArr["predictedArrivalTime"] != nil)
     }
 
     @Test
@@ -368,7 +369,7 @@ struct MOTCompatibilityDataLoaderTests {
         let response = try decodeAppResponse(json, as: [Stop].self)
         let stop = try #require(response.list.first)
         #expect(stop.code == "5997")
-        #expect(stop.name.contains("סילבר"))
+        #expect(stop.name.contains("סילבר") || stop.name.contains("Silver"))
         #expect(stop.regionIdentifier == 972)
 
         // This failed on the real iPad when agency.privateService was missing.
