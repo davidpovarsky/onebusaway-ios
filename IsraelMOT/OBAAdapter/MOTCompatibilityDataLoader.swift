@@ -167,6 +167,9 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
 
         do {
             let res: NearbyStopsResponseDTOServiceResponse = try await client.get(targetURL)
+            guard res.success else {
+                throw MOTHTTPError.serviceError(message: res.message ?? "MOT nearby stops request was unsuccessful")
+            }
             let stopsDTO = res.data ?? []
             let domainStops = stopsDTO.map { MOTStopMapper.map(from: $0) }
             let envelope = OBACompatibilityBridge.stopsForLocationResponse(stops: domainStops)
@@ -174,7 +177,9 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
             return (data, response)
         } catch {
-            return try await emptyStopsResponse(for: url)
+            // A failed MOT request must NOT masquerade as a successful search
+            // that found zero stops. Surface the real error to the map.
+            throw error
         }
     }
 
@@ -194,8 +199,14 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
             return (data, response)
+        } catch let error as MOTHTTPError {
+            // Only a genuine 404 means the resource is absent.
+            if case .httpError(statusCode: 404, responseBody: _) = error {
+                return try await notFoundResponse(for: url)
+            }
+            throw error
         } catch {
-            return try await notFoundResponse(for: url)
+            throw error
         }
     }
 
@@ -241,8 +252,14 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
             return (data, response)
+        } catch let error as MOTHTTPError {
+            // Only a genuine 404 means the resource is absent.
+            if case .httpError(statusCode: 404, responseBody: _) = error {
+                return try await notFoundResponse(for: url)
+            }
+            throw error
         } catch {
-            return try await notFoundResponse(for: url)
+            throw error
         }
     }
 
@@ -317,8 +334,14 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
             return (data, response)
+        } catch let error as MOTHTTPError {
+            // Only a genuine 404 means the resource is absent.
+            if case .httpError(statusCode: 404, responseBody: _) = error {
+                return try await notFoundResponse(for: url)
+            }
+            throw error
         } catch {
-            return try await notFoundResponse(for: url)
+            throw error
         }
     }
 
