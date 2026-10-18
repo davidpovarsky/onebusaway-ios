@@ -73,7 +73,7 @@ struct MOTLocationWeatherTests {
 
     @Test
     func testBadMETDataFailsInsteadOfShowingAnotherCity() {
-        #expect(throws: (any Error).self) {
+        #expect(throws: DecodingError.self) {
             try MOTLocationWeatherService.decodeForecast(
                 data: Data("{}".utf8),
                 latitude: 31.78,
