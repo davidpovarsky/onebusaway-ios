@@ -45,10 +45,13 @@ class MapViewController: UIViewController,
         hover.stackView.addArrangedSubview(toggleMapTypeButton)
         updateMapTypeButton(mapType: viewModel.mapType)
 
-        // Weather is now GPS-sourced and independent of region-bound Obaco.
-        // The button stays hidden until actual location weather data is ready.
-        hover.stackView.addArrangedSubview(HoverBarSeparator())
-        hover.stackView.addArrangedSubview(weatherButton)
+        // Dedicated Israel edition uses GPS weather; other OBA editions keep
+        // the original Obaco-dependent visibility behaviour.
+        if application.config.fixedRegionName == "Israel"
+            || application.features.obaco == .running {
+            hover.stackView.addArrangedSubview(HoverBarSeparator())
+            hover.stackView.addArrangedSubview(weatherButton)
+        }
 
         hover.stackView.addArrangedSubview(HoverBarSeparator())
         hover.stackView.addArrangedSubview(myTripButton)
