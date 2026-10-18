@@ -529,4 +529,87 @@ struct MOTCompatibilityDataLoaderTests {
         #expect((references?["routes"] as? [[String: Any]])?.count == 1)
         #expect((references?["agencies"] as? [[String: Any]])?.count == 1)
     }
+
+    @Test
+    func testStopsForRouteEnvelopeDecoding() throws {
+        let stop1 = TransitStop(
+            code: MOTStopCode(5997),
+            internalID: MOTStopInternalID(11622),
+            name: TransitMultiLanguageName(he: "סילבר/שכטמן", en: nil, ar: nil),
+            cityName: "ירושלים",
+            location: CLLocationCoordinate2D(latitude: 31.815188, longitude: 35.203022)
+        )
+        let stop2 = TransitStop(
+            code: MOTStopCode(2899),
+            internalID: MOTStopInternalID(10168),
+            name: TransitMultiLanguageName(he: "בר לב/שבטי ישראל", en: nil, ar: nil),
+            cityName: "ירושלים",
+            location: CLLocationCoordinate2D(latitude: 31.787760, longitude: 35.227006)
+        )
+
+        let domainRoute = TransitRoute(
+            routeID: MOTRouteID(33285),
+            lineName: "31",
+            longName: "רמות - גילה",
+            agencyID: MOTAgencyID(16),
+            agencyName: "סופרבוס",
+            polyline: [
+                CLLocationCoordinate2D(latitude: 31.815188, longitude: 35.203022),
+                CLLocationCoordinate2D(latitude: 31.787760, longitude: 35.227006)
+            ],
+            stops: [stop1, stop2]
+        )
+
+        let envelope = OBACompatibilityBridge.stopsForRouteResponse(route: domainRoute)
+        let jsonData = try JSONSerialization.data(withJSONObject: envelope)
+
+        let decoder = JSONDecoder()
+        let response = try decoder.decode(RESTAPIResponse<StopsForRoute>.self, from: jsonData)
+        #expect(response.code == 200)
+
+        guard let entry = response.entry else {
+            Issue.record("Expected StopsForRoute entry")
+            return
+        }
+
+        #expect(entry.id == "mot:route:33285")
+        #expect(entry.stopGroupings.count == 1)
+        #expect(entry.stopGroupings[0].stopGroups.count == 1)
+        #expect(entry.stopGroupings[0].stopGroups[0].stopIDs.count == 2)
+        #expect(response.references.stops.count == 2)
+        #expect(response.references.routes.count == 1)
+        #expect(response.references.agencies.count == 1)
+    }
+
+    @Test
+    func testScheduleForRouteEnvelopeDecoding() throws {
+        let stop = TransitStop(
+            code: MOTStopCode(5997),
+            name: TransitMultiLanguageName(he: "סילבר/שכטמן", en: nil, ar: nil),
+            location: CLLocationCoordinate2D(latitude: 31.815188, longitude: 35.203022)
+        )
+        let domainRoute = TransitRoute(
+            routeID: MOTRouteID(33285),
+            lineName: "31",
+            agencyID: MOTAgencyID(16),
+            agencyName: "סופרבוס",
+            stops: [stop]
+        )
+
+        let envelope = OBACompatibilityBridge.scheduleForRouteResponse(route: domainRoute)
+        let jsonData = try JSONSerialization.data(withJSONObject: envelope)
+
+        let decoder = JSONDecoder()
+        let response = try decoder.decode(RESTAPIResponse<ScheduleForRoute>.self, from: jsonData)
+        #expect(response.code == 200)
+
+        guard let entry = response.entry else {
+            Issue.record("Expected ScheduleForRoute entry")
+            return
+        }
+
+        #expect(entry.id == "mot:route:33285")
+        #expect(entry.stopTripGroupings.count == 1)
+        #expect(entry.stopTripGroupings[0].stopIDs.count == 1)
+    }
 }

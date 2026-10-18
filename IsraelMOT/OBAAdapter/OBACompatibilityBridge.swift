@@ -325,6 +325,129 @@ nonisolated public enum OBACompatibilityBridge {
         ]
     }
 
+    public static func stopsForRouteResponse(
+        route: TransitRoute,
+        currentTime: Date = Date()
+    ) -> [String: Any] {
+        let routeDict = serializeRoute(route)
+        let agencyDict = serializeAgency(id: route.agencyID, name: route.agencyName)
+
+        var referencesStops: [String: [String: Any]] = [:]
+        var stopIds: [String] = []
+
+        for stop in route.stops {
+            let sDict = serializeStop(stop)
+            let sId = sDict["id"] as! String
+            referencesStops[sId] = sDict
+            stopIds.append(sId)
+        }
+
+        var polylineEntities: [[String: Any]] = []
+        if let polylineCoords = route.polyline, !polylineCoords.isEmpty {
+            let encoded = GooglePolylineEncoder.encode(polylineCoords)
+            polylineEntities.append(["points": encoded])
+        }
+
+        let headsign = route.destinationName ?? route.longName ?? route.lineName
+        let stopGroup: [String: Any] = [
+            "id": "0",
+            "name": [
+                "name": headsign,
+                "type": "destination"
+            ],
+            "polylines": polylineEntities,
+            "stopIds": stopIds
+        ]
+
+        let stopGrouping: [String: Any] = [
+            "ordered": true,
+            "type": "direction",
+            "stopGroups": [stopGroup]
+        ]
+
+        let entry: [String: Any] = [
+            "routeId": routeDict["id"] as! String,
+            "polylines": polylineEntities,
+            "stopIds": stopIds,
+            "stopGroupings": [stopGrouping]
+        ]
+
+        let references: [String: Any] = [
+            "agencies": [agencyDict],
+            "routes": [routeDict],
+            "stops": Array(referencesStops.values),
+            "trips": [],
+            "situations": []
+        ]
+
+        return [
+            "code": 200,
+            "currentTime": Int(currentTime.timeIntervalSince1970 * 1000),
+            "text": "OK",
+            "version": 2,
+            "data": [
+                "entry": entry,
+                "references": references
+            ]
+        ]
+    }
+
+    public static func scheduleForRouteResponse(
+        route: TransitRoute,
+        date: Date = Date(),
+        currentTime: Date = Date()
+    ) -> [String: Any] {
+        let routeDict = serializeRoute(route)
+        let agencyDict = serializeAgency(id: route.agencyID, name: route.agencyName)
+
+        var referencesStops: [String: [String: Any]] = [:]
+        var stopIds: [String] = []
+
+        for stop in route.stops {
+            let sDict = serializeStop(stop)
+            let sId = sDict["id"] as! String
+            referencesStops[sId] = sDict
+            stopIds.append(sId)
+        }
+
+        let scheduleDateMs = Calendar.current.startOfDay(for: date).timeIntervalSince1970 * 1000.0
+        let headsign = route.destinationName ?? route.longName ?? route.lineName
+
+        let stopTripGrouping: [String: Any] = [
+            "directionId": "0",
+            "stopIds": stopIds,
+            "tripHeadsigns": [headsign],
+            "tripIds": ["mot:trip:\(route.routeID.rawValue)_default"],
+            "tripsWithStopTimes": [] as [[String: Any]]
+        ]
+
+        let entry: [String: Any] = [
+            "routeId": routeDict["id"] as! String,
+            "scheduleDate": scheduleDateMs,
+            "serviceIds": ["mot:service:default"],
+            "stopTripGroupings": [stopTripGrouping]
+        ]
+
+        let references: [String: Any] = [
+            "agencies": [agencyDict],
+            "routes": [routeDict],
+            "stops": Array(referencesStops.values),
+            "trips": [],
+            "situations": []
+        ]
+
+        return [
+            "code": 200,
+            "currentTime": Int(currentTime.timeIntervalSince1970 * 1000),
+            "text": "OK",
+            "version": 2,
+            "data": [
+                "entry": entry,
+                "references": references
+            ]
+        ]
+    }
+
     // MARK: - Serializers
 
     private static func serializeStop(_ stop: TransitStop) -> [String: Any] {

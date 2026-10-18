@@ -66,6 +66,16 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             return try await handleRouteDetail(url: url)
         }
 
+        // 6. Stops for Route: /api/where/stops-for-route/{id}.json
+        if path.contains("stops-for-route") {
+            return try await handleStopsForRoute(url: url)
+        }
+
+        // 7. Schedule for Route: /api/where/schedule-for-route/{id}.json
+        if path.contains("schedule-for-route") {
+            return try await handleScheduleForRoute(url: url)
+        }
+
         // The official MOT server does NOT implement the OneBusAway REST API.
         // Agency-coverage geometry is unavailable: return an explicit empty
         // OBA-compatible list rather than sending a nonexistent endpoint to MOT.
@@ -117,7 +127,7 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
 
         // 1. If search query is provided
         if let q = query, !q.isEmpty {
-            // If query is a numeric stop code, resolve via GetStopFullData
+            // If query is a numeric stop code, try live enrichment first, then local catalog
             if let stopCodeInt = Int(q) {
                 let code = MOTStopCode(rawValue: stopCodeInt)
                 let targetURL = endpoints.stopFullDataURL(stopCode: code)
@@ -128,10 +138,24 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
                     let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
                     let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
                     return (data, response)
+                } else if let localStop = IsraelStopCatalogRepository.shared.stop(forCode: code) {
+                    let envelope = OBACompatibilityBridge.stopsForLocationResponse(stops: [localStop])
+                    let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
+                    let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
+                    return (data, response)
                 }
             }
 
-            // General location/station query
+            // Text search: try local catalog first
+            let localMatching = IsraelStopCatalogRepository.shared.searchStops(query: q, limit: 20)
+            if !localMatching.isEmpty {
+                let envelope = OBACompatibilityBridge.stopsForLocationResponse(stops: localMatching)
+                let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
+                let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
+                return (data, response)
+            }
+
+            // Fallback to remote location autocomplete
             let searchURL = endpoints.searchLocationsURL(query: q)
             if let res: LocationAutoCompleteDTOServiceResponse = try? await client.get(searchURL),
                let items = res.data {
@@ -148,9 +172,47 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             return try await emptyStopsResponse(for: url)
         }
 
-        let coord = CLLocationCoordinate2D(latitude: lat, longitude: lon)
         let latSpan = latSpanStr.flatMap(Double.init)
         let lonSpan = lonSpanStr.flatMap(Double.init)
+
+        // Viewport query via nationwide local SQLite stop catalog
+        let catalog = IsraelStopCatalogRepository.shared
+        if catalog.isAvailable {
+            let lSpan = latSpan ?? 0.02
+            let rSpan = lonSpan ?? 0.02
+
+            // Zoom gate: when zoomed out beyond a metropolitan area, return empty to prevent pin flood
+            if lSpan > 0.8 {
+                let envelope = OBACompatibilityBridge.stopsForLocationResponse(stops: [])
+                let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
+                let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
+                return (data, response)
+            }
+
+            // Viewport query with 15% margin on each side
+            let marginLat = lSpan * 0.15
+            let marginLon = rSpan * 0.15
+            let minLat = lat - (lSpan / 2.0) - marginLat
+            let maxLat = lat + (lSpan / 2.0) + marginLat
+            let minLon = lon - (rSpan / 2.0) - marginLon
+            let maxLon = lon + (rSpan / 2.0) + marginLon
+
+            let localStops = catalog.stops(
+                minLat: minLat,
+                maxLat: maxLat,
+                minLon: minLon,
+                maxLon: maxLon,
+                limit: 350
+            )
+
+            let envelope = OBACompatibilityBridge.stopsForLocationResponse(stops: localStops)
+            let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
+            let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
+            return (data, response)
+        }
+
+        // Fallback to remote nearby stops if catalog is unavailable
+        let coord = CLLocationCoordinate2D(latitude: lat, longitude: lon)
         let explicitRadius = radiusStr.flatMap(Double.init)
 
         let targetURL: URL
@@ -158,7 +220,6 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             let radiusMeters = max(250.0, min(15000.0, explicitRadius))
             targetURL = endpoints.stopsCloseToLocationByRadiusURL(coordinate: coord, radiusMeters: radiusMeters)
         } else if let latSpan = latSpan, let lonSpan = lonSpan {
-            // Approximate degree to meters: 1 deg lat ~ 111km, 1 deg lon at ~32deg ~ 94km
             let halfSpanMeters = max(latSpan * 111000.0, lonSpan * 94000.0) / 2.0
             let radiusMeters = max(250.0, min(10000.0, halfSpanMeters))
             targetURL = endpoints.stopsCloseToLocationByRadiusURL(coordinate: coord, radiusMeters: radiusMeters)
@@ -178,8 +239,6 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
             return (data, response)
         } catch {
-            // A failed MOT request must NOT masquerade as a successful search
-            // that found zero stops. Surface the real error to the map.
             throw error
         }
     }
@@ -270,8 +329,7 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             $0.name.lowercased() == "query"
         }?.value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
-        // OBA's route search sends a route number (e.g. "31").
-        // Unlike searching stations/locations, routes have a separate MOT endpoint.
+        // OBA's route search sends a route number (e.g. "31") or composite string (e.g. "31 ירושלים").
         let query = rawQuery.replacingOccurrences(
             of: "^קו\\s*",
             with: "",
@@ -281,25 +339,42 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
         if query.isEmpty {
             routeSummaries = []
         } else {
+            let tokens = query.split(separator: " ").map(String.init)
+            let lineToken = tokens.first(where: { Int($0) != nil })
+            let textTokens = tokens.filter { Int($0) == nil }
+
+            let apiSearchQuery = lineToken ?? query
             let response: MOTSearchLinesServiceResponse = try await client.get(
-                endpoints.searchLinesURL(query: query)
+                endpoints.searchLinesURL(query: apiSearchQuery)
             )
             guard response.success else {
                 throw MOTHTTPError.serviceError(message: response.message ?? "SearchLines failed")
             }
 
-            // Prefer exact line number to substring matches, and retain
-            // descriptions/city for disambiguating many Israeli lines named "31".
+            // Filter lines: exact or partial route number match, plus optional city/agency text filter
             let matching = (response.data ?? []).filter { line in
-                line.routeName.localizedCaseInsensitiveContains(query)
-                    || line.routeLongName?.localizedCaseInsensitiveContains(query) == true
+                if let lt = lineToken {
+                    guard line.routeName.localizedCaseInsensitiveContains(lt) else { return false }
+                }
+                for text in textTokens {
+                    let matchesCity = line.cityName?.localizedCaseInsensitiveContains(text) == true
+                    let matchesAgency = line.agencyName?.localizedCaseInsensitiveContains(text) == true
+                    let matchesLongName = line.routeLongName?.localizedCaseInsensitiveContains(text) == true
+                    if !matchesCity && !matchesAgency && !matchesLongName {
+                        return false
+                    }
+                }
+                return true
             }
+
+            let targetNum = lineToken ?? query
             let sorted = matching.sorted { first, second in
-                let firstExact = first.routeName.compare(query, options: .caseInsensitive) == .orderedSame
-                let secondExact = second.routeName.compare(query, options: .caseInsensitive) == .orderedSame
+                let firstExact = first.routeName.compare(targetNum, options: .caseInsensitive) == .orderedSame
+                let secondExact = second.routeName.compare(targetNum, options: .caseInsensitive) == .orderedSame
                 if firstExact != secondExact { return firstExact }
-                return first.cityName ?? "" < second.cityName ?? ""
+                return (first.cityName ?? "") < (second.cityName ?? "")
             }
+
             var seen = Set<Int>()
             routeSummaries = sorted.compactMap { line in
                 guard seen.insert(line.routeId).inserted else { return nil }
@@ -337,6 +412,64 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             return (data, response)
         } catch let error as MOTHTTPError {
             // Only a genuine 404 means the resource is absent.
+            if case .httpError(statusCode: 404, responseBody: _) = error {
+                return try await notFoundResponse(for: url)
+            }
+            throw error
+        } catch {
+            throw error
+        }
+    }
+
+    private func handleStopsForRoute(url: URL) async throws -> (Data, URLResponse) {
+        guard let routeID = extractRouteID(from: url) else {
+            return try await notFoundResponse(for: url)
+        }
+
+        let targetURL = endpoints.routeFullDataURL(routeID: routeID)
+        let stopsURL = endpoints.routeStopsURL(routeID: routeID)
+
+        do {
+            let res: RouteFullDataResponseDTOServiceResponse = try await client.get(targetURL)
+            guard let routeDTO = res.data else {
+                return try await notFoundResponse(for: url)
+            }
+            let stopsRes: RouteStopsResponseDTOServiceResponse? = try? await client.get(stopsURL)
+            let domainRoute = MOTRouteMapper.map(routeDTO: routeDTO, stopsDTO: stopsRes?.data?.route)
+            let envelope = OBACompatibilityBridge.stopsForRouteResponse(route: domainRoute)
+            let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
+            let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
+            return (data, response)
+        } catch let error as MOTHTTPError {
+            if case .httpError(statusCode: 404, responseBody: _) = error {
+                return try await notFoundResponse(for: url)
+            }
+            throw error
+        } catch {
+            throw error
+        }
+    }
+
+    private func handleScheduleForRoute(url: URL) async throws -> (Data, URLResponse) {
+        guard let routeID = extractRouteID(from: url) else {
+            return try await notFoundResponse(for: url)
+        }
+
+        let targetURL = endpoints.routeFullDataURL(routeID: routeID)
+        let stopsURL = endpoints.routeStopsURL(routeID: routeID)
+
+        do {
+            let res: RouteFullDataResponseDTOServiceResponse = try await client.get(targetURL)
+            guard let routeDTO = res.data else {
+                return try await notFoundResponse(for: url)
+            }
+            let stopsRes: RouteStopsResponseDTOServiceResponse? = try? await client.get(stopsURL)
+            let domainRoute = MOTRouteMapper.map(routeDTO: routeDTO, stopsDTO: stopsRes?.data?.route)
+            let envelope = OBACompatibilityBridge.scheduleForRouteResponse(route: domainRoute)
+            let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
+            let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
+            return (data, response)
+        } catch let error as MOTHTTPError {
             if case .httpError(statusCode: 404, responseBody: _) = error {
                 return try await notFoundResponse(for: url)
             }
