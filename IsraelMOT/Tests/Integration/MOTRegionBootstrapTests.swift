@@ -60,6 +60,48 @@ final class MOTRegionBootstrapTests: OBATestCase {
     }
 
     @Test
+    func testOutdatedStoredIsraelDefinitionIsReplacedAtLaunch() throws {
+        let bundledData = try Data(contentsOf: URL(fileURLWithPath: bundledRegionsPath))
+        let bundled = try JSONDecoder.RESTDecoder().decode(
+            RESTAPIResponse<[Region]>.self, from: bundledData
+        )
+        let canonicalIsrael = try #require(bundled.list.first { $0.regionIdentifier == 972 })
+        #expect(canonicalIsrael.sidecarBaseURL == nil)
+
+        // Simulate the prior IPA's cached region 972 with its invalid Obaco URL.
+        let encoded = try JSONEncoder().encode(canonicalIsrael)
+        var oldJSON = try #require(
+            JSONSerialization.jsonObject(with: encoded) as? [String: Any]
+        )
+        oldJSON["sidecarBaseUrl"] = "https://api.bus.gov.il/prod"
+        oldJSON["otpBaseUrl"] = "https://api.bus.gov.il/prod/RoutePlanning/GetRoutes"
+        let oldData = try JSONSerialization.data(withJSONObject: oldJSON)
+        let staleIsrael = try JSONDecoder().decode(Region.self, from: oldData)
+        #expect(staleIsrael.sidecarBaseURL != nil)
+
+        let storage = MockRegionsFileStorage(defaultRegions: [staleIsrael])
+        let location = LocationService(
+            userDefaults: userDefaults,
+            locationManager: LocationManagerMock()
+        )
+        userDefaults.set(972, forKey: RegionsService.currentRegionIdentifierUserDefaultsKey)
+        let service = RegionsService(
+            apiService: nil,
+            locationService: location,
+            userDefaults: userDefaults,
+            bundledRegionsFilePath: bundledRegionsPath,
+            apiPath: nil,
+            fileStorage: storage,
+            fixedRegionName: "Israel",
+            pinnedBundledRegionIdentifiers: [972]
+        )
+        let selected = try #require(service.currentRegion)
+        #expect(selected.regionIdentifier == 972)
+        #expect(selected.sidecarBaseURL == nil)
+        #expect(selected.openTripPlannerURL?.absoluteString.contains("route-planner-prod/api/") == true)
+    }
+
+    @Test
     func testRemoteRefreshCannotRemovePinnedIsrael() async throws {
         let remoteUSRegions = try Fixtures.loadSomeRegions()
         let storedRegions = MockRegionsFileStorage(defaultRegions: remoteUSRegions)
