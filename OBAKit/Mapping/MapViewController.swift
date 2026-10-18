@@ -47,7 +47,7 @@ class MapViewController: UIViewController,
 
         // Dedicated Israel edition uses GPS weather; other OBA editions keep
         // the original Obaco-dependent visibility behaviour.
-        if application.config.fixedRegionName == "Israel"
+        if Bundle.main.fixedRegionName == "Israel"
             || application.features.obaco == .running {
             hover.stackView.addArrangedSubview(HoverBarSeparator())
             hover.stackView.addArrangedSubview(weatherButton)
