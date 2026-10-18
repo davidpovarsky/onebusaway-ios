@@ -14,6 +14,8 @@
 @import OBAKit;
 @import Security;
 #import <FirebaseCrashlytics/FirebaseCrashlytics.h>
+#import <dlfcn.h>
+#import <TargetConditionals.h>
 #import "App-Swift.h"
 
 @interface AppDelegate ()<OBAApplicationDelegate>
@@ -28,15 +30,30 @@
 // in the Israel edition when the installed binary lacks that entitlement.
 // A properly signed IPA with APNs entitlement retains the push integration.
 static BOOL OBAHasAPNsEntitlement(void) {
-    SecTaskRef task = SecTaskCreateFromSelf(kCFAllocatorDefault);
+#if TARGET_OS_SIMULATOR
+    return NO;
+#else
+    typedef struct __SecTask *SecTaskRef;
+    typedef SecTaskRef (*SecTaskCreateFromSelfFunc)(CFAllocatorRef);
+    typedef CFTypeRef (*SecTaskCopyValueForEntitlementFunc)(SecTaskRef, CFStringRef, CFErrorRef *);
+
+    SecTaskCreateFromSelfFunc createFunc = (SecTaskCreateFromSelfFunc)dlsym(RTLD_DEFAULT, "SecTaskCreateFromSelf");
+    SecTaskCopyValueForEntitlementFunc copyFunc = (SecTaskCopyValueForEntitlementFunc)dlsym(RTLD_DEFAULT, "SecTaskCopyValueForEntitlement");
+
+    if (!createFunc || !copyFunc) {
+        return NO;
+    }
+
+    SecTaskRef task = createFunc(kCFAllocatorDefault);
     if (task == NULL) { return NO; }
-    CFTypeRef value = SecTaskCopyValueForEntitlement(task, CFSTR("aps-environment"), NULL);
+    CFTypeRef value = copyFunc(task, CFSTR("aps-environment"), NULL);
     BOOL result = value != NULL
         && CFGetTypeID(value) == CFStringGetTypeID()
         && CFStringGetLength((CFStringRef)value) > 0;
     if (value != NULL) { CFRelease(value); }
     CFRelease(task);
     return result;
+#endif
 }
 
 @implementation AppDelegate
