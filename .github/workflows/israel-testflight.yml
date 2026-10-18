@@ -1,0 +1,368 @@
+name: Israel TestFlight - Manual Signed Beta and Crash Symbols
+
+# Manual workflow registered on main and selectable for any branch, including main.
+# No push-triggered macOS spending and no automatic TestFlight upload.
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Validate manifest only, or sign and upload to private TestFlight
+        required: true
+        type: choice
+        default: validate
+        options:
+          - validate
+          - upload
+      expected_sha:
+        description: Exact 40-character source commit SHA required for upload
+        required: false
+        type: string
+      source_ref:
+        description: Source branch, tag, or commit to build; blank uses the selected branch (including main)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: israel-testflight-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  testflight:
+    name: Prepare Israel iOS signed beta
+    runs-on: macos-15
+    timeout-minutes: 105
+    env:
+      ISRAEL_APP_BUNDLE_ID: com.davidpovarsky.onebusawayisrael
+      OPERATION: ${{ github.event_name == 'workflow_dispatch' && inputs.operation || 'validate' }}
+      EXPECTED_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.expected_sha || '' }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ISRAEL_APP_STORE_CONNECT_APP_ID: ${{ vars.ISRAEL_APP_STORE_CONNECT_APP_ID }}
+
+    steps:
+      - name: Check out selected source branch or commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref || github.ref }}
+          persist-credentials: false
+
+      - name: Load canonical TestFlight scripts from main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: .testflight-support
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/ci
+
+      - name: Enforce immutable SHA and explicit upload gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_SHA=$(git rev-parse HEAD)
+          echo "SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"
+          echo "Building source commit $SOURCE_SHA"
+          if [ -n "$EXPECTED_SHA" ] && [ "$EXPECTED_SHA" != "$SOURCE_SHA" ]; then
+            echo "::error::Expected commit SHA does not match the checked-out commit"
+            exit 1
+          fi
+          if [ "$OPERATION" = "upload" ] && [ -z "$EXPECTED_SHA" ]; then
+            echo "::error::Upload requires expected_sha to prevent wrong-build delivery"
+            exit 1
+          fi
+          if [ "$OPERATION" = "upload" ] && ! [[ "$EXPECTED_SHA" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::Upload requires a full 40-character expected SHA"
+            exit 1
+          fi
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Check required Apple distribution configuration
+        if: inputs.operation == 'upload'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE_P12_B64: ${{ secrets.APPLE_CERTIFICATE_P12_B64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          ISRAEL_APP_PROVISIONING_PROFILE_B64: ${{ secrets.ISRAEL_APP_PROVISIONING_PROFILE_B64 }}
+          ISRAEL_WIDGET_PROVISIONING_PROFILE_B64: ${{ secrets.ISRAEL_WIDGET_PROVISIONING_PROFILE_B64 }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          for name in APPLE_TEAM_ID APPLE_CERTIFICATE_P12_B64 APPLE_CERTIFICATE_PASSWORD \
+                      ISRAEL_APP_PROVISIONING_PROFILE_B64 ISRAEL_WIDGET_PROVISIONING_PROFILE_B64 \
+                      ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 ISRAEL_APP_STORE_CONNECT_APP_ID; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Missing required repository secret or variable: $name"
+              exit 1
+            fi
+          done
+          echo "All required secret and variable names are configured (values not displayed)."
+
+      - name: Restore temporary signing keychain and profiles
+        if: inputs.operation == 'upload'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE_P12_B64: ${{ secrets.APPLE_CERTIFICATE_P12_B64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          ISRAEL_APP_PROVISIONING_PROFILE_B64: ${{ secrets.ISRAEL_APP_PROVISIONING_PROFILE_B64 }}
+          ISRAEL_WIDGET_PROVISIONING_PROFILE_B64: ${{ secrets.ISRAEL_WIDGET_PROVISIONING_PROFILE_B64 }}
+        run: |
+          set -euo pipefail
+          umask 077
+          KEYCHAIN="$RUNNER_TEMP/israel-testflight-signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          echo "$KEYCHAIN_PASSWORD" > "$RUNNER_TEMP/israel-keychain-password"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+
+          printf '%s' "$APPLE_CERTIFICATE_P12_B64" | base64 -D > "$RUNNER_TEMP/israel-distribution.p12"
+          security import "$RUNNER_TEMP/israel-distribution.p12" \
+            -P "$APPLE_CERTIFICATE_PASSWORD" -A -f pkcs12 -k "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s \
+            -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN"
+
+          printf '%s' "$ISRAEL_APP_PROVISIONING_PROFILE_B64" | base64 -D > "$RUNNER_TEMP/israel-app.mobileprovision"
+          printf '%s' "$ISRAEL_WIDGET_PROVISIONING_PROFILE_B64" | base64 -D > "$RUNNER_TEMP/israel-widget.mobileprovision"
+          security cms -D -i "$RUNNER_TEMP/israel-app.mobileprovision" > "$RUNNER_TEMP/israel-app-profile.plist"
+          security cms -D -i "$RUNNER_TEMP/israel-widget.mobileprovision" > "$RUNNER_TEMP/israel-widget-profile.plist"
+
+          python3 .testflight-support/scripts/ci/verify_israel_profiles.py \
+            --main "$RUNNER_TEMP/israel-app-profile.plist" \
+            --widget "$RUNNER_TEMP/israel-widget-profile.plist" \
+            --team "$APPLE_TEAM_ID" --bundle "$ISRAEL_APP_BUNDLE_ID" \
+            --env-file "$GITHUB_ENV"
+
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          app_uuid=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$RUNNER_TEMP/israel-app-profile.plist")
+          widget_uuid=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$RUNNER_TEMP/israel-widget-profile.plist")
+          cp "$RUNNER_TEMP/israel-app.mobileprovision" "$HOME/Library/MobileDevice/Provisioning Profiles/${app_uuid}.mobileprovision"
+          cp "$RUNNER_TEMP/israel-widget.mobileprovision" "$HOME/Library/MobileDevice/Provisioning Profiles/${widget_uuid}.mobileprovision"
+
+      - name: Generate original upstream project, then apply temporary Israel identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          scripts/generate_project OneBusAway --no-watch
+          python3 .testflight-support/scripts/ci/prepare_israel_testflight.py --mode "$OPERATION"
+          xcodegen generate
+          mkdir -p build/testflight
+          xcodegen dump --type json > build/testflight/resolved-project.json
+          if [ "$OPERATION" = "upload" ]; then
+            EXPECTED_TEAM="$APPLE_TEAM_ID"
+          else
+            EXPECTED_TEAM="VALIDA1234"
+          fi
+          python3 .testflight-support/scripts/ci/check_israel_testflight_spec.py \
+            --spec build/testflight/resolved-project.json \
+            --team "$EXPECTED_TEAM" --bundle "$ISRAEL_APP_BUNDLE_ID" \
+            --mode "$OPERATION"
+
+      - name: Pick simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "SIMULATOR_UDID=$(scripts/resolve_simulator_udid)" >> "$GITHUB_ENV"
+
+      - name: Verify selected source branch with applicable Apple build/tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f "IsraelMOT/Tests/Integration/IsraelStopCatalogTests.swift" ]; then
+            echo "IsraelMOT branch detected: run focused MOT test suites"
+            xcodebuild test \
+              -project OBAKit.xcodeproj -scheme App \
+              -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+              -derivedDataPath DerivedData \
+              CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+              -only-testing:OBAKitTests/MOTDTODecodingTests \
+              -only-testing:OBAKitTests/MOTMapperTests \
+              -only-testing:OBAKitTests/MOTHTTPClientTests \
+              -only-testing:OBAKitTests/MOTCompatibilityDataLoaderTests \
+              -only-testing:OBAKitTests/MOTTripPlanningTests \
+              -only-testing:OBAKitTests/MOTGetRoutesEncodingTests \
+              -only-testing:OBAKitTests/MOTFlexiblePolylineTests \
+              -only-testing:OBAKitTests/MOTLocationWeatherTests \
+              -only-testing:OBAKitTests/MOTRegionBootstrapTests \
+              -only-testing:OBAKitTests/IsraelStopCatalogTests \
+              -only-testing:OBAKitTests/TransitProviderRegistryTests
+          else
+            echo "Branch without IsraelMOT: compile original OneBusAway app"
+            xcodebuild build \
+              -project OBAKit.xcodeproj -scheme App \
+              -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+              -derivedDataPath DerivedData \
+              CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+          fi
+
+      - name: Confirm dry-run validation only (never upload)
+        if: inputs.operation == 'validate'
+        run: echo "Validation complete. No signing, Apple account changes, or upload performed."
+
+      - name: Build signed release archive (including widget and dSYMs)
+        if: inputs.operation == 'upload'
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild archive \
+            -project OBAKit.xcodeproj -scheme App \
+            -configuration Release -destination 'generic/platform=iOS' \
+            -derivedDataPath DerivedData \
+            -archivePath "$GITHUB_WORKSPACE/build/OneBusAwayIsrael.xcarchive" \
+            "CURRENT_PROJECT_VERSION=$GITHUB_RUN_NUMBER"
+          test -d "build/OneBusAwayIsrael.xcarchive/dSYMs"
+          test -d "build/OneBusAwayIsrael.xcarchive/Products/Applications"
+
+      - name: Export App Store signed IPA with both provisioning profiles
+        if: inputs.operation == 'upload'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, plistlib
+          bundle = os.environ["ISRAEL_APP_BUNDLE_ID"]
+          options = {
+              "method": "app-store-connect",
+              "destination": "export",
+              "signingStyle": "manual",
+              "signingCertificate": "Apple Distribution",
+              "teamID": os.environ["APPLE_TEAM_ID"],
+              "manageAppVersionAndBuildNumber": False,
+              "uploadSymbols": True,
+              "provisioningProfiles": {
+                  bundle: os.environ["ISRAEL_APP_PROFILE_NAME"],
+                  bundle + ".OBAWidget": os.environ["ISRAEL_WIDGET_PROFILE_NAME"],
+              },
+          }
+          with open("build/testflight/ExportOptions.plist", "wb") as out:
+              plistlib.dump(options, out)
+          PY
+          xcodebuild -exportArchive \
+            -archivePath "$GITHUB_WORKSPACE/build/OneBusAwayIsrael.xcarchive" \
+            -exportOptionsPlist build/testflight/ExportOptions.plist \
+            -exportPath "$GITHUB_WORKSPACE/build/testflight-export"
+          find build/testflight-export -maxdepth 1 -name '*.ipa' -print
+
+      - name: Validate actual signed IPA identity and bundled catalog
+        if: inputs.operation == 'upload'
+        shell: bash
+        run: |
+          set -euo pipefail
+          IPA=$(find build/testflight-export -maxdepth 1 -name '*.ipa' -print -quit)
+          test -n "$IPA"
+          APP=$(find build/OneBusAwayIsrael.xcarchive/Products/Applications -maxdepth 1 -name '*.app' -print -quit)
+          test -n "$APP"
+          codesign --verify --deep --strict "$APP"
+          xcrun dwarfdump --uuid "build/OneBusAwayIsrael.xcarchive/dSYMs/"*.dSYM > build/testflight/dsym-uuids.txt
+          python3 - "$IPA" <<'PY'
+          import os, pathlib, plistlib, sys, zipfile
+          bundle = os.environ["ISRAEL_APP_BUNDLE_ID"]
+          with zipfile.ZipFile(sys.argv[1]) as z:
+              names = z.namelist()
+              app_plists = [n for n in names if n.startswith("Payload/") and
+                            n.endswith(".app/Info.plist") and n.count(".app/") == 1]
+              if len(app_plists) != 1:
+                  raise SystemExit("Expected exactly one signed main app")
+              main = plistlib.loads(z.read(app_plists[0]))
+              if main.get("CFBundleIdentifier") != bundle:
+                  raise SystemExit("Signed main bundle ID mismatch")
+              widget_plists = [n for n in names if "/PlugIns/" in n and n.endswith(".appex/Info.plist")]
+              if len(widget_plists) != 1:
+                  raise SystemExit("Expected exactly one WidgetKit extension")
+              widget = plistlib.loads(z.read(widget_plists[0]))
+              if widget.get("CFBundleIdentifier") != bundle + ".OBAWidget":
+                  raise SystemExit("Signed widget bundle ID mismatch")
+              has_catalog_in_source = os.path.isfile("IsraelMOT/Resources/IsraelStopCatalog.sqlite")
+              has_catalog_in_ipa = any(n.endswith("IsraelStopCatalog.sqlite") for n in names)
+              if has_catalog_in_source and not has_catalog_in_ipa:
+                  raise SystemExit("Source has stop catalog, but signed IPA does not")
+          print("Signed IPA IDs and branch-specific embedded resources: VERIFIED")
+          PY
+          cd build/OneBusAwayIsrael.xcarchive
+          zip -qry "$GITHUB_WORKSPACE/build/testflight/OneBusAwayIsrael-dSYMs.zip" dSYMs
+
+      - name: Validate and upload exact signed build to private TestFlight
+        if: inputs.operation == 'upload'
+        shell: bash
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          key_path="$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+          printf '%s' "$ASC_KEY_P8" | base64 -D > "$key_path"
+          chmod 600 "$key_path"
+          IPA=$(find build/testflight-export -maxdepth 1 -name '*.ipa' -print -quit)
+          test -n "$IPA"
+          xcrun altool --validate-app \
+            -f "$IPA" -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+          xcrun altool --upload-app \
+            -f "$IPA" -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+          echo "Upload accepted by transport. Apple processing and TestFlight availability remain to verify."
+
+      - name: Save non-secret release evidence for crash symbolication
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/testflight
+          printf 'source_sha=%s\nworkflow_run=%s\nmode=%s\nbundle_id=%s\n' \
+            "$SOURCE_SHA" "$GITHUB_RUN_ID" "$OPERATION" \
+            "$ISRAEL_APP_BUNDLE_ID" > build/testflight/release-evidence.txt
+          if [ "$OPERATION" = "upload" ]; then
+            printf 'Upload status is NOT equivalent to Apple processing complete.\n' \
+              >> build/testflight/release-evidence.txt
+          fi
+
+      - name: Upload matching dSYMs for crash analysis (not signed IPA)
+        if: always() && inputs.operation == 'upload'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Israel-TestFlight-dSYMs-${{ github.run_number }}
+          path: |
+            build/testflight/OneBusAwayIsrael-dSYMs.zip
+            build/testflight/dsym-uuids.txt
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Upload sanitized release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Israel-TestFlight-evidence-${{ github.run_number }}
+          path: build/testflight/release-evidence.txt
+          retention-days: 30
+
+      - name: Erase transient signing materials
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          security delete-keychain "$RUNNER_TEMP/israel-testflight-signing.keychain-db" >/dev/null 2>&1
+          rm -f "$RUNNER_TEMP/israel-keychain-password" \
+                "$RUNNER_TEMP/israel-distribution.p12" \
+                "$RUNNER_TEMP/israel-app.mobileprovision" \
+                "$RUNNER_TEMP/israel-widget.mobileprovision" \
+                "$RUNNER_TEMP/israel-app-profile.plist" \
+                "$RUNNER_TEMP/israel-widget-profile.plist"
+          if [ -n "${ISRAEL_APP_PROFILE_UUID:-}" ]; then
+            rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/${ISRAEL_APP_PROFILE_UUID}.mobileprovision"
+          fi
+          if [ -n "${ISRAEL_WIDGET_PROFILE_UUID:-}" ]; then
+            rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/${ISRAEL_WIDGET_PROFILE_UUID}.mobileprovision"
+          fi
+          if [ -n "${ASC_KEY_ID:-}" ]; then
+            rm -f "$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+          fi
