@@ -90,7 +90,7 @@ public actor MOTLocationWeatherService {
     }
 
     /// Convert MET Norway's symbol codes to keys already supported by WeatherFormatter.
-    private static func iconKey(from symbol: String) -> String {
+    private nonisolated static func iconKey(from symbol: String) -> String {
         let code = symbol.lowercased()
         let isNight = code.contains("_night")
         let suffix = isNight ? "night" : "day"
