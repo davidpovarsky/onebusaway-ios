@@ -305,7 +305,7 @@ struct MOTCompatibilityDataLoaderTests {
 
     @Test
     func testNativeOBAArrivalsDecoderAndTripReferences() throws {
-        let scheduled = Date(timeIntervalSince1970: 1_760_000_000)
+        let scheduled = Date().addingTimeInterval(300)
         let arrival = TransitArrival(
             routeID: MOTRouteID(33287),
             lineName: "31",
@@ -334,7 +334,7 @@ struct MOTCompatibilityDataLoaderTests {
 
     @Test
     func testNativeOBAScheduledArrivalsDecodeWithoutRealTimeData() throws {
-        let when = Date(timeIntervalSince1970: 1_760_000_000)
+        let when = Date().addingTimeInterval(300)
         let scheduled = TransitArrival(
             routeID: MOTRouteID(33287),
             lineName: "31",
