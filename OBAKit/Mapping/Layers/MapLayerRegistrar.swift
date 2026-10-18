@@ -102,6 +102,12 @@ import OTPKit
     /// `OnDemandSupport` for the new server on activation.
     private func configureOnDemandLayer() {
         mapRegionManager.removeMapLayer(id: OnDemandMapLayer.layerID)
+        // MOT's national API does not provide OBA /api/ondemand services.
+        // Do not add a layer that would repeatedly query an invalid URL.
+        guard application.currentRegion?.regionIdentifier != 972 else {
+            onDemandLayer = nil
+            return
+        }
         let layer = OnDemandMapLayer(application: application)
         onDemandLayer = layer
         mapRegionManager.registerMapLayer(layer)
