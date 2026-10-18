@@ -10,12 +10,15 @@ import os.log
 
 /// Makes API calls to the OBA REST service and converts the server's responses into model objects.
 public actor RESTAPIService: @preconcurrency APIService {
-    public let configuration: APIServiceConfiguration
+    public nonisolated let configuration: APIServiceConfiguration
     public nonisolated let dataLoader: URLDataLoader
 
     /// The configuration's base URL, readable without an actor hop. `OnDemandSupport`
     /// keys on it, and `@MainActor` callers consult support synchronously.
     public nonisolated let baseURL: URL
+
+    /// The region identifier, readable without an actor hop.
+    public nonisolated let regionIdentifier: Int?
 
     /// Where the `services-for-location` probe records a server that lacks
     /// `/api/ondemand`. Injectable so tests never share the process-wide cache.
@@ -34,6 +37,7 @@ public actor RESTAPIService: @preconcurrency APIService {
         self.configuration = configuration
         self.dataLoader = dataLoader
         self.baseURL = configuration.baseURL
+        self.regionIdentifier = configuration.regionIdentifier
         self.onDemandSupport = onDemandSupport
         self.urlBuilder = RESTAPIURLBuilder(
             baseURL: configuration.baseURL,
