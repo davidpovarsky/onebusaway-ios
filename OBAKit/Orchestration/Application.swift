@@ -739,7 +739,7 @@ public class Application: CoreApplication, PushServiceDelegate {
         ) { [weak self] _ in
             guard let self else { return }
             MainActor.assumeIsolated {
-                self.refreshAPIServices()
+                self.refreshServices()
             }
         }
     }
