@@ -487,9 +487,25 @@ public class RegionsService: NSObject, LocationServiceDelegate {
         _ regions: [Region], bundled: [Region], pinnedIDs: Set<RegionIdentifier>
     ) -> [Region] {
         guard !pinnedIDs.isEmpty else { return regions }
-        let existingIDs = Set(regions.map(\.regionIdentifier))
-        let additions = bundled.filter { pinnedIDs.contains($0.regionIdentifier) && !existingIDs.contains($0.regionIdentifier) }
-        return regions + additions
+
+        // The bundled definition is canonical for a pinned fork region. If an
+        // older IPA persisted region 972 with a bogus Obaco sidecar or planner
+        // URL, merely appending a missing region will NOT repair it.
+        let canonical = Dictionary(uniqueKeysWithValues: bundled
+            .filter { pinnedIDs.contains($0.regionIdentifier) }
+            .map { ($0.regionIdentifier, $0) })
+        var seen = Set<RegionIdentifier>()
+        var result: [Region] = []
+        for candidate in regions {
+            guard seen.insert(candidate.regionIdentifier).inserted else { continue }
+            result.append(canonical[candidate.regionIdentifier] ?? candidate)
+        }
+        for candidate in bundled where pinnedIDs.contains(candidate.regionIdentifier) {
+            if seen.insert(candidate.regionIdentifier).inserted {
+                result.append(candidate)
+            }
+        }
+        return result
     }
 
     private static func bundledRegions(path: String) -> [Region] {
