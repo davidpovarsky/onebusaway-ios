@@ -29,7 +29,8 @@
 
 ---
 
-## 3. Approval Gates
+## 3. Mandatory Subagent Delegation & Approval Gates
+- **חובת האצלה:** הסוכן הראשי פועל כמתאם בלבד ומחויב להפעיל סוכני משנה (`invoke_subagent`). כל קוד מועבר לרוני לאימות.
 - **Release Readiness:** Release gate tasks remain OPEN until verified on physical iPad via SideStore with green CI.
 - **Physical Device:** Tasks with physical iPad runtime verification remain open until verified on hardware.
 - **Asana Policy:** Autonomous updates and verified completion are authorized per `docs/ai-team/ASANA_POLICY.md`.
