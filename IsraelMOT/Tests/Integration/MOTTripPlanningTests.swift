@@ -212,4 +212,28 @@ struct MOTTripPlanningTests {
         #expect(error.errorDescription?.contains(supportID) == true)
         #expect(error.errorDescription?.contains("חומת אש F5") == true)
     }
+
+    @Test
+    func testTimezoneFormattingAsiaJerusalem() {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "Asia/Jerusalem")!
+
+        var components = DateComponents()
+        components.year = 2026
+        components.month = 10
+        components.day = 18
+        components.hour = 16
+        components.minute = 10
+        components.second = 0
+
+        guard let targetDate = cal.date(from: components) else {
+            Issue.record("Failed to create target test date")
+            return
+        }
+
+        let formatted = MOTTripPlanningAPIService.formatRequestDate(targetDate)
+        // Strictly wall-clock Asia/Jerusalem time without trailing 'Z'
+        #expect(formatted == "2026-10-18T16:10:00")
+        #expect(!formatted.hasSuffix("Z"))
+    }
 }

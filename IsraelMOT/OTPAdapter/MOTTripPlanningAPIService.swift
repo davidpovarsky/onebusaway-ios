@@ -27,6 +27,16 @@ nonisolated public final class MOTTripPlanningAPIService: Sendable {
         self.endpoints = MOTEndpoints(plannerBase: baseURL)
         self.client = client
     }
+
+    /// Formats a Date in Asia/Jerusalem wall-clock time without a trailing 'Z',
+    /// matching the format expected by the MOT RoutePlanning/GetRoutes backend.
+    public static func formatRequestDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "Asia/Jerusalem") ?? TimeZone(secondsFromGMT: 7200)!
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        return formatter.string(from: date)
+    }
 }
 
 #if canImport(OTPKit)
@@ -43,11 +53,11 @@ nonisolated extension MOTTripPlanningAPIService: APIService {
 
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        formatter.timeZone = TimeZone(identifier: "Asia/Jerusalem") ?? TimeZone(secondsFromGMT: 7200)!
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         let isoDate = formatter.string(from: request.date)
 
-        let isFuture = request.date > Date()
+        let isFuture = request.arriveBy || request.date >= Date().addingTimeInterval(-60)
 
         let optionsDTO = GetRoutesOptionsDTO(
             isAccessible: request.wheelchairAccessible,
