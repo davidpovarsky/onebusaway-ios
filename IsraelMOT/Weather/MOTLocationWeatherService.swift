@@ -56,6 +56,13 @@ public actor MOTLocationWeatherService {
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
             throw MOTLocationWeatherError.serverUnavailable
         }
+        return try Self.decodeForecast(data: data, latitude: latitude, longitude: longitude)
+    }
+
+    /// Offline-testable mapping of MET Norway's forecast JSON.
+    public nonisolated static func decodeForecast(
+        data: Data, latitude: Double, longitude: Double
+    ) throws -> MOTLocationWeatherSnapshot {
         let result = try JSONDecoder().decode(METLocationForecast.self, from: data)
         let parser = ISO8601DateFormatter()
         parser.formatOptions = [.withInternetDateTime]
@@ -119,7 +126,7 @@ nonisolated public enum MOTLocationWeatherError: Error {
     case emptyForecast
 }
 
-private struct METLocationForecast: Decodable {
+nonisolated private struct METLocationForecast: Decodable {
     let properties: Properties
 
     struct Properties: Decodable {
