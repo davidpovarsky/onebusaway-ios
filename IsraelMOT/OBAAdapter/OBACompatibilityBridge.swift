@@ -490,6 +490,8 @@ nonisolated public enum OBACompatibilityBridge {
                 "id": trip.tripID,
                 "routeId": routeDict["id"] as! String,
                 "tripHeadsign": headsign,
+                "tripShortName": route.lineName,
+                "routeShortName": route.lineName,
                 "serviceId": "mot:service:regular",
                 "directionId": "0",
                 "blockId": "mot:block:\(route.routeID.rawValue)",
