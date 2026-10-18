@@ -152,12 +152,12 @@ class MapViewModel: NSObject, ObservableObject, LocationServiceDelegate {
     var isWeatherFeatureAvailable: Bool {
         // Dedicated Israel edition uses GPS weather; international OBA editions
         // keep their original region-based Obaco weather behaviour.
-        application.config.fixedRegionName == "Israel"
+        Bundle.main.fixedRegionName == "Israel"
             || application.features.obaco == .running
     }
 
     func loadWeather() async {
-        if application.config.fixedRegionName != "Israel" {
+        if Bundle.main.fixedRegionName != "Israel" {
             // No changes to upstream/international weather behaviour.
             guard let apiService = application.obacoService else {
                 weatherDisplay = nil
