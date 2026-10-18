@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 /// Strongly-typed provider identifiers.
-public struct TransitProviderID: RawRepresentable, Hashable, Codable, Sendable, CustomStringConvertible {
+nonisolated public struct TransitProviderID: RawRepresentable, Hashable, Codable, Sendable, CustomStringConvertible {
     public let rawValue: String
 
     public init(rawValue: String) {
@@ -28,7 +28,7 @@ public struct TransitProviderID: RawRepresentable, Hashable, Codable, Sendable, 
 }
 
 /// Runtime status of a specific capability.
-public enum CapabilityStatus: Hashable, Codable, Sendable {
+nonisolated public enum CapabilityStatus: Hashable, Codable, Sendable {
     case supported
     case unsupported
     case degraded(reason: String)
@@ -46,7 +46,7 @@ public enum CapabilityStatus: Hashable, Codable, Sendable {
 }
 
 /// Granular capabilities descriptor for transit data providers.
-public struct TransitProviderCapabilities: Hashable, Codable, Sendable {
+nonisolated public struct TransitProviderCapabilities: Hashable, Codable, Sendable {
     public var nearbyStops: CapabilityStatus
     public var mapViewportStops: CapabilityStatus
     public var searchLines: CapabilityStatus
@@ -151,7 +151,7 @@ public struct TransitProviderCapabilities: Hashable, Codable, Sendable {
 }
 
 /// Metadata and descriptor for a transit provider.
-public struct TransitProviderDescriptor: Identifiable, Hashable, Sendable {
+nonisolated public struct TransitProviderDescriptor: Identifiable, Hashable, Sendable {
     public var id: TransitProviderID
     public var displayName: String
     public var localizedDescription: String
@@ -262,7 +262,7 @@ nonisolated public final class TransitProviderRegistry: @unchecked Sendable {
 public final class TransitProviderSelectionStore: ObservableObject {
     public static let shared = TransitProviderSelectionStore()
 
-    public static let userDefaultsKey = "org.onebusaway.israel.selected_provider"
+    nonisolated public static let userDefaultsKey = "org.onebusaway.israel.selected_provider"
 
     nonisolated public static func currentProviderID() -> TransitProviderID {
         if let savedRaw = UserDefaults.standard.string(forKey: userDefaultsKey) {
