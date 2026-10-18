@@ -72,11 +72,18 @@ public actor MOTHTTPClient {
                     throw MOTHTTPError.invalidResponse(expected: "HTTPURLResponse", actual: nil)
                 }
 
-                // Check for F5 WAF 403 Forbidden
+                // HTTP 403 alone does not establish F5/WAF interference.
+                // F5 HTML includes "The requested URL was rejected" and a
+                // support ID; normal APIs can also return 403 for other reasons.
                 if httpResponse.statusCode == 403 {
                     let bodyString = String(data: data, encoding: .utf8) ?? ""
-                    let supportID = extractF5SupportID(from: bodyString)
-                    throw MOTHTTPError.wafBlocked(supportID: supportID)
+                    let looksLikeF5 = bodyString.localizedCaseInsensitiveContains("The requested URL was rejected")
+                        || bodyString.localizedCaseInsensitiveContains("F5 site:")
+                        || bodyString.localizedCaseInsensitiveContains("Please consult with your administrator")
+                    if looksLikeF5 {
+                        throw MOTHTTPError.wafBlocked(supportID: extractF5SupportID(from: bodyString))
+                    }
+                    throw MOTHTTPError.httpError(statusCode: 403, responseBody: bodyString)
                 }
 
                 // Check for Rate Limiting 429
@@ -133,10 +140,9 @@ public actor MOTHTTPClient {
     }
 
     private func extractF5SupportID(from body: String) -> String? {
-        guard body.contains("The requested URL was rejected") || body.contains("support ID is:") else {
-            return nil
-        }
-        let pattern = "support ID is:\\s*([0-9]+)"
+        guard body.localizedCaseInsensitiveContains("support ID") else { return nil }
+        // Real F5 responses can use hexadecimal UUIDs, not only digits.
+        let pattern = "support\\\\s+ID(?:\\\\s+is)?\\\\s*[:#]?\\\\s*([A-Fa-f0-9-]{8,})"
         guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
               let match = regex.firstMatch(in: body, options: [], range: NSRange(location: 0, length: body.utf16.count)) else {
             return nil
