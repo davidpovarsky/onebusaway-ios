@@ -76,14 +76,7 @@ public actor MOTHTTPClient {
                 // F5 HTML includes "The requested URL was rejected" and a
                 // support ID; normal APIs can also return 403 for other reasons.
                 if httpResponse.statusCode == 403 {
-                    let bodyString = String(data: data, encoding: .utf8) ?? ""
-                    let looksLikeF5 = bodyString.localizedCaseInsensitiveContains("The requested URL was rejected")
-                        || bodyString.localizedCaseInsensitiveContains("F5 site:")
-                        || bodyString.localizedCaseInsensitiveContains("Please consult with your administrator")
-                    if looksLikeF5 {
-                        throw MOTHTTPError.wafBlocked(supportID: extractF5SupportID(from: bodyString))
-                    }
-                    throw MOTHTTPError.httpError(statusCode: 403, responseBody: bodyString)
+                    throw Self.classifyForbiddenResponse(String(data: data, encoding: .utf8) ?? "")
                 }
 
                 // Check for Rate Limiting 429
@@ -139,7 +132,18 @@ public actor MOTHTTPClient {
         }
     }
 
-    private func extractF5SupportID(from body: String) -> String? {
+    /// Offline-testable classification: an HTTP 403 is not necessarily F5.
+    public nonisolated static func classifyForbiddenResponse(_ body: String) -> MOTHTTPError {
+        let looksLikeF5 = body.localizedCaseInsensitiveContains("The requested URL was rejected")
+            || body.localizedCaseInsensitiveContains("F5 site:")
+            || body.localizedCaseInsensitiveContains("Please consult with your administrator")
+        if looksLikeF5 {
+            return .wafBlocked(supportID: extractF5SupportID(from: body))
+        }
+        return .httpError(statusCode: 403, responseBody: body)
+    }
+
+    private nonisolated static func extractF5SupportID(from body: String) -> String? {
         guard body.localizedCaseInsensitiveContains("support ID") else { return nil }
         // Real F5 responses can use hexadecimal UUIDs, not only digits.
         let pattern = "support\\s+ID(?:\\s+is)?\\s*[:#]?\\s*([A-Fa-f0-9-]{8,})"
