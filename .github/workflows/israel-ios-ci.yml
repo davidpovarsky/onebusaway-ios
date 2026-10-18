@@ -5,10 +5,14 @@ on:
     branches:
       - main
       - feature/israel-mot-adapter
+      - 'feature/**'
+      - 'fix/**'
   pull_request:
     branches:
       - main
       - feature/israel-mot-adapter
+      - 'feature/**'
+      - 'fix/**'
   workflow_dispatch:
 
 concurrency:
@@ -79,7 +83,9 @@ jobs:
             -only-testing:OBAKitTests/MOTGetRoutesEncodingTests \
             -only-testing:OBAKitTests/MOTFlexiblePolylineTests \
             -only-testing:OBAKitTests/MOTLocationWeatherTests \
-            -only-testing:OBAKitTests/MOTRegionBootstrapTests
+            -only-testing:OBAKitTests/MOTRegionBootstrapTests \
+            -only-testing:OBAKitTests/IsraelStopCatalogTests \
+            -only-testing:OBAKitTests/TransitProviderRegistryTests
 
       - name: Build and Archive iOS App (Unsigned)
         run: |
