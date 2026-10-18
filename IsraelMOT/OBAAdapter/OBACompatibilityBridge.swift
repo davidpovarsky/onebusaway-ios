@@ -202,6 +202,7 @@ nonisolated public enum OBACompatibilityBridge {
                 "serviceId": "mot:service:default",
                 "tripHeadsign": arr.destination,
                 "tripShortName": arr.lineName,
+                "routeShortName": arr.lineName,
                 "directionId": "0",
                 "blockId": "",
                 "shapeId": "",
@@ -223,6 +224,8 @@ nonisolated public enum OBACompatibilityBridge {
                 "scheduledArrivalTime": schedMs,
                 "scheduledDepartureTime": schedMs,
                 "predicted": arr.isRealTime,
+                "lastUpdateTime": Int(currentTime.timeIntervalSince1970 * 1000),
+                "vehicleId": "", // OBA decoder requires the key; MOT often has no vehicle ID.
                 "serviceDate": Int(Calendar.current.startOfDay(for: arr.scheduledTime).timeIntervalSince1970 * 1000),
                 "distanceFromStop": 0.0,
                 "numberOfStopsAway": 0,
@@ -378,7 +381,8 @@ nonisolated public enum OBACompatibilityBridge {
             "url": "https://bus.gov.il",
             "timezone": "Asia/Jerusalem",
             "lang": "he",
-            "phone": "*8787"
+            "phone": "*8787",
+            "privateService": false
         ]
     }
 }
