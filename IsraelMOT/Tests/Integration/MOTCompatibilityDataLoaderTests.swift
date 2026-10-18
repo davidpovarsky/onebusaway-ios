@@ -11,7 +11,7 @@ import CoreLocation
 @testable import OBAKit
 @testable import OBAKitCore
 
-private final class TestMockDataLoader: NSObject, URLDataLoader, @unchecked Sendable {
+private nonisolated final class TestMockDataLoader: NSObject, URLDataLoader, @unchecked Sendable {
     var handledRequests: [URLRequest] = []
     var responseData: Data = "{\"code\": 200, \"text\": \"OK\"}".data(using: .utf8)!
 
@@ -30,7 +30,7 @@ private final class TestMockDataLoader: NSObject, URLDataLoader, @unchecked Send
 /// In-memory official-MOT reply, served through URLSession so this test
 /// exercises the real OBA REST API -> MOT loader -> MOTHTTPClient -> MOT
 /// JSON -> OBA model pipeline without relying on a live external server.
-private final class MOTRouteSearchStubProtocol: URLProtocol {
+private nonisolated final class MOTRouteSearchStubProtocol: URLProtocol {
     override class func canInit(with request: URLRequest) -> Bool {
         request.url?.host == "api.bus.gov.il"
     }
