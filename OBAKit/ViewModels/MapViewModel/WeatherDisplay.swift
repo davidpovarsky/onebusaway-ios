@@ -35,6 +35,62 @@ struct WeatherDisplay: Equatable {
     /// Horizontally scrolling 24-hour strip.
     let hourly: [HourlyEntry]
 
+    /// Non-nil for independently sourced, GPS-based forecasts.
+    let sourceAttribution: String?
+
+    init?(locationForecast: MOTLocationWeatherSnapshot, locationName: String, locale: Locale, now: Date = .now) {
+        guard let current = locationForecast.hours.last(where: { $0.time <= now })
+            ?? locationForecast.hours.first else { return nil }
+
+        let upcoming = Array(locationForecast.hours.filter {
+            $0.time >= now.addingTimeInterval(-3600) && $0.time <= now.addingTimeInterval(24 * 3600)
+        }.prefix(25))
+        let shown = upcoming.isEmpty ? [current] : upcoming
+
+        func temperature(_ value: Double) -> String {
+            WeatherFormatter.formatTemp(value * 9.0 / 5.0 + 32.0, locale: locale)
+        }
+
+        let chance = current.precipitationChancePercent.map { Int($0.rounded()) }
+        let currentTemperature = temperature(current.temperatureCelsius)
+        let low = shown.map(\.temperatureCelsius).min() ?? current.temperatureCelsius
+        let high = shown.map(\.temperatureCelsius).max() ?? current.temperatureCelsius
+
+        buttonTitle = currentTemperature
+        header = Header(
+            iconName: current.iconKey,
+            regionName: locationName,
+            conditionSummary: WeatherFormatter.conditionText(for: current.iconKey),
+            chanceOfRainText: chance.map {
+                String(format: OBALoc("weather.chance_of_rain_format", value: "Chance of Rain: %d%%", comment: "Current chance of rain"), $0)
+            } ?? "—",
+            currentTemp: currentTemperature,
+            highLowText: String(
+                format: OBALoc("weather.high_low_format", value: "H:%@  L:%@", comment: "High and low temperatures"),
+                temperature(high), temperature(low)
+            )
+        )
+        stats = Stats(
+            windText: current.windMetersPerSecond.map {
+                WeatherFormatter.formatWindSpeed($0 * 3.6, locale: locale)
+            } ?? "—",
+            precipText: chance.map { "\($0)%" } ?? "—",
+            feelsLikeText: "—" // Not provided by this MET Norway endpoint; do not fabricate.
+        )
+        hourly = shown.enumerated().map { index, hour in
+            HourlyEntry(
+                id: hour.time,
+                timeLabel: index == 0
+                    ? OBALoc("weather.now", value: "Now", comment: "Current hourly forecast")
+                    : WeatherFormatter.formatTime(hour.time, locale: locale),
+                iconName: hour.iconKey,
+                temp: temperature(hour.temperatureCelsius),
+                isNow: index == 0
+            )
+        }
+        sourceAttribution = MOTLocationWeatherSnapshot.attribution
+    }
+
     init(forecast: WeatherForecast, locale: Locale, now: Date = .now, calendar: Calendar = .current) {
         // Compute the "next 24 hours" window once so the hourly strip and the
         // header's hi/lo are guaranteed to be summarising the same hours —
@@ -50,6 +106,7 @@ struct WeatherDisplay: Equatable {
         self.header = Header(forecast: forecast, upcoming: upcoming, locale: locale)
         self.stats = Stats(forecast: forecast.currentForecast, locale: locale)
         self.hourly = HourlyEntry.list(from: upcoming, locale: locale)
+        self.sourceAttribution = nil
     }
 
     /// Spoken value for the map weather control: temperature plus condition.
@@ -77,6 +134,15 @@ extension WeatherDisplay {
         let chanceOfRainText: String
         let currentTemp: String
         let highLowText: String?
+
+        init(iconName: String, regionName: String, conditionSummary: String, chanceOfRainText: String, currentTemp: String, highLowText: String?) {
+            self.iconName = iconName
+            self.regionName = regionName
+            self.conditionSummary = conditionSummary
+            self.chanceOfRainText = chanceOfRainText
+            self.currentTemp = currentTemp
+            self.highLowText = highLowText
+        }
 
         init(forecast: WeatherForecast, upcoming: [WeatherForecast.HourlyForecast], locale: Locale) {
             let current = forecast.currentForecast
@@ -127,6 +193,12 @@ extension WeatherDisplay {
         let windText: String
         let precipText: String
         let feelsLikeText: String
+
+        init(windText: String, precipText: String, feelsLikeText: String) {
+            self.windText = windText
+            self.precipText = precipText
+            self.feelsLikeText = feelsLikeText
+        }
 
         init(forecast current: WeatherForecast.HourlyForecast, locale: Locale) {
             self.windText = WeatherFormatter.formatWindSpeed(current.windSpeed, locale: locale)
