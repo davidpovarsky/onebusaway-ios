@@ -238,14 +238,10 @@ nonisolated public final class TransitProviderRegistry: @unchecked Sendable {
         providers[.oneBusAwayNative] = oba
     }
 
-    public func allProviders() -> [TransitProviderDescriptor] {
+    public var allProviders: [TransitProviderDescriptor] {
         lock.lock()
         defer { lock.unlock() }
         return Array(providers.values).sorted { $0.displayName < $1.displayName }
-    }
-
-    public var allProviders: [TransitProviderDescriptor] {
-        return allProviders()
     }
 
     public func provider(for id: TransitProviderID) -> TransitProviderDescriptor? {

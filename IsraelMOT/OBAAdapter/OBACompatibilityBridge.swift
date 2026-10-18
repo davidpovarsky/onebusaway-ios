@@ -416,7 +416,7 @@ nonisolated public enum OBACompatibilityBridge {
             calendar.timeZone = jTz
         }
         let scheduleDateMs = calendar.startOfDay(for: date).timeIntervalSince1970 * 1000.0
-        let headsign = route.destinationName ?? route.longName ?? route.lineName
+        let headsign = route.longName ?? route.lineName
 
         // Parse departure start times (in seconds since midnight)
         struct ScheduledTrip {

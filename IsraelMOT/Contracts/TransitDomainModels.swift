@@ -106,15 +106,20 @@ nonisolated public struct TransitRoute: Identifiable, Hashable, Codable, Sendabl
     public let polyline: String?
     public let stops: [TransitStop]
 
+    /// Preferred destination display name, falling back to longName
+    public var destinationName: String? {
+        return longName
+    }
+
     public init(
         routeID: MOTRouteID,
         lineName: String,
-        longName: String?,
-        routeDesc: MOTRouteDesc?,
+        longName: String? = nil,
+        routeDesc: MOTRouteDesc? = nil,
         agencyID: MOTAgencyID,
         agencyName: String,
-        cityName: String?,
-        polyline: String?,
+        cityName: String? = nil,
+        polyline: String? = nil,
         stops: [TransitStop] = []
     ) {
         self.routeID = routeID
@@ -126,6 +131,30 @@ nonisolated public struct TransitRoute: Identifiable, Hashable, Codable, Sendabl
         self.cityName = cityName
         self.polyline = polyline
         self.stops = stops
+    }
+
+    public init(
+        routeID: MOTRouteID,
+        lineName: String,
+        longName: String? = nil,
+        routeDesc: MOTRouteDesc? = nil,
+        agencyID: MOTAgencyID,
+        agencyName: String,
+        cityName: String? = nil,
+        polyline: [CLLocationCoordinate2D]?,
+        stops: [TransitStop] = []
+    ) {
+        self.init(
+            routeID: routeID,
+            lineName: lineName,
+            longName: longName,
+            routeDesc: routeDesc,
+            agencyID: agencyID,
+            agencyName: agencyName,
+            cityName: cityName,
+            polyline: nil,
+            stops: stops
+        )
     }
 }
 

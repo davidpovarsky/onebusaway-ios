@@ -128,10 +128,13 @@ struct IsraelStopCatalogTests {
 
         let route = TransitRoute(
             routeID: MOTRouteID(33287),
+            lineName: "31",
+            longName: "ירושלים",
+            routeDesc: MOTRouteDesc("15031-1-0"),
             agencyID: MOTAgencyID(16),
             agencyName: "Superbus",
-            lineName: "31",
-            destinationName: "ירושלים",
+            cityName: "ירושלים",
+            polyline: nil,
             stops: [stop1, stop2]
         )
 

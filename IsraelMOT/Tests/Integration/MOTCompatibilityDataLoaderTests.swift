@@ -551,12 +551,11 @@ struct MOTCompatibilityDataLoaderTests {
             routeID: MOTRouteID(33285),
             lineName: "31",
             longName: "רמות - גילה",
+            routeDesc: MOTRouteDesc("15031-1-0"),
             agencyID: MOTAgencyID(16),
             agencyName: "סופרבוס",
-            polyline: [
-                CLLocationCoordinate2D(latitude: 31.815188, longitude: 35.203022),
-                CLLocationCoordinate2D(latitude: 31.787760, longitude: 35.227006)
-            ],
+            cityName: "ירושלים",
+            polyline: nil,
             stops: [stop1, stop2]
         )
 
@@ -591,8 +590,12 @@ struct MOTCompatibilityDataLoaderTests {
         let domainRoute = TransitRoute(
             routeID: MOTRouteID(33285),
             lineName: "31",
+            longName: "רמות - גילה",
+            routeDesc: MOTRouteDesc("15031-1-0"),
             agencyID: MOTAgencyID(16),
             agencyName: "סופרבוס",
+            cityName: "ירושלים",
+            polyline: nil,
             stops: [stop]
         )
 
