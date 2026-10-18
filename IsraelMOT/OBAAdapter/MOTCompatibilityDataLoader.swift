@@ -56,7 +56,12 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             return try await handleArrivalsAndDepartures(url: url)
         }
 
-        // 4. Route Detail: /api/where/route/{id}.json
+        // 4. Route search: /api/where/routes-for-location.json
+        if path.contains("routes-for-location") {
+            return try await handleRoutesForLocation(url: url)
+        }
+
+        // 5. Route Detail: /api/where/route/{id}.json
         if path.contains("/where/route/") {
             return try await handleRouteDetail(url: url)
         }
@@ -206,6 +211,58 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
         } catch {
             return try await notFoundResponse(for: url)
         }
+    }
+
+    private func handleRoutesForLocation(url: URL) async throws -> (Data, URLResponse) {
+        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        let rawQuery = components?.queryItems?.first {
+            $0.name.lowercased() == "query"
+        }?.value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        // OBA's route search sends a route number (e.g. "31").
+        // Unlike searching stations/locations, routes have a separate MOT endpoint.
+        let query = rawQuery.replacingOccurrences(
+            of: "^קו\\s*",
+            with: "",
+            options: [.regularExpression, .caseInsensitive]
+        )
+        let routeSummaries: [TransitRouteSummary]
+        if query.isEmpty {
+            routeSummaries = []
+        } else {
+            let response: MOTSearchLinesServiceResponse = try await client.get(
+                endpoints.searchLinesURL(query: query)
+            )
+            guard response.success else {
+                throw MOTHTTPError.serviceError(message: response.message ?? "SearchLines failed")
+            }
+
+            // Prefer exact line number to substring matches, and retain
+            // descriptions/city for disambiguating many Israeli lines named "31".
+            let matching = (response.data ?? []).filter { line in
+                line.routeName.localizedCaseInsensitiveContains(query)
+                    || line.routeLongName?.localizedCaseInsensitiveContains(query) == true
+            }
+            let sorted = matching.sorted { first, second in
+                let firstExact = first.routeName.compare(query, options: .caseInsensitive) == .orderedSame
+                let secondExact = second.routeName.compare(query, options: .caseInsensitive) == .orderedSame
+                if firstExact != secondExact { return firstExact }
+                return first.cityName ?? "" < second.cityName ?? ""
+            }
+            var seen = Set<Int>()
+            routeSummaries = sorted.compactMap { line in
+                guard seen.insert(line.routeId).inserted else { return nil }
+                return line.toTransitRouteSummary()
+            }
+        }
+
+        let envelope = OBACompatibilityBridge.routesForLocationResponse(routes: routeSummaries)
+        let data = try JSONSerialization.data(withJSONObject: envelope)
+        let response = HTTPURLResponse(
+            url: url, statusCode: 200, httpVersion: "HTTP/1.1",
+            headerFields: ["Content-Type": "application/json; charset=utf-8"]
+        )!
+        return (data, response)
     }
 
     private func handleRouteDetail(url: URL) async throws -> (Data, URLResponse) {
