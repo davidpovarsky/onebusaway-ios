@@ -307,6 +307,9 @@ open class CoreApplication: NSObject,
     /// Reloads the Obaco Service stack, including the network queue, api service manager, and model service manager.
     /// This must be called when the region changes.
     private func refreshObacoService() {
+        // Never reuse a previous US region's Obaco service after switching to
+        // a region with no sidecar (e.g. Israel MOT).
+        obacoService = nil
         guard
             let region = regionsService.currentRegion,
             let baseURL = region.sidecarBaseURL
