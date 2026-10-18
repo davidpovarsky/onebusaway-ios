@@ -182,9 +182,13 @@ public struct TransitProviderDescriptor: Identifiable, Hashable, Sendable {
     }
 }
 
+extension Notification.Name {
+    public static let transitProviderDidChange = Notification.Name("org.onebusaway.israel.transitProviderDidChange")
+}
+
 /// Registry of known transit providers and capability provider for the app.
-public final class TransitProviderRegistry: @unchecked Sendable {
-    public static let shared = TransitProviderRegistry()
+nonisolated public final class TransitProviderRegistry: @unchecked Sendable {
+    nonisolated public static let shared = TransitProviderRegistry()
 
     private let lock = NSLock()
     private var providers: [TransitProviderID: TransitProviderDescriptor] = [:]
@@ -234,10 +238,14 @@ public final class TransitProviderRegistry: @unchecked Sendable {
         providers[.oneBusAwayNative] = oba
     }
 
-    public var allProviders: [TransitProviderDescriptor] {
+    public func allProviders() -> [TransitProviderDescriptor] {
         lock.lock()
         defer { lock.unlock() }
         return Array(providers.values).sorted { $0.displayName < $1.displayName }
+    }
+
+    public var allProviders: [TransitProviderDescriptor] {
+        return allProviders()
     }
 
     public func provider(for id: TransitProviderID) -> TransitProviderDescriptor? {
@@ -258,11 +266,19 @@ public final class TransitProviderRegistry: @unchecked Sendable {
 public final class TransitProviderSelectionStore: ObservableObject {
     public static let shared = TransitProviderSelectionStore()
 
-    private let userDefaultsKey = "org.onebusaway.israel.selected_provider"
+    public static let userDefaultsKey = "org.onebusaway.israel.selected_provider"
+
+    nonisolated public static func currentProviderID() -> TransitProviderID {
+        if let savedRaw = UserDefaults.standard.string(forKey: userDefaultsKey) {
+            return TransitProviderID(savedRaw)
+        }
+        return .israelMOT
+    }
 
     @Published public private(set) var activeProviderID: TransitProviderID {
         didSet {
-            UserDefaults.standard.set(activeProviderID.rawValue, forKey: userDefaultsKey)
+            UserDefaults.standard.set(activeProviderID.rawValue, forKey: Self.userDefaultsKey)
+            NotificationCenter.default.post(name: .transitProviderDidChange, object: activeProviderID)
         }
     }
 
@@ -270,7 +286,7 @@ public final class TransitProviderSelectionStore: ObservableObject {
 
     private init() {
         let registry = TransitProviderRegistry.shared
-        if let savedRaw = UserDefaults.standard.string(forKey: userDefaultsKey) {
+        if let savedRaw = UserDefaults.standard.string(forKey: Self.userDefaultsKey) {
             let savedID = TransitProviderID(savedRaw)
             if let desc = registry.provider(for: savedID), desc.isAvailable {
                 self.activeProviderID = savedID

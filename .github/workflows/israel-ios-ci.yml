@@ -114,8 +114,10 @@ jobs:
           cd build
           zip -qry OneBusAway-Israel-unsigned.ipa Payload
           ls -lh OneBusAway-Israel-unsigned.ipa
-          # Verify IPA contents
+          # Verify IPA contents and bundled SQLite stop catalog
           unzip -l OneBusAway-Israel-unsigned.ipa | head -n 30
+          echo "Verifying IsraelStopCatalog.sqlite inside packaged IPA:"
+          unzip -l OneBusAway-Israel-unsigned.ipa | grep "IsraelStopCatalog.sqlite"
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4

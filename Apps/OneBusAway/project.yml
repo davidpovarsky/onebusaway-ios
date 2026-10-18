@@ -18,6 +18,8 @@ targets:
       - path: Apps/Shared/CommonClient
         name: Common
         group: OneBusAway
+      - path: IsraelMOT/Resources/IsraelStopCatalog.sqlite
+        buildPhase: resources
     entitlements:
       path: Apps/OneBusAway/OneBusAway.entitlements
       properties:

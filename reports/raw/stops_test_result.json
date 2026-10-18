@@ -1,0 +1,50 @@
+{
+  "close_to_loc": {
+    "success": true,
+    "count": 10
+  },
+  "radius_500": {
+    "success": true,
+    "count": 10
+  },
+  "radius_2000": {
+    "success": true,
+    "count": 10
+  },
+  "map_stops_paged": {
+    "success": true,
+    "count": 20,
+    "sample": [
+      {
+        "name": {
+          "he": "'אביאל א",
+          "en": "Aviel A",
+          "ar": "أڤيئيل أ‘"
+        },
+        "cityName": "אביאל",
+        "streetName": "הגפן",
+        "streetNumber": "",
+        "stopcode": 47166,
+        "lat": 32.530109,
+        "lng": 34.994963,
+        "stopid": 17262,
+        "desc": "רחוב: הגפן עיר: אביאל רציף:  קומה: "
+      },
+      {
+        "name": {
+          "he": "'אגוז א",
+          "en": "Egoz A",
+          "ar": "إيچوز أ‘"
+        },
+        "cityName": "כוכב יאיר",
+        "streetName": "אגוז",
+        "streetNumber": "5",
+        "stopcode": 31958,
+        "lat": 32.220631,
+        "lng": 34.992793,
+        "stopid": 15965,
+        "desc": "רחוב: אגוז 5 עיר: כוכב יאיר רציף:  קומה: "
+      }
+    ]
+  }
+}

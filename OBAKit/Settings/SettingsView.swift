@@ -17,6 +17,7 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            providerSection
             mapSection
             arrivalDisplaySection
             experimentalSection
@@ -43,6 +44,22 @@ struct SettingsView: View {
             }
         }
         .tint(Color(ThemeColors.shared.brand))
+    }
+
+    // MARK: - Transit Provider
+    @ObservedObject private var providerStore = TransitProviderSelectionStore.shared
+
+    private var providerSection: some View {
+        Section(OBALoc("settings_controller.provider_section.title", value: "ספק נתוני תחבורה", comment: "Settings > Transit Data Provider section title")) {
+            NavigationLink(destination: MOTProviderSettingsView()) {
+                HStack {
+                    Text(OBALoc("settings_controller.provider_section.select_provider", value: "בחירת ספק נתונים", comment: "Settings > Data Provider selection row"))
+                    Spacer()
+                    Text(providerStore.activeDescriptor.displayName)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
     }
 
     // MARK: - Map

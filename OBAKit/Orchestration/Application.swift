@@ -210,6 +210,7 @@ public class Application: CoreApplication, PushServiceDelegate {
 
         configureAppearanceProxies()
         observeShortcutLifecycle()
+        observeTransitProviderLifecycle()
     }
 
     private func configureTipKit() {
@@ -730,6 +731,19 @@ public class Application: CoreApplication, PushServiceDelegate {
         }
     }
 
+    private func observeTransitProviderLifecycle() {
+        notificationCenter.addObserver(
+            forName: .transitProviderDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            MainActor.assumeIsolated {
+                self.refreshAPIServices()
+            }
+        }
+    }
+
     @objc public func applicationWillResignActive(_ application: UIApplication) {
         // Unconditional: stopping is always safe, and gating it on authorization
         // would strand a manager we started before access was revoked.
@@ -902,7 +916,12 @@ public class Application: CoreApplication, PushServiceDelegate {
 
     open override func dataLoader(for region: Region) -> URLDataLoader {
         if region.regionIdentifier == 972 {
-            return MOTCompatibilityDataLoader(fallbackLoader: super.dataLoader(for: region))
+            let activeProvider = TransitProviderSelectionStore.currentProviderID()
+            if activeProvider == .israelMOT {
+                return MOTCompatibilityDataLoader(fallbackLoader: super.dataLoader(for: region))
+            } else if activeProvider == .oneBusAwayNative {
+                return super.dataLoader(for: region)
+            }
         }
         return super.dataLoader(for: region)
     }

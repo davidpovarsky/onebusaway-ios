@@ -52,11 +52,21 @@ Both sources were downloaded and analyzed side-by-side using deterministic Pytho
 
 ### Technical Artifact: `IsraelStopCatalog.sqlite`
 - **Path:** `IsraelMOT/Resources/IsraelStopCatalog.sqlite`
-- **File Size:** **6.19 MB** uncompressed (compresses to ~2.1 MB in IPA archive).
-- **Indexing:**
-  - Standard B-Tree on `stop_code` for instant $O(1)$ lookup by stop code.
+- **Schema Version:** `1.1`
+- **Record Count:** **35,387** nationwide stations
+- **Multilingual Support:** Official Ministry of Transport translations extracted directly from `translations.txt`:
+  - **English (`name_en`):** 32,765 stations (92.59%)
+  - **Arabic (`name_ar`):** 32,757 stations (92.57%)
+  - **Hebrew (`name_he`):** 35,387 stations (100.0%)
+- **File Size:** **7.94 MB** uncompressed (~2.4 MB in compressed IPA).
+- **Indexing & Spatial Density:**
+  - Standard B-Tree on `stop_code` for instant $O(1)$ lookup by signpost code.
   - SQLite **R-Tree** virtual table `stops_rtree` on `(min_lat, max_lat, min_lon, max_lon)` for $O(\log N)$ bounding-box viewport queries.
-- **Query Performance:** A spatial bounding-box query encompassing the entire dense Jerusalem center (526 stations) executes in **4.79 milliseconds**.
+  - **Adaptive Viewport Density (Zero Stop Cutoff):**
+    - **Street Level (`latSpan < 0.035`):** 100% of visible stations in the bounding box are returned with NO arbitrary cutoff.
+    - **City/District Level (`0.035 <= latSpan <= 0.25`):** Deterministic 16x16 geographic grid bucketing ensures uniform spatial distribution and hub/platform preservation without MapKit annotation flood.
+    - **Regional Level (`latSpan > 0.25`):** Zoom gate active (returns empty array, prompting zoom-in).
+- **Query Performance:** A spatial bounding-box query encompassing the dense Jerusalem center (526 stations) executes in **5.65 milliseconds**.
 
 ---
 

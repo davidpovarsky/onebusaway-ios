@@ -181,28 +181,15 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             let lSpan = latSpan ?? 0.02
             let rSpan = lonSpan ?? 0.02
 
-            // Zoom gate: when zoomed out beyond a metropolitan area, return empty to prevent pin flood
-            if lSpan > 0.8 {
-                let envelope = OBACompatibilityBridge.stopsForLocationResponse(stops: [])
-                let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
-                let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
-                return (data, response)
-            }
-
-            // Viewport query with 15% margin on each side
-            let marginLat = lSpan * 0.15
-            let marginLon = rSpan * 0.15
-            let minLat = lat - (lSpan / 2.0) - marginLat
-            let maxLat = lat + (lSpan / 2.0) + marginLat
-            let minLon = lon - (rSpan / 2.0) - marginLon
-            let maxLon = lon + (rSpan / 2.0) + marginLon
-
-            let localStops = catalog.stops(
-                minLat: minLat,
-                maxLat: maxLat,
-                minLon: minLon,
-                maxLon: maxLon,
-                limit: 350
+            // Smart adaptive viewport density loading:
+            // - Street level (lSpan < 0.035): 100% of stations returned with NO cutoff.
+            // - City level (0.035 <= lSpan <= 0.25): spatial grid clustering ensures uniform distribution without overload.
+            // - Far zoom (lSpan > 0.25): zoom gate returns empty array.
+            let localStops = catalog.viewportStops(
+                centerLat: lat,
+                centerLon: lon,
+                latSpan: lSpan,
+                lonSpan: rSpan
             )
 
             let envelope = OBACompatibilityBridge.stopsForLocationResponse(stops: localStops)
@@ -465,7 +452,38 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             }
             let stopsRes: RouteStopsResponseDTOServiceResponse? = try? await client.get(stopsURL)
             let domainRoute = MOTRouteMapper.map(routeDTO: routeDTO, stopsDTO: stopsRes?.data?.route)
-            let envelope = OBACompatibilityBridge.scheduleForRouteResponse(route: domainRoute)
+
+            // Extract schedule date if query parameter is present (e.g. ?date=2026-10-18)
+            let dateComponents = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            let queryDate = dateComponents?.queryItems?.first(where: { $0.name == "date" })?.value
+            let targetDateString: String = {
+                if let qd = queryDate, !qd.isEmpty { return qd }
+                let f = DateFormatter()
+                f.dateFormat = "yyyy-MM-dd"
+                f.timeZone = TimeZone(identifier: "Asia/Jerusalem") ?? TimeZone.current
+                return f.string(from: Date())
+            }()
+
+            // Fetch live timetable from MOT Calendar API if start and end stops are available
+            var dailyDepartures: [DailyCalendarDepartureDTO]? = nil
+            if let firstStop = domainRoute.stops.first?.internalID?.rawValue,
+               let lastStop = domainRoute.stops.last?.internalID?.rawValue {
+                let calURL = endpoints.routeDailyCalendarURL(
+                    startStopID: firstStop,
+                    endStopID: lastStop,
+                    routeID: routeID,
+                    day: targetDateString
+                )
+                if let calRes: RouteDailyCalendarResponseDTOServiceResponse = try? await client.get(calURL),
+                   let startDeps = calRes.data?.start, !startDeps.isEmpty {
+                    dailyDepartures = startDeps
+                }
+            }
+
+            let envelope = OBACompatibilityBridge.scheduleForRouteResponse(
+                route: domainRoute,
+                departures: dailyDepartures
+            )
             let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
             return (data, response)

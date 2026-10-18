@@ -611,5 +611,10 @@ struct MOTCompatibilityDataLoaderTests {
         #expect(entry.id == "mot:route:33285")
         #expect(entry.stopTripGroupings.count == 1)
         #expect(entry.stopTripGroupings[0].stopIDs.count == 1)
+        #expect(!entry.stopTripGroupings[0].tripsWithStopTimes.isEmpty)
+        #expect(!entry.stopTripGroupings[0].tripIDs.isEmpty)
+        let firstTrip = entry.stopTripGroupings[0].tripsWithStopTimes[0]
+        #expect(firstTrip.stopTimes.count == 1)
+        #expect(firstTrip.stopTimes[0].departureTime > 0)
     }
 }

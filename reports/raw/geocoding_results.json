@@ -1,0 +1,282 @@
+{
+  "originData": {
+    "data": [
+      {
+        "title": "ליפסקי לואי 39, ירושלים",
+        "id": "3000-4442-he-alias-2",
+        "addressDetails": {
+          "label": "ליפסקי לואי 39, ירושלים",
+          "countryName": "ישראל",
+          "county": null,
+          "city": "ירושלים",
+          "district": null,
+          "street": "ליפסקי לואי",
+          "postalCode": null,
+          "houseNumber": "39"
+        },
+        "coordinates": {
+          "lat": 31.816342207093594,
+          "lng": 35.20317591490155
+        },
+        "isStop": false,
+        "isPoi": false,
+        "isCity": false
+      }
+    ],
+    "success": true,
+    "message": "",
+    "duration": null
+  },
+  "destData": {
+    "data": [
+      {
+        "title": "מזרחי יוסף, ירושלים",
+        "id": "3000-159-he-alias-1",
+        "addressDetails": {
+          "label": "מזרחי יוסף, ירושלים",
+          "countryName": "ישראל",
+          "county": null,
+          "city": "ירושלים",
+          "district": null,
+          "street": "מזרחי יוסף",
+          "postalCode": null,
+          "houseNumber": ""
+        },
+        "coordinates": {
+          "lat": 31.78877157662898,
+          "lng": 35.22341703168423
+        },
+        "isStop": false,
+        "isPoi": false,
+        "isCity": false
+      },
+      {
+        "title": "הפסגה, ירושלים",
+        "id": "3000-1056-he-alias-10",
+        "addressDetails": {
+          "label": "הפסגה, ירושלים",
+          "countryName": "ישראל",
+          "county": null,
+          "city": "ירושלים",
+          "district": null,
+          "street": "הפסגה",
+          "postalCode": null,
+          "houseNumber": ""
+        },
+        "coordinates": {
+          "lat": 31.767514831732154,
+          "lng": 35.18365834635741
+        },
+        "isStop": false,
+        "isPoi": false,
+        "isCity": false
+      }
+    ],
+    "success": true,
+    "message": "",
+    "duration": null
+  },
+  "originAlt": {
+    "data": [
+      {
+        "title": "ליפסקי לואי, ירושלים",
+        "id": "3000-4442-he-alias-2",
+        "addressDetails": {
+          "label": "ליפסקי לואי, ירושלים",
+          "countryName": "ישראל",
+          "county": null,
+          "city": "ירושלים",
+          "district": null,
+          "street": "ליפסקי לואי",
+          "postalCode": null,
+          "houseNumber": ""
+        },
+        "coordinates": {
+          "lat": 31.81597,
+          "lng": 35.20292
+        },
+        "isStop": false,
+        "isPoi": false,
+        "isCity": false
+      },
+      {
+        "title": "ליפסקי לואי, תל אביב - יפו",
+        "id": "5000-945-he-alias-2",
+        "addressDetails": {
+          "label": "ליפסקי לואי, תל אביב - יפו",
+          "countryName": "ישראל",
+          "county": null,
+          "city": "תל אביב - יפו",
+          "district": null,
+          "street": "ליפסקי לואי",
+          "postalCode": null,
+          "houseNumber": ""
+        },
+        "coordinates": {
+          "lat": 32.08938575793787,
+          "lng": 34.78781292091915
+        },
+        "isStop": false,
+        "isPoi": false,
+        "isCity": false
+      },
+      {
+        "title": "שיבת ציון/לואי ליפסקי (331)",
+        "id": "STOP-8826-he-name",
+        "addressDetails": {
+          "label": "שיבת ציון/לואי ליפסקי (331)",
+          "countryName": "ישראל",
+          "county": null,
+          "city": "ירושלים",
+          "district": null,
+          "street": null,
+          "postalCode": null,
+          "houseNumber": ""
+        },
+        "coordinates": {
+          "lat": 31.816761,
+          "lng": 35.201404
+        },
+        "isStop": true,
+        "isPoi": false,
+        "isCity": false
+      }
+    ],
+    "success": true,
+    "message": "",
+    "duration": null
+  },
+  "destAlt": {
+    "data": [
+      {
+        "title": "מזרחי יוסף, ירושלים",
+        "id": "3000-159-he-alias-1",
+        "addressDetails": {
+          "label": "מזרחי יוסף, ירושלים",
+          "countryName": "ישראל",
+          "county": null,
+          "city": "ירושלים",
+          "district": null,
+          "street": "מזרחי יוסף",
+          "postalCode": null,
+          "houseNumber": ""
+        },
+        "coordinates": {
+          "lat": 31.78877157662898,
+          "lng": 35.22341703168423
+        },
+        "isStop": false,
+        "isPoi": false,
+        "isCity": false
+      },
+      {
+        "title": "הפסגה, ירושלים",
+        "id": "3000-1056-he-alias-10",
+        "addressDetails": {
+          "label": "הפסגה, ירושלים",
+          "countryName": "ישראל",
+          "county": null,
+          "city": "ירושלים",
+          "district": null,
+          "street": "הפסגה",
+          "postalCode": null,
+          "houseNumber": ""
+        },
+        "coordinates": {
+          "lat": 31.767514831732154,
+          "lng": 35.18365834635741
+        },
+        "isStop": false,
+        "isPoi": false,
+        "isCity": false
+      },
+      {
+        "title": "ישיבת מיר/רבי עקיבא (63989)",
+        "id": "STOP-35061-he-name",
+        "addressDetails": {
+          "label": "ישיבת מיר/רבי עקיבא (63989)",
+          "countryName": "ישראל",
+          "county": null,
+          "city": "מודיעין עילית",
+          "district": null,
+          "street": null,
+          "postalCode": null,
+          "houseNumber": ""
+        },
+        "coordinates": {
+          "lat": 31.940566,
+          "lng": 35.043124
+        },
+        "isStop": true,
+        "isPoi": false,
+        "isCity": false
+      },
+      {
+        "title": "ישיבת מיר/רבי עקיבא (60285)",
+        "id": "STOP-7555-he-name",
+        "addressDetails": {
+          "label": "ישיבת מיר/רבי עקיבא (60285)",
+          "countryName": "ישראל",
+          "county": null,
+          "city": "מודיעין עילית",
+          "district": null,
+          "street": null,
+          "postalCode": null,
+          "houseNumber": ""
+        },
+        "coordinates": {
+          "lat": 31.940446,
+          "lng": 35.043134
+        },
+        "isStop": true,
+        "isPoi": false,
+        "isCity": false
+      },
+      {
+        "title": "אמרי סופר/ישיבת מיר (61424)",
+        "id": "STOP-44005-he-name",
+        "addressDetails": {
+          "label": "אמרי סופר/ישיבת מיר (61424)",
+          "countryName": "ישראל",
+          "county": null,
+          "city": "ביתר עילית",
+          "district": null,
+          "street": null,
+          "postalCode": null,
+          "houseNumber": ""
+        },
+        "coordinates": {
+          "lat": 31.707691,
+          "lng": 35.115855
+        },
+        "isStop": true,
+        "isPoi": false,
+        "isCity": false
+      },
+      {
+        "title": "אמרי סופר/ישיבת מיר (61425)",
+        "id": "STOP-44004-he-name",
+        "addressDetails": {
+          "label": "אמרי סופר/ישיבת מיר (61425)",
+          "countryName": "ישראל",
+          "county": null,
+          "city": "ביתר עילית",
+          "district": null,
+          "street": null,
+          "postalCode": null,
+          "houseNumber": ""
+        },
+        "coordinates": {
+          "lat": 31.707948,
+          "lng": 35.117768
+        },
+        "isStop": true,
+        "isPoi": false,
+        "isCity": false
+      }
+    ],
+    "success": true,
+    "message": "",
+    "duration": null
+  }
+}

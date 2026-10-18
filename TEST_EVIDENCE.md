@@ -12,10 +12,10 @@
 
 | Test Suite | File Path | Focus & Coverage | Status |
 | :--- | :--- | :--- | :--- |
-| **`IsraelStopCatalogTests`** | `IsraelMOT/Tests/Integration/IsraelStopCatalogTests.swift` | 35,387 stations, spatial R-Tree bbox query, zoom threshold, stops 5997 and 2899 lookup, autocomplete search | **NEW / PASSING** |
-| **`TransitProviderRegistryTests`** | `IsraelMOT/Tests/Integration/TransitProviderRegistryTests.swift` | Multi-provider registration (`israel-mot`, `onebusaway-native`, `bus-nearby`), active provider selection, placeholder rejection | **NEW / PASSING** |
-| **`MOTTripPlanningTests`** | `IsraelMOT/Tests/Integration/MOTTripPlanningTests.swift` | Trip planning, itinerary mapping, legs, transfers, F5 WAF error handling, Asia/Jerusalem wall-clock time formatting | **UPDATED / PASSING** |
-| **`MOTCompatibilityDataLoaderTests`** | `IsraelMOT/Tests/Integration/MOTCompatibilityDataLoaderTests.swift` | OBA URLSession interception, local catalog viewport stops, `stops-for-route` envelope decoding, `schedule-for-route`, multi-token search ("31 ירושלים") | **UPDATED / PASSING** |
+| **`IsraelStopCatalogTests`** | `IsraelMOT/Tests/Integration/IsraelStopCatalogTests.swift` | 35,387 stations, spatial R-Tree bbox query, adaptive viewport density without arbitrary cutoff, known stops 5997 & 2899 with multilingual (HE/EN/AR) validation, autocomplete search, and ScheduleForRoute timetable decoding with stop times | **UPDATED / PASSING** |
+| **`TransitProviderRegistryTests`** | `IsraelMOT/Tests/Integration/TransitProviderRegistryTests.swift` | Multi-provider registration (`israel-mot`, `onebusaway-native`, `bus-nearby`), async `@MainActor` test execution, active provider selection end-to-end switching, and placeholder rejection | **UPDATED / PASSING** |
+| **`MOTTripPlanningTests`** | `IsraelMOT/Tests/Integration/MOTTripPlanningTests.swift` | Trip planning, itinerary mapping, legs, transfers, F5 WAF error handling, Asia/Jerusalem wall-clock time formatting | **PASSING** |
+| **`MOTCompatibilityDataLoaderTests`** | `IsraelMOT/Tests/Integration/MOTCompatibilityDataLoaderTests.swift` | OBA URLSession interception, local catalog adaptive viewport stops, `stops-for-route` envelope decoding, `schedule-for-route` with populated `tripsWithStopTimes`, multi-token search ("31 ירושלים") | **UPDATED / PASSING** |
 | **`MOTDTODecodingTests`** | `IsraelMOT/Tests/DTO/MOTDTODecodingTests.swift` | MOT JSON DTO decoding: scheduler, planner, stops, routes, arrivals | **PASSING** |
 | **`MOTMapperTests`** | `IsraelMOT/Tests/Mappers/MOTMapperTests.swift` | Domain models, multilingual names, stop mapper, route mapper, arrival mapper | **PASSING** |
 | **`MOTHTTPClientTests`** | `IsraelMOT/Tests/HTTP/MOTHTTPClientTests.swift` | HTTP client, retry policies, backoff, headers, error resolution | **PASSING** |

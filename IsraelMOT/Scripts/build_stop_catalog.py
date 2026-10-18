@@ -17,6 +17,9 @@ import time
 import re
 from datetime import datetime, timezone
 
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
 # Israel bounding box for sanity checks
 ISRAEL_MIN_LAT = 29.4
 ISRAEL_MAX_LAT = 33.5
@@ -45,13 +48,34 @@ def parse_desc(desc):
         
     return street, city, platform
 
-def build_catalog(stops_csv_path, output_sqlite_path, dataset_version="2026-10-18"):
+def load_translations(translations_path):
+    translations = {}
+    if not translations_path or not os.path.exists(translations_path):
+        print(f"[-] Translations file not found: {translations_path}, proceeding without translations.")
+        return translations
+    print(f"[*] Ingesting official MOT translations from: {translations_path}")
+    with open(translations_path, 'r', encoding='utf-8-sig') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            tid = row.get('trans_id', '').strip()
+            lang = row.get('lang', '').strip().upper()
+            trans = row.get('translation', '').strip()
+            if tid and lang and trans:
+                if tid not in translations:
+                    translations[tid] = {}
+                translations[tid][lang] = trans
+    print(f"[*] Loaded translations for {len(translations)} unique trans_ids")
+    return translations
+
+def build_catalog(stops_csv_path, output_sqlite_path, translations_path=None, dataset_version="2026-10-18"):
     print(f"[*] Reading GTFS stops from: {stops_csv_path}")
     start_time = time.time()
     
     if not os.path.exists(stops_csv_path):
         raise FileNotFoundError(f"Source file not found: {stops_csv_path}")
         
+    translations = load_translations(translations_path)
+
     # Remove existing db if present
     if os.path.exists(output_sqlite_path):
         os.remove(output_sqlite_path)
@@ -107,6 +131,8 @@ def build_catalog(stops_csv_path, output_sqlite_path, dataset_version="2026-10-1
     total_read = 0
     total_inserted = 0
     skipped_bounds = 0
+    en_count = 0
+    ar_count = 0
     
     stop_rows = []
     rtree_rows = []
@@ -140,8 +166,14 @@ def build_catalog(stops_csv_path, output_sqlite_path, dataset_version="2026-10-1
                 
             street, city, platform = parse_desc(desc)
             
+            t = translations.get(name_he, {})
+            name_en = t.get('EN')
+            name_ar = t.get('AR')
+            if name_en: en_count += 1
+            if name_ar: ar_count += 1
+            
             stop_rows.append((
-                stop_id, stop_code, name_he, None, None,
+                stop_id, stop_code, name_he, name_en, name_ar,
                 street, city, platform, lat, lon, loc_type, parent_station
             ))
             rtree_rows.append((
@@ -169,8 +201,10 @@ def build_catalog(stops_csv_path, output_sqlite_path, dataset_version="2026-10-1
     metadata = [
         ("source", "GTFS-MOT"),
         ("dataset_version", dataset_version),
-        ("schema_version", "1.0"),
+        ("schema_version", "1.1"),
         ("record_count", str(total_inserted)),
+        ("translations_en_count", str(en_count)),
+        ("translations_ar_count", str(ar_count)),
         ("sha256", checksum),
         ("generated_at", now_iso),
         ("bounds", f"{ISRAEL_MIN_LAT},{ISRAEL_MAX_LAT},{ISRAEL_MIN_LON},{ISRAEL_MAX_LON}")
@@ -192,6 +226,8 @@ def build_catalog(stops_csv_path, output_sqlite_path, dataset_version="2026-10-1
     print("="*50)
     print(f"Source Records Read:      {total_read}")
     print(f"Stops Inserted:           {total_inserted}")
+    print(f"English Translations:     {en_count} ({en_count*100.0/total_inserted:.2f}%)")
+    print(f"Arabic Translations:      {ar_count} ({ar_count*100.0/total_inserted:.2f}%)")
     print(f"Skipped (Out of Bounds):  {skipped_bounds}")
     print(f"Catalog DB File:          {output_sqlite_path}")
     print(f"Database Size:            {file_size_mb:.2f} MB")
@@ -208,23 +244,27 @@ def verify_catalog(sqlite_path):
     cur = conn.cursor()
     
     # Check stop 5997
-    cur.execute("SELECT stop_id, stop_code, name_he, lat, lon FROM stops WHERE stop_code = 5997;")
+    cur.execute("SELECT stop_id, stop_code, name_he, name_en, name_ar, lat, lon FROM stops WHERE stop_code = 5997;")
     res_5997 = cur.fetchone()
     assert res_5997 is not None, "Stop 5997 not found in catalog!"
     assert res_5997[0] == 11622, f"Stop 5997 stop_id mismatch: expected 11622, got {res_5997[0]}"
-    print(f"  ✓ Verified Stop 5997: ID={res_5997[0]}, Name={res_5997[2]}, Coords=({res_5997[3]}, {res_5997[4]})")
+    print(f"  ✓ Verified Stop 5997: ID={res_5997[0]}, HE={res_5997[2]}, EN={res_5997[3]}, AR={res_5997[4]}")
+    assert res_5997[3] is not None, "Stop 5997 missing English translation!"
+    assert res_5997[4] is not None, "Stop 5997 missing Arabic translation!"
     
     # Check stop 2899
-    cur.execute("SELECT stop_id, stop_code, name_he, lat, lon FROM stops WHERE stop_code = 2899;")
+    cur.execute("SELECT stop_id, stop_code, name_he, name_en, name_ar, lat, lon FROM stops WHERE stop_code = 2899;")
     res_2899 = cur.fetchone()
     assert res_2899 is not None, "Stop 2899 not found in catalog!"
     assert res_2899[0] == 10168, f"Stop 2899 stop_id mismatch: expected 10168, got {res_2899[0]}"
-    print(f"  ✓ Verified Stop 2899: ID={res_2899[0]}, Name={res_2899[2]}, Coords=({res_2899[3]}, {res_2899[4]})")
+    print(f"  ✓ Verified Stop 2899: ID={res_2899[0]}, HE={res_2899[2]}, EN={res_2899[3]}, AR={res_2899[4]}")
+    assert res_2899[3] is not None, "Stop 2899 missing English translation!"
+    assert res_2899[4] is not None, "Stop 2899 missing Arabic translation!"
     
     # Check spatial R-Tree query for Jerusalem center (bbox: 31.78 to 31.82, 35.20 to 35.23)
     t0 = time.perf_counter()
     cur.execute("""
-    SELECT s.stop_id, s.stop_code, s.name_he, s.lat, s.lon
+    SELECT s.stop_id, s.stop_code, s.name_he, s.name_en, s.name_ar, s.lat, s.lon
     FROM stops_rtree r
     JOIN stops s ON r.id = s.stop_id
     WHERE r.min_lat >= 31.78 AND r.max_lat <= 31.82
@@ -239,10 +279,13 @@ def verify_catalog(sqlite_path):
     print("[*] All Verification Checks PASSED!\n")
 
 if __name__ == "__main__":
-    default_input = r"C:\Users\DAVID\.gemini\antigravity\brain\d43808db-5246-418a-9f99-ac0bbef85f87\scratch\stops.txt"
+    scratch_dir = r"C:\Users\DAVID\.gemini\antigravity\brain\d43808db-5246-418a-9f99-ac0bbef85f87\scratch"
+    default_input = os.path.join(scratch_dir, "stops.txt")
     default_output = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Resources", "IsraelStopCatalog.sqlite")
+    default_translations = os.path.join(scratch_dir, "translations.txt")
     
     input_path = sys.argv[1] if len(sys.argv) > 1 else default_input
     output_path = sys.argv[2] if len(sys.argv) > 2 else default_output
+    trans_path = sys.argv[3] if len(sys.argv) > 3 else default_translations
     
-    build_catalog(input_path, output_path)
+    build_catalog(input_path, output_path, trans_path)

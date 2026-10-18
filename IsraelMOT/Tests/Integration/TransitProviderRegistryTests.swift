@@ -37,8 +37,9 @@ struct TransitProviderRegistryTests {
         #expect(mot?.capabilities.searchLines.isSupported == true)
     }
 
+    @MainActor
     @Test
-    func testBusNearbyIsFuturePlaceholderAndNotAvailable() {
+    func testBusNearbyIsFuturePlaceholderAndNotAvailable() async throws {
         let registry = TransitProviderRegistry.shared
         let busNearby = registry.provider(for: .busNearby)
 
@@ -48,12 +49,32 @@ struct TransitProviderRegistryTests {
         #expect(busNearby?.capabilities.planJourney.isSupported == false)
 
         // Verify selection store rejects activating unavailable provider
-        Task { @MainActor in
-            let store = TransitProviderSelectionStore.shared
-            let activated = store.selectProvider(.busNearby)
-            #expect(activated == false)
-            #expect(store.activeProviderID != .busNearby)
-        }
+        let store = TransitProviderSelectionStore.shared
+        let activated = store.selectProvider(.busNearby)
+        #expect(activated == false)
+        #expect(store.activeProviderID != .busNearby)
+    }
+
+    @MainActor
+    @Test
+    func testProviderSwitchingEndToEnd() async throws {
+        let store = TransitProviderSelectionStore.shared
+
+        // Initial default is Israel MOT
+        #expect(store.activeProviderID == .israelMOT)
+        #expect(TransitProviderSelectionStore.currentProviderID() == .israelMOT)
+
+        // Switch to OneBusAway Native
+        let switched = store.selectProvider(.oneBusAwayNative)
+        #expect(switched == true)
+        #expect(store.activeProviderID == .oneBusAwayNative)
+        #expect(TransitProviderSelectionStore.currentProviderID() == .oneBusAwayNative)
+
+        // Switch back to Israel MOT
+        let restored = store.selectProvider(.israelMOT)
+        #expect(restored == true)
+        #expect(store.activeProviderID == .israelMOT)
+        #expect(TransitProviderSelectionStore.currentProviderID() == .israelMOT)
     }
 
     @Test

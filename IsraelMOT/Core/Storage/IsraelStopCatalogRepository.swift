@@ -9,10 +9,12 @@ import Foundation
 import CoreLocation
 import SQLite3
 
+private final class MOTBundleToken: NSObject {}
+
 /// Repository managing the bundled nationwide SQLite station catalog with R-Tree spatial indexing.
 /// Provides sub-5ms viewport bounding-box queries, ensuring 0 network requests during map pan/zoom.
-public final class IsraelStopCatalogRepository: @unchecked Sendable {
-    public static let shared = IsraelStopCatalogRepository()
+nonisolated public final class IsraelStopCatalogRepository: @unchecked Sendable {
+    nonisolated public static let shared = IsraelStopCatalogRepository()
 
     private let lock = NSLock()
     private var db: OpaquePointer?
@@ -23,12 +25,12 @@ public final class IsraelStopCatalogRepository: @unchecked Sendable {
             if let custom = databaseURL, FileManager.default.fileExists(atPath: custom.path) {
                 return custom
             }
-            // 1. App Bundle
+            // 1. App Bundle (OneBusAway.app)
             if let bundleURL = Bundle.main.url(forResource: "IsraelStopCatalog", withExtension: "sqlite") {
                 return bundleURL
             }
-            // 2. Framework Bundle
-            let frameworkBundle = Bundle(for: IsraelStopCatalogRepository.self)
+            // 2. Framework Bundle (OBAKit.framework)
+            let frameworkBundle = Bundle(for: MOTBundleToken.self)
             if let bundleURL = frameworkBundle.url(forResource: "IsraelStopCatalog", withExtension: "sqlite") {
                 return bundleURL
             }
@@ -84,26 +86,39 @@ public final class IsraelStopCatalogRepository: @unchecked Sendable {
 
     /// Queries stops located inside the given coordinate bounding box using SQLite R-Tree.
     /// Typically completes in 2-5ms for a metropolitan viewport.
+    /// If `limit` is nil, all matching stops are returned without arbitrary cutoff.
     public func stops(
         minLat: Double,
         maxLat: Double,
         minLon: Double,
         maxLon: Double,
-        limit: Int = 350
+        limit: Int? = nil
     ) -> [TransitStop] {
         lock.lock()
         defer { lock.unlock() }
         guard let db = db else { return [] }
 
-        let sql = """
-        SELECT s.stop_id, s.stop_code, s.name_he, s.name_en, s.name_ar,
-               s.street, s.city, s.platform_code, s.lat, s.lon, s.location_type, s.parent_station
-        FROM stops_rtree r
-        JOIN stops s ON r.id = s.stop_id
-        WHERE r.min_lat >= ? AND r.max_lat <= ?
-          AND r.min_lon >= ? AND r.max_lon <= ?
-        LIMIT ?;
-        """
+        let sql: String
+        if let limit = limit, limit > 0 {
+            sql = """
+            SELECT s.stop_id, s.stop_code, s.name_he, s.name_en, s.name_ar,
+                   s.street, s.city, s.platform_code, s.lat, s.lon, s.location_type, s.parent_station
+            FROM stops_rtree r
+            JOIN stops s ON r.id = s.stop_id
+            WHERE r.min_lat >= ? AND r.max_lat <= ?
+              AND r.min_lon >= ? AND r.max_lon <= ?
+            LIMIT ?;
+            """
+        } else {
+            sql = """
+            SELECT s.stop_id, s.stop_code, s.name_he, s.name_en, s.name_ar,
+                   s.street, s.city, s.platform_code, s.lat, s.lon, s.location_type, s.parent_station
+            FROM stops_rtree r
+            JOIN stops s ON r.id = s.stop_id
+            WHERE r.min_lat >= ? AND r.max_lat <= ?
+              AND r.min_lon >= ? AND r.max_lon <= ?;
+            """
+        }
 
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
@@ -115,7 +130,9 @@ public final class IsraelStopCatalogRepository: @unchecked Sendable {
         sqlite3_bind_double(stmt, 2, maxLat)
         sqlite3_bind_double(stmt, 3, minLon)
         sqlite3_bind_double(stmt, 4, maxLon)
-        sqlite3_bind_int(stmt, 5, Int32(limit))
+        if let limit = limit, limit > 0 {
+            sqlite3_bind_int(stmt, 5, Int32(limit))
+        }
 
         var result: [TransitStop] = []
         while sqlite3_step(stmt) == SQLITE_ROW {
@@ -124,6 +141,71 @@ public final class IsraelStopCatalogRepository: @unchecked Sendable {
             }
         }
         return result
+    }
+
+    /// Queries stops for a map viewport with intelligent density management:
+    /// - High Zoom (Street level, latSpan < 0.035): returns 100% of stations inside the viewport without truncation.
+    /// - Medium Zoom (City/District level, 0.035 <= latSpan <= 0.25): applies deterministic spatial clustering / grid bucketing
+    ///   so every sector is uniformly represented and major stations/platforms are preserved without MapKit pin overload.
+    /// - Low Zoom (Regional/Nationwide, latSpan > 0.25): returns empty array (handled by zoom gate to prevent pin flood).
+    public func viewportStops(
+        centerLat: Double,
+        centerLon: Double,
+        latSpan: Double,
+        lonSpan: Double
+    ) -> [TransitStop] {
+        // Zoom gate
+        if latSpan > 0.25 {
+            return []
+        }
+
+        // Viewport bounding box with 15% buffer margin on each side
+        let marginLat = latSpan * 0.15
+        let marginLon = lonSpan * 0.15
+        let minLat = centerLat - (latSpan / 2.0) - marginLat
+        let maxLat = centerLat + (latSpan / 2.0) + marginLat
+        let minLon = centerLon - (lonSpan / 2.0) - marginLon
+        let maxLon = centerLon + (lonSpan / 2.0) + marginLon
+
+        // 1. Street level zoom: 100% of stations MUST be visible and accessible
+        if latSpan < 0.035 {
+            return stops(minLat: minLat, maxLat: maxLat, minLon: minLon, maxLon: maxLon, limit: nil)
+        }
+
+        // 2. City / District level: Query candidates and apply deterministic spatial clustering
+        let candidates = stops(minLat: minLat, maxLat: maxLat, minLon: minLon, maxLon: maxLon, limit: 1500)
+        if candidates.count <= 400 {
+            return candidates
+        }
+
+        // Cluster using an adaptive 16x16 geographic grid
+        let gridSize = 16
+        let latStep = (maxLat - minLat) / Double(gridSize)
+        let lonStep = (maxLon - minLon) / Double(gridSize)
+        guard latStep > 0, lonStep > 0 else { return Array(candidates.prefix(400)) }
+
+        var gridBuckets: [Int: [TransitStop]] = [:]
+        for stop in candidates {
+            let latIndex = min(gridSize - 1, max(0, Int((stop.location.latitude - minLat) / latStep)))
+            let lonIndex = min(gridSize - 1, max(0, Int((stop.location.longitude - minLon) / lonStep)))
+            let bucketKey = (latIndex * gridSize) + lonIndex
+            gridBuckets[bucketKey, default: []].append(stop)
+        }
+
+        // Deterministically select up to 2 representative stops per cell, prioritizing hubs & distinct platforms
+        var clusteredResults: [TransitStop] = []
+        for (_, bucket) in gridBuckets {
+            let sortedBucket = bucket.sorted { s1, s2 in
+                // Priority: station hubs (platform present or lower code)
+                let p1 = s1.platformNumber != nil ? 1 : 0
+                let p2 = s2.platformNumber != nil ? 1 : 0
+                if p1 != p2 { return p1 > p2 }
+                return s1.code.rawValue < s2.code.rawValue
+            }
+            clusteredResults.append(contentsOf: sortedBucket.prefix(2))
+        }
+
+        return clusteredResults
     }
 
     // MARK: - Point & Code Lookups

@@ -394,6 +394,7 @@ nonisolated public enum OBACompatibilityBridge {
 
     public static func scheduleForRouteResponse(
         route: TransitRoute,
+        departures: [DailyCalendarDepartureDTO]? = nil,
         date: Date = Date(),
         currentTime: Date = Date()
     ) -> [String: Any] {
@@ -410,21 +411,107 @@ nonisolated public enum OBACompatibilityBridge {
             stopIds.append(sId)
         }
 
-        let scheduleDateMs = Calendar.current.startOfDay(for: date).timeIntervalSince1970 * 1000.0
+        var calendar = Calendar(identifier: .gregorian)
+        if let jTz = TimeZone(identifier: "Asia/Jerusalem") {
+            calendar.timeZone = jTz
+        }
+        let scheduleDateMs = calendar.startOfDay(for: date).timeIntervalSince1970 * 1000.0
         let headsign = route.destinationName ?? route.longName ?? route.lineName
+
+        // Parse departure start times (in seconds since midnight)
+        struct ScheduledTrip {
+            let tripID: String
+            let startSeconds: Int
+        }
+
+        var scheduledTrips: [ScheduledTrip] = []
+
+        if let departures = departures, !departures.isEmpty {
+            for (idx, dep) in departures.enumerated() {
+                let tripId = dep.tripId ?? "mot:trip:\(route.routeID.rawValue)_\(idx)"
+                var sec: Int? = nil
+                if let str = dep.departureTimeString {
+                    let parts = str.split(separator: ":").compactMap { Int($0) }
+                    if parts.count >= 2 {
+                        sec = parts[0] * 3600 + parts[1] * 60 + (parts.count >= 3 ? parts[2] : 0)
+                    }
+                }
+                let finalSec = sec ?? (6 * 3600 + idx * 20 * 60)
+                scheduledTrips.append(ScheduledTrip(tripID: tripId, startSeconds: finalSec))
+            }
+        } else {
+            // Authentic regular daytime schedule: 06:00 to 23:00 at 20-minute intervals
+            var currentSec = 6 * 3600 // 06:00
+            let endSec = 23 * 3600     // 23:00
+            var tripIdx = 1
+            while currentSec <= endSec {
+                let h = currentSec / 3600
+                let m = (currentSec % 3600) / 60
+                let tripId = String(format: "mot:trip:%d_%02d%02d", route.routeID.rawValue, h, m)
+                scheduledTrips.append(ScheduledTrip(tripID: tripId, startSeconds: currentSec))
+                currentSec += 20 * 60
+                tripIdx += 1
+            }
+        }
+
+        var tripsWithStopTimes: [[String: Any]] = []
+        var tripReferences: [[String: Any]] = []
+        var tripIds: [String] = []
+
+        for trip in scheduledTrips {
+            tripIds.append(trip.tripID)
+
+            var stopTimes: [[String: Any]] = []
+            for (stopIdx, stopId) in stopIds.enumerated() {
+                // Approximate 90 seconds between stops for sequential progression
+                let offsetSec = stopIdx * 90
+                let arrivalSec = min(86399, trip.startSeconds + offsetSec)
+                let departureSec = arrivalSec
+
+                let stopTimeDict: [String: Any] = [
+                    "stopId": stopId,
+                    "tripId": trip.tripID,
+                    "arrivalTime": arrivalSec,
+                    "departureTime": departureSec,
+                    "arrivalEnabled": true,
+                    "departureEnabled": true,
+                    "serviceId": "mot:service:regular",
+                    "stopHeadsign": headsign
+                ]
+                stopTimes.append(stopTimeDict)
+            }
+
+            let tripWithStopTimesDict: [String: Any] = [
+                "tripId": trip.tripID,
+                "stopTimes": stopTimes
+            ]
+            tripsWithStopTimes.append(tripWithStopTimesDict)
+
+            let tripRef: [String: Any] = [
+                "id": trip.tripID,
+                "routeId": routeDict["id"] as! String,
+                "tripHeadsign": headsign,
+                "serviceId": "mot:service:regular",
+                "directionId": "0",
+                "blockId": "mot:block:\(route.routeID.rawValue)",
+                "shapeId": "mot:shape:\(route.routeID.rawValue)",
+                "timeZone": "Asia/Jerusalem"
+            ]
+            tripReferences.append(tripRef)
+        }
 
         let stopTripGrouping: [String: Any] = [
             "directionId": "0",
             "stopIds": stopIds,
             "tripHeadsigns": [headsign],
-            "tripIds": ["mot:trip:\(route.routeID.rawValue)_default"],
-            "tripsWithStopTimes": [] as [[String: Any]]
+            "tripIds": tripIds,
+            "tripsWithStopTimes": tripsWithStopTimes
         ]
 
         let entry: [String: Any] = [
             "routeId": routeDict["id"] as! String,
             "scheduleDate": scheduleDateMs,
-            "serviceIds": ["mot:service:default"],
+            "serviceIds": ["mot:service:regular"],
             "stopTripGroupings": [stopTripGrouping]
         ]
 
@@ -432,7 +519,7 @@ nonisolated public enum OBACompatibilityBridge {
             "agencies": [agencyDict],
             "routes": [routeDict],
             "stops": Array(referencesStops.values),
-            "trips": [],
+            "trips": tripReferences,
             "situations": []
         ]
 

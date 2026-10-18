@@ -1,0 +1,384 @@
+{
+  "1_direct_trip": {
+    "status": 200,
+    "success": true,
+    "message": "",
+    "routesCount": 6,
+    "routes": [
+      {
+        "index": 0,
+        "dep": "2026-10-19T09:01:00",
+        "arr": "2026-10-19T09:23:00",
+        "totalDuration": null,
+        "lines": [
+          "31"
+        ]
+      },
+      {
+        "index": 1,
+        "dep": "2026-10-19T09:05:00",
+        "arr": "2026-10-19T09:30:00",
+        "totalDuration": null,
+        "lines": [
+          "540"
+        ]
+      },
+      {
+        "index": 2,
+        "dep": "2026-10-19T09:08:00",
+        "arr": "2026-10-19T09:31:00",
+        "totalDuration": null,
+        "lines": [
+          "504"
+        ]
+      },
+      {
+        "index": 3,
+        "dep": "2026-10-19T09:10:00",
+        "arr": "2026-10-19T09:37:00",
+        "totalDuration": null,
+        "lines": [
+          "363"
+        ]
+      },
+      {
+        "index": 4,
+        "dep": "2026-10-19T09:13:00",
+        "arr": "2026-10-19T09:35:00",
+        "totalDuration": null,
+        "lines": [
+          "31"
+        ]
+      },
+      {
+        "index": 5,
+        "dep": "2026-10-19T09:13:00",
+        "arr": "2026-10-19T09:36:00",
+        "totalDuration": null,
+        "lines": [
+          "531"
+        ]
+      }
+    ]
+  },
+  "2_transfers_allowed": {
+    "status": 200,
+    "success": true,
+    "message": "",
+    "routesCount": 6,
+    "routes": [
+      {
+        "index": 0,
+        "dep": "2026-10-19T09:01:00",
+        "arr": "2026-10-19T09:22:00",
+        "totalDuration": null,
+        "lines": [
+          "66",
+          "299"
+        ]
+      },
+      {
+        "index": 1,
+        "dep": "2026-10-19T09:01:00",
+        "arr": "2026-10-19T09:23:00",
+        "totalDuration": null,
+        "lines": [
+          "31"
+        ]
+      },
+      {
+        "index": 2,
+        "dep": "2026-10-19T09:02:00",
+        "arr": "2026-10-19T09:37:00",
+        "totalDuration": null,
+        "lines": [
+          "L3"
+        ]
+      },
+      {
+        "index": 3,
+        "dep": "2026-10-19T09:05:00",
+        "arr": "2026-10-19T09:30:00",
+        "totalDuration": null,
+        "lines": [
+          "540"
+        ]
+      },
+      {
+        "index": 4,
+        "dep": "2026-10-19T09:06:00",
+        "arr": "2026-10-19T09:30:00",
+        "totalDuration": null,
+        "lines": [
+          "39",
+          "540"
+        ]
+      },
+      {
+        "index": 5,
+        "dep": "2026-10-19T09:08:00",
+        "arr": "2026-10-19T09:31:00",
+        "totalDuration": null,
+        "lines": [
+          "504"
+        ]
+      }
+    ]
+  },
+  "3_light_rail": {
+    "status": 200,
+    "success": true,
+    "message": "",
+    "routesCount": 6,
+    "routes": [
+      {
+        "index": 0,
+        "dep": "2026-10-19T10:00:00",
+        "arr": "2026-10-19T10:15:00",
+        "totalDuration": null,
+        "lines": [
+          "L1"
+        ]
+      },
+      {
+        "index": 1,
+        "dep": "2026-10-19T10:05:00",
+        "arr": "2026-10-19T10:20:00",
+        "totalDuration": null,
+        "lines": [
+          "L1"
+        ]
+      },
+      {
+        "index": 2,
+        "dep": "2026-10-19T10:10:00",
+        "arr": "2026-10-19T10:25:00",
+        "totalDuration": null,
+        "lines": [
+          "L1"
+        ]
+      },
+      {
+        "index": 3,
+        "dep": "2026-10-19T10:15:00",
+        "arr": "2026-10-19T10:30:00",
+        "totalDuration": null,
+        "lines": [
+          "L1"
+        ]
+      },
+      {
+        "index": 4,
+        "dep": "2026-10-19T10:20:00",
+        "arr": "2026-10-19T10:35:00",
+        "totalDuration": null,
+        "lines": [
+          "L1"
+        ]
+      },
+      {
+        "index": 5,
+        "dep": "2026-10-19T10:25:00",
+        "arr": "2026-10-19T10:40:00",
+        "totalDuration": null,
+        "lines": [
+          "L1"
+        ]
+      }
+    ]
+  },
+  "4_long_intercity": {
+    "status": 200,
+    "success": true,
+    "message": "",
+    "routesCount": 6,
+    "routes": [
+      {
+        "index": 0,
+        "dep": "2026-10-19T08:03:00",
+        "arr": "2026-10-19T08:49:00",
+        "totalDuration": null,
+        "lines": [
+          "46"
+        ]
+      },
+      {
+        "index": 1,
+        "dep": "2026-10-19T08:03:00",
+        "arr": "2026-10-19T08:57:00",
+        "totalDuration": null,
+        "lines": []
+      },
+      {
+        "index": 2,
+        "dep": "2026-10-19T08:33:00",
+        "arr": "2026-10-19T09:19:00",
+        "totalDuration": null,
+        "lines": [
+          "46"
+        ]
+      },
+      {
+        "index": 3,
+        "dep": "2026-10-19T08:33:00",
+        "arr": "2026-10-19T09:27:00",
+        "totalDuration": null,
+        "lines": []
+      },
+      {
+        "index": 4,
+        "dep": "2026-10-19T09:03:00",
+        "arr": "2026-10-19T09:48:00",
+        "totalDuration": null,
+        "lines": [
+          "4"
+        ]
+      },
+      {
+        "index": 5,
+        "dep": "2026-10-19T09:03:00",
+        "arr": "2026-10-19T09:57:00",
+        "totalDuration": null,
+        "lines": []
+      }
+    ]
+  },
+  "5_midnight_night_lines": {
+    "status": 200,
+    "success": true,
+    "message": "",
+    "routesCount": 6,
+    "routes": [
+      {
+        "index": 0,
+        "dep": "2026-10-19T00:35:00",
+        "arr": "2026-10-19T00:52:00",
+        "totalDuration": null,
+        "lines": [
+          "15"
+        ]
+      },
+      {
+        "index": 1,
+        "dep": "2026-10-19T00:39:00",
+        "arr": "2026-10-19T01:15:00",
+        "totalDuration": null,
+        "lines": [
+          "78"
+        ]
+      },
+      {
+        "index": 2,
+        "dep": "2026-10-19T00:41:00",
+        "arr": "2026-10-19T01:25:00",
+        "totalDuration": null,
+        "lines": [
+          "27",
+          "19"
+        ]
+      },
+      {
+        "index": 3,
+        "dep": "2026-10-19T00:49:00",
+        "arr": "2026-10-19T01:26:00",
+        "totalDuration": null,
+        "lines": [
+          "74",
+          "77"
+        ]
+      },
+      {
+        "index": 4,
+        "dep": "2026-10-19T00:54:00",
+        "arr": "2026-10-19T01:30:00",
+        "totalDuration": null,
+        "lines": [
+          "78"
+        ]
+      },
+      {
+        "index": 5,
+        "dep": "2026-10-19T00:59:00",
+        "arr": "2026-10-19T01:29:00",
+        "totalDuration": null,
+        "lines": [
+          "1",
+          "19"
+        ]
+      }
+    ]
+  },
+  "6_wheelchair_accessible": {
+    "status": 503,
+    "raw": "<html lang=\"he\" dir=\"rtl\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>הרשות הארצית לתחבורה ציבורית</title>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <style>\n        body {\n            background: #f7f9fa;\n            color: #1a1a1a;\n            font-family: 'Se"
+  },
+  "7_no_results_remote": {
+    "status": 200,
+    "success": true,
+    "message": "",
+    "routesCount": 0,
+    "routes": []
+  },
+  "8_depart_at_vs_arrive_by": {
+    "status": 200,
+    "success": true,
+    "message": "",
+    "routesCount": 6,
+    "routes": [
+      {
+        "index": 0,
+        "dep": "2026-10-19T11:33:00",
+        "arr": "2026-10-19T12:00:00",
+        "totalDuration": null,
+        "lines": [
+          "509"
+        ]
+      },
+      {
+        "index": 1,
+        "dep": "2026-10-19T11:37:00",
+        "arr": "2026-10-19T11:59:00",
+        "totalDuration": null,
+        "lines": [
+          "31"
+        ]
+      },
+      {
+        "index": 2,
+        "dep": "2026-10-19T11:20:00",
+        "arr": "2026-10-19T11:55:00",
+        "totalDuration": null,
+        "lines": [
+          "L3"
+        ]
+      },
+      {
+        "index": 3,
+        "dep": "2026-10-19T11:32:00",
+        "arr": "2026-10-19T11:55:00",
+        "totalDuration": null,
+        "lines": [
+          "504"
+        ]
+      },
+      {
+        "index": 4,
+        "dep": "2026-10-19T11:23:00",
+        "arr": "2026-10-19T11:51:00",
+        "totalDuration": null,
+        "lines": [
+          "6"
+        ]
+      },
+      {
+        "index": 5,
+        "dep": "2026-10-19T11:28:00",
+        "arr": "2026-10-19T11:51:00",
+        "totalDuration": null,
+        "lines": [
+          "531"
+        ]
+      }
+    ]
+  }
+}

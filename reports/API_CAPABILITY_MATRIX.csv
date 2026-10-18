@@ -1,0 +1,161 @@
+service,method,endpoint,group,server_capability,official_site_usage,app_implementation,mapping_fidelity,user_visible,gap_classification,notes_and_evidence
+route-planner-prod,GET,/api/AutoComplete/SearchLocations,AutoComplete,"Geocodes text queries to cities, addresses, POIs, aliases",Primary origin/destination auto-complete,IsraelMOT: MOTEndpoints.searchLocationsURL / MOTCompatibilityDataLoader,Partial,Yes (Search field),Partial Gap,"App uses SearchLocations for address queries, but string-based ID parsing can fail for non-numeric IDs."
+route-planner-prod,GET,/api/AutoComplete/SearchAddressesAndPOIs,AutoComplete,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/AutoComplete/SearchCities,AutoComplete,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/AutoComplete/SearchStations,AutoComplete,Searches transit stops by station code or name,Used in station search filter tab,IsraelMOT: MOTEndpoints.searchStationsURL,Full,Yes (Stop search),Parity,"Returns stop codes, coordinates, and localized stop names."
+route-planner-prod,GET,/api/AutoComplete/SearchPointsOfInterest,AutoComplete,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/AutoComplete/SearchLines,AutoComplete,Searches transit routes/lines by line number or destination,Used in route/line search tab,IsraelMOT: MOTEndpoints.searchLinesURL,Partial (Buggy),Partial (Fails on composite queries),Broken Endpoint,Search 31 can fail when user types city name because query string is not sanitized before substring comparison.
+route-planner-prod,GET,/api/AutoComplete/GetAddressDataByCoordinates,AutoComplete,"Reverse geocodes lat/lng into street address, city, and zip",Used when dropping a pin on map,IsraelMOT: MOTEndpoints.addressByCoordinatesURL,Full,Yes (Reverse geocoding),Parity,Returns address text for map tap.
+route-planner-prod,GET,/api/AutoComplete/GetAllMissingSearches,AutoComplete,Internal telemetry for unresolvable user search terms,Internal logging,Unimplemented,None,No,Internal / Telemetry,Not required for core transit functionality.
+route-planner-prod,GET,/api/AutoComplete/GetMissingSearchesCount,AutoComplete,Internal telemetry for unresolvable user search terms,Internal logging,Unimplemented,None,No,Internal / Telemetry,Not required for core transit functionality.
+route-planner-prod,POST,/api/AutoComplete/AddMissingSearch,AutoComplete,Internal telemetry for unresolvable user search terms,Internal logging,Unimplemented,None,No,Internal / Telemetry,Not required for core transit functionality.
+route-planner-prod,DELETE,/api/AutoComplete/DeleteMissingSearch,AutoComplete,Internal telemetry for unresolvable user search terms,Internal logging,Unimplemented,None,No,Internal / Telemetry,Not required for core transit functionality.
+route-planner-prod,PUT,/api/AutoComplete/SetIsFixedForMissingSearch,AutoComplete,Internal telemetry for unresolvable user search terms,Internal logging,Unimplemented,None,No,Internal / Telemetry,Not required for core transit functionality.
+route-planner-prod,GET,/api/Health,Health,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/Location/ImportLocationData,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/Location/ImportParkAndGoLotsFromS3,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/Location/GetParkAndGoLots,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/Location/GetMapLocations,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/Location/GetMapParkAndGoLots,Location,Returns park and ride parking lot locations and capacity,Park and ride layer toggle,Unimplemented,None,No,Missing Feature,Allows users to plan Park & Ride trips.
+route-planner-prod,GET,/api/Location/GetMapRavKavStations,Location,Returns Rav-Kav service points and recharge kiosks,Rav-Kav kiosk map layer,Unimplemented,None,No,Missing Feature,Useful for riders seeking ticketing services.
+route-planner-prod,GET,/api/Location/GetMapRavKavStationsFiltered,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/Location/GetMapStops,Location,Returns stops within a map bounding box with skip/take pagination,Primary map stops loader on route.bus.gov.il,Unimplemented,None,No,Critical Gap,Official site uses this to load unlimited map stops without the 10-stop hard cap.
+route-planner-prod,POST,/api/Location/ImportRavKavStations,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/Location/ImportPricingZones,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/Location/AddPointOfInterestRequest,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/Location/GetPointsOfInterest,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/Location/GetPointOfInterestById,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/Location/AddPointOfInterest,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/Location/GetRavKavStationsByRadius,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/Location/GetPricingZones,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/Location/GetProblematicStreets,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/Location/AddProblematicStreets,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/Location/AddProblematicStreetsWithHereName,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/Location/ImportParkAndGoLotNames,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/Location/AddStreetsBackup,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/Location/AddStreetsWithGeoLocationsBackup,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/Location/AddNotValidStreets,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/Location/GetNotValidStreets,Location,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/OpenSearchBackup/SaveOpensearchCities,OpenSearchBackup,Backend administrative data ingestion / mutations,Internal / CMS only,Unimplemented,None,No,Internal / Admin Only,"Restricted or mutating endpoint, not public."
+route-planner-prod,GET,/api/OpenSearchBackup/GetOpensearchCities,OpenSearchBackup,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/OpenSearchBackup/SaveOpensearchStreets,OpenSearchBackup,Backend administrative data ingestion / mutations,Internal / CMS only,Unimplemented,None,No,Internal / Admin Only,"Restricted or mutating endpoint, not public."
+route-planner-prod,GET,/api/OpenSearchBackup/GetOpensearchStreets,OpenSearchBackup,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/OpenSearchBackup/SaveOpensearchBusStops,OpenSearchBackup,Backend administrative data ingestion / mutations,Internal / CMS only,Unimplemented,None,No,Internal / Admin Only,"Restricted or mutating endpoint, not public."
+route-planner-prod,GET,/api/OpenSearchBackup/GetOpensearchBusStops,OpenSearchBackup,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/OpenSearchBackup/SaveOpensearchPOIs,OpenSearchBackup,Backend administrative data ingestion / mutations,Internal / CMS only,Unimplemented,None,No,Internal / Admin Only,"Restricted or mutating endpoint, not public."
+route-planner-prod,GET,/api/OpenSearchBackup/GetOpensearchPOIs,OpenSearchBackup,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/OpenSearchBackup/SaveOpensearchSearch,OpenSearchBackup,Backend administrative data ingestion / mutations,Internal / CMS only,Unimplemented,None,No,Internal / Admin Only,"Restricted or mutating endpoint, not public."
+route-planner-prod,GET,/api/OpenSearchBackup/GetOpensearchSearch,OpenSearchBackup,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/OpenSearchBackup/SaveOpensearchGeoLocations,OpenSearchBackup,Backend administrative data ingestion / mutations,Internal / CMS only,Unimplemented,None,No,Internal / Admin Only,"Restricted or mutating endpoint, not public."
+route-planner-prod,GET,/api/OpenSearchBackup/GetOpensearchGeoLocations,OpenSearchBackup,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/OpenSearchBackup/SaveOpensearchRoutes,OpenSearchBackup,Backend administrative data ingestion / mutations,Internal / CMS only,Unimplemented,None,No,Internal / Admin Only,"Restricted or mutating endpoint, not public."
+route-planner-prod,GET,/api/OpenSearchBackup/GetOpensearchRoutes,OpenSearchBackup,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/OpenSearchBackup/SaveOpensearchRouteSearch,OpenSearchBackup,Backend administrative data ingestion / mutations,Internal / CMS only,Unimplemented,None,No,Internal / Admin Only,"Restricted or mutating endpoint, not public."
+route-planner-prod,GET,/api/OpenSearchBackup/GetOpensearchRouteSearch,OpenSearchBackup,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/RoutePlanning/GetRoutes,RoutePlanning,"Multi-modal routing engine (bus, rail, light rail, walk, car/park&go)",Core routing engine for route.bus.gov.il,IsraelMOT: MOTTripPlanningAPIService.swift,Broken (Timezone shift),Yes (Trip planner results),Critical Gap,"MOTTripPlanningAPIService formats arrival/departure dates with UTC 'Z' timezone, shifting local Israel time (IDT UTC+3) by 1-3 hours. Hardcodes changes=true, sortBy=0, maxWalkTime=120, dropping site filter features."
+route-planner-prod,POST,/api/RoutePlanning/ImportAgenciesContactInformation,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/RoutePlanning/ImportOrderInAdvancedLines,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetAgencyContactInfo,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetAllAgencyContactInfo,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,PUT,/api/RoutePlanning/UpdateAgencyContactInfo,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/RoutePlanning/AddRouteToCalendar,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/RoutePlanning/SendIntercityLinesRouteMessage,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/RoutePlanning/SendAllRoutesRouteMessage,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/RoutePlanning/SendLineTripRouteMessage,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/RoutePlanning/SendStationDetailsMessage,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/RoutePlanning/SendRouteDetailsRouteMessage,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/RoutePlanning/SendRouteCalendarToSms,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetRating,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/RoutePlanning/AddRating,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/RoutePlanning/InsertStopCustomName,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,DELETE,/api/RoutePlanning/DeleteCustomStopNameByStopcode,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/RoutePlanning/CheckHereAccess,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/RoutePlanning/SendEmail,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/RoutePlanning/InsertHereApiCall,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,POST,/api/RoutePlanning/InsertHereApiCallsBatch,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetHereApiCallsCount,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetAllHereApiCalls,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/ExportHereCallsToCsv,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetAllSearchOriginDestinationReports,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetSearchOriginDestinationReportsCount,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/ExportSearchOriginDestinationReportsToCsv,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetAllSearchCarIntegratedReports,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetSearchCarIntegratedReportsCount,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/ExportSearchCarIntegratedReportsToCsv,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetAllSearchStopReports,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetSearchStopReportsCount,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/ExportSearchStopReportsToCsv,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetAllSearchPoiStopsReports,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetSearchPoiStopsReportsCount,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/ExportSearchPoiStopsReportsToCsv,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetAllSearchIntercityReports,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetSearchIntercityReportsCount,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/ExportSearchIntercityReportsToCsv,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetAllSearchRouteReports,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/GetSearchRouteReportsCount,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,/api/RoutePlanning/ExportSearchRouteReportsToCsv,RoutePlanning,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Calendar/GetTripCalendar,Calendar,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Calendar/GetTripCalendarByRouteDesc,Calendar,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Calendar/GetRouteDailyCalendar,Calendar,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Calendar/GetRouteNextDayOfService,Calendar,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Calendar/GetRouteDailyCalendarDispatch,Calendar,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Calendar/GetRouteCalendarAtStopsByStopCodes,Calendar,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Calendar/GetManyRouteCalendarAtStopByStopCode,Calendar,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Health,Health,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Routes/GetInterCityLines,Routes,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Routes/GetRouteFullData,Routes,"Returns complete route metadata, polyline shape geometry, stops, timetable calendar, and disruptions",Route viewer and timetable schedule,"Partial: only called in handleRouteDetail, timetable & calendar dropped",Partial,"Partial (Route polyline, but no schedule)",Broken Endpoint,Polyline is available in response but route timetable calendar is dropped by MOTRouteMapper.
+mot-scheduler-prod,POST,/api/Routes/GetNextStopTimesAndLocation,Routes,"Returns real-time vehicle positions (lat/lng), speed, and ETA for active buses",Plots live moving bus on route map,"Defined in MOTEndpoints, vehicle GPS dropped in MOTItineraryMapper & OBACompatibilityBridge",Partial,No (Live bus pin not rendered),Missing Feature,"Backend returns isRealTime: true and routeLocation coordinates, but app drops coordinates, preventing map bus plotting."
+mot-scheduler-prod,GET,/api/Routes/GetNextRouteLocation,Routes,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Routes/GetRouteMinimumData,Routes,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Routes/GetSpecialMessageByRouteId,Routes,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Routes/GetSpecialMessageByRouteDesc,Routes,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Routes/GetSpecialMessageByManyRouteDesc,Routes,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Routes/GetRouteStops,Routes,Returns full stop list for both forward and reverse directions of a route,Route stop list view in official site,"Defined in MOTEndpoints, UNUSED in MOTCompatibilityDataLoader",Broken (Uncalled),Error ('stop list isn't available'),Broken Endpoint,"Root cause of 'stop list isn't available'. OBAKit calls /api/where/stops-for-route, but loader does not intercept it and throws."
+mot-scheduler-prod,GET,/api/Routes/GetRoutePrice,Routes,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Routes/GetRouteLocationsOld,Routes,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Routes/GetRouteLocations,Routes,Returns real-time GPS locations of all active buses on a route,Displays live buses along the selected route line,"Defined in MOTEndpoints, not wired to UI",None,No,Missing Feature,Live fleet tracking on route map.
+mot-scheduler-prod,GET,/api/Routes/IsRouteHasAlternatives,Routes,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Routes/GetTripShapePolyline,Routes,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Routes/GetRoutePolylineByRouteDescStopAndTime,Routes,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Routes/GetAccessibleLines,Routes,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Routes/GetNightLines,Routes,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/ServiceAlert/ServiceAlerts,ServiceAlert,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/ServiceAlert/ServiceAlerts2,ServiceAlert,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/ServiceAlert/GetSpecialMessagesByTransportType,ServiceAlert,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Stops/GetStopByCode,Stops,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Stops/GetStopById,Stops,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Stops/GetStopFullData,Stops,"Returns stop metadata, passing lines, timetable, and platforms",Stop details pane,IsraelMOT: MOTEndpoints.stopFullDataURL / handleStopDetail,Partial,Yes (Stop screen),Partial Gap,"Timetable and scheduled passing lines mapped, but some platform numbers and accessibility badges dropped."
+mot-scheduler-prod,GET,/api/Stops/GetSpecialMessagesByStopAndDay,Stops,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Stops/GetStopsByAgency,Stops,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Stops/GetSpecialMessagesByStopIds,Stops,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Stops/GetSpecialMessagesByManyStopCodes,Stops,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Stops/GetStopsCloseToLocation,Stops,"Returns stops near coordinate, but server-capped at exactly 10 stops",Legacy/quick stop lookup. Site uses Location/GetMapStops with pagination.,IsraelMOT: MOTEndpoints.stopsCloseToLocationByRadiusURL,Server Capped,Yes (Map stops),Critical Gap,Backend hard-caps response at 10 stops. Causes map stops to appear sparse or disappear during pan/zoom. Needs migration to GetMapStops or tiling.
+mot-scheduler-prod,GET,/api/Stops/GetStopsCloseToLocationByRadius,Stops,"Returns stops near coordinate, but server-capped at exactly 10 stops",Legacy/quick stop lookup. Site uses Location/GetMapStops with pagination.,IsraelMOT: MOTEndpoints.stopsCloseToLocationByRadiusURL,Server Capped,Yes (Map stops),Critical Gap,Backend hard-caps response at 10 stops. Causes map stops to appear sparse or disappear during pan/zoom. Needs migration to GetMapStops or tiling.
+mot-scheduler-prod,GET,/api/Stops/GetclosestStop,Stops,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Stops/RefreshStopTimesAtStop,Stops,Returns dynamic real-time arrival estimates for a stop,Auto-refresh in stop details,IsraelMOT: MOTEndpoints.refreshStopTimesURL,Partial,Yes (Real-time arrivals),Partial Gap,"Returns live arrivals, but vehicle GPS coordinates are omitted from OBA payload."
+mot-scheduler-prod,GET,/api/Stops/GetStopsList,Stops,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Stops/GetStopsListCount,Stops,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/TariffProfiles,TariffProfiles,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Update,Update,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Update/PrecalcZonesPerStop,Update,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Update/UpdateSiriSnapshot,Update,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Update/GetGtfsUpdateStatus,Update,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,POST,/api/Update/UpdateLineCrowd,Update,Backend administrative data ingestion / mutations,Internal / CMS only,Unimplemented,None,No,Internal / Admin Only,"Restricted or mutating endpoint, not public."
+mot-scheduler-prod,POST,/api/Update/UpdateLineCrowdFromS3,Update,Backend administrative data ingestion / mutations,Internal / CMS only,Unimplemented,None,No,Internal / Admin Only,"Restricted or mutating endpoint, not public."
+mot-scheduler-prod,POST,/api/Update/UpdateRoutesAndStopsElastic,Update,Backend administrative data ingestion / mutations,Internal / CMS only,Unimplemented,None,No,Internal / Admin Only,"Restricted or mutating endpoint, not public."
+mot-scheduler-prod,GET,/api/Update/CheckGTFSAccess,Update,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Update/TestGtfsSuccessEmail,Update,,Unused or internal,Unimplemented,None,No,Unused Backend,
+mot-scheduler-prod,GET,/api/Update/TestGtfsErrorEmail,Update,,Unused or internal,Unimplemented,None,No,Unused Backend,
+route-planner-prod,GET,location/GetAddressDataByCoordinates,Frontend/CMS,Content/News/Config,Direct browser fetch on route.bus.gov.il,Unimplemented,None,No,Missing Feature (CMS),"Provides agency logos, announcements, and fare table updates."
+route-planner-prod,GET,location/SearchAddress,Frontend/CMS,Content/News/Config,Direct browser fetch on route.bus.gov.il,Unimplemented,None,No,Missing Feature (CMS),"Provides agency logos, announcements, and fare table updates."
+route-planner-prod,GET,location/SearchCity,Frontend/CMS,Content/News/Config,Direct browser fetch on route.bus.gov.il,Unimplemented,None,No,Missing Feature (CMS),"Provides agency logos, announcements, and fare table updates."
+mot-scheduler-prod,GET,Calendar/GetRouteCalendarAtStops,Frontend/CMS,Content/News/Config,Direct browser fetch on route.bus.gov.il,Unimplemented,None,No,Missing Feature (CMS),"Provides agency logos, announcements, and fare table updates."
+mot-scheduler-prod,GET,Routes/AutoComplete,Frontend/CMS,Content/News/Config,Direct browser fetch on route.bus.gov.il,Unimplemented,None,No,Missing Feature (CMS),"Provides agency logos, announcements, and fare table updates."
+mot-scheduler-prod,GET,Stops/AutoComplete,Frontend/CMS,Content/News/Config,Direct browser fetch on route.bus.gov.il,Unimplemented,None,No,Missing Feature (CMS),"Provides agency logos, announcements, and fare table updates."
+bo-be-prod,GET,cms-static-variables,Frontend/CMS,Content/News/Config,Direct browser fetch on route.bus.gov.il,Unimplemented,None,No,Missing Feature (CMS),"Provides agency logos, announcements, and fare table updates."
+bo-be-prod,GET,menu/language/{languageId}/detailed,Frontend/CMS,Content/News/Config,Direct browser fetch on route.bus.gov.il,Unimplemented,None,No,Missing Feature (CMS),"Provides agency logos, announcements, and fare table updates."
+bo-be-prod,GET,content-management/search/language/{languageId},Frontend/CMS,Content/News/Config,Direct browser fetch on route.bus.gov.il,Unimplemented,None,No,Missing Feature (CMS),"Provides agency logos, announcements, and fare table updates."
+bo-be-prod,GET,polls,Frontend/CMS,Content/News/Config,Direct browser fetch on route.bus.gov.il,Unimplemented,None,No,Missing Feature (CMS),"Provides agency logos, announcements, and fare table updates."
+bo-be-prod,GET,polls/{pollId},Frontend/CMS,Content/News/Config,Direct browser fetch on route.bus.gov.il,Unimplemented,None,No,Missing Feature (CMS),"Provides agency logos, announcements, and fare table updates."
+bo-be-prod,POST,polls/{pollId}/{languageId}/views,Frontend/CMS,Content/News/Config,Direct browser fetch on route.bus.gov.il,Unimplemented,None,No,Missing Feature (CMS),"Provides agency logos, announcements, and fare table updates."
+bo-be-prod,POST,polls/{pollId}/{languageId}/response,Frontend/CMS,Content/News/Config,Direct browser fetch on route.bus.gov.il,Unimplemented,None,No,Missing Feature (CMS),"Provides agency logos, announcements, and fare table updates."

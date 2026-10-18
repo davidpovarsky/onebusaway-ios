@@ -1,0 +1,314 @@
+{
+  "3": {
+    "status": 200,
+    "success": true,
+    "count": 100,
+    "sample": [
+      {
+        "routeId": 16705,
+        "agencyId": 31,
+        "agencyName": "דן בדרום",
+        "routeName": "3",
+        "routeLongName": "ת. רכבת אופקים רציפים/עירוני<->אפיקים בנגב",
+        "oppositeDirectionId": 16707,
+        "cityName": "אופקים"
+      },
+      {
+        "routeId": 41222,
+        "agencyId": 3,
+        "agencyName": "אגד",
+        "routeName": "3",
+        "routeLongName": "ת.כבאות/ששת הימים<->מבואות אילת",
+        "oppositeDirectionId": 41223,
+        "cityName": "אילת"
+      },
+      {
+        "routeId": 41223,
+        "agencyId": 3,
+        "agencyName": "אגד",
+        "routeName": "3",
+        "routeLongName": "חניון אגד<->שחמון",
+        "oppositeDirectionId": 41222,
+        "cityName": "אילת"
+      },
+      {
+        "routeId": 33274,
+        "agencyId": 15,
+        "agencyName": "מטרופולין",
+        "routeName": "3",
+        "routeLongName": "המוביל/טארק עבד אל חי<->רכבת טירה כוכב יאיר",
+        "oppositeDirectionId": 33273,
+        "cityName": "טירה"
+      },
+      {
+        "routeId": 7,
+        "agencyId": 25,
+        "agencyName": "אלקטרה אפיקים",
+        "routeName": "3",
+        "routeLongName": "ת. רכבת יבנה מערב<->רכבת יבנה מזרח",
+        "oppositeDirectionId": 8,
+        "cityName": "יבנה"
+      }
+    ]
+  },
+  "31": {
+    "status": 200,
+    "success": true,
+    "count": 100,
+    "sample": [
+      {
+        "routeId": 33287,
+        "agencyId": 16,
+        "agencyName": "סופרבוס",
+        "routeName": "31",
+        "routeLongName": "מסוף גילה/המרגלית<->רמות",
+        "oppositeDirectionId": null,
+        "cityName": "ירושלים"
+      },
+      {
+        "routeId": 18707,
+        "agencyId": 18,
+        "agencyName": "קווים",
+        "routeName": "31",
+        "routeLongName": "מלבר/סמטת מאלה<->לוזית מרכז",
+        "oppositeDirectionId": 18367,
+        "cityName": "לוזית"
+      },
+      {
+        "routeId": 29462,
+        "agencyId": 15,
+        "agencyName": "מטרופולין",
+        "routeName": "31",
+        "routeLongName": "לב הפארק/וייצמן<->הרצליה קניון ארנה",
+        "oppositeDirectionId": 29463,
+        "cityName": "הרצליה"
+      },
+      {
+        "routeId": 3726,
+        "agencyId": 3,
+        "agencyName": "אגד",
+        "routeName": "31",
+        "routeLongName": "טכניון/מעונות העמים<->רכבת בת גלים",
+        "oppositeDirectionId": 3729,
+        "cityName": "חיפה"
+      },
+      {
+        "routeId": 3729,
+        "agencyId": 3,
+        "agencyName": "אגד",
+        "routeName": "31",
+        "routeLongName": "ת. רכבת בת גלים<->טכניון",
+        "oppositeDirectionId": 3726,
+        "cityName": "חיפה"
+      }
+    ]
+  },
+  "64": {
+    "status": 200,
+    "success": true,
+    "count": 72,
+    "sample": [
+      {
+        "routeId": 12249,
+        "agencyId": 18,
+        "agencyName": "קווים",
+        "routeName": "64",
+        "routeLongName": "איבטן<->חדרה תחנה מרכזית",
+        "oppositeDirectionId": 12247,
+        "cityName": "חדרה"
+      },
+      {
+        "routeId": 31960,
+        "agencyId": 14,
+        "agencyName": "נתיב אקספרס",
+        "routeName": "64",
+        "routeLongName": "ת. מרכזית נהריה/רציפים<->גבעת טרומפלדור",
+        "oppositeDirectionId": 31959,
+        "cityName": "נהריה"
+      },
+      {
+        "routeId": 34638,
+        "agencyId": 37,
+        "agencyName": "אקסטרה",
+        "routeName": "64",
+        "routeLongName": "מסוף עין התכלת/איסוף<->רכבת ספיר",
+        "oppositeDirectionId": 34639,
+        "cityName": "נתניה"
+      },
+      {
+        "routeId": 12247,
+        "agencyId": 18,
+        "agencyName": "קווים",
+        "routeName": "64",
+        "routeLongName": "ת. מרכזית חדרה/רציפים<->זמר איבטן",
+        "oppositeDirectionId": 12249,
+        "cityName": "זמר"
+      },
+      {
+        "routeId": 10458,
+        "agencyId": 38,
+        "agencyName": "אקסטרה ירושלים",
+        "routeName": "64",
+        "routeLongName": "מסוף הר נוף/כנפי נשרים<->רמות",
+        "oppositeDirectionId": null,
+        "cityName": "ירושלים"
+      }
+    ]
+  },
+  "קו 31": {
+    "status": 200,
+    "success": true,
+    "count": 31,
+    "sample": [
+      {
+        "routeId": 33287,
+        "agencyId": 16,
+        "agencyName": "סופרבוס",
+        "routeName": "31",
+        "routeLongName": "מסוף גילה/המרגלית<->רמות",
+        "oppositeDirectionId": null,
+        "cityName": "ירושלים"
+      },
+      {
+        "routeId": 18707,
+        "agencyId": 18,
+        "agencyName": "קווים",
+        "routeName": "31",
+        "routeLongName": "מלבר/סמטת מאלה<->לוזית מרכז",
+        "oppositeDirectionId": 18367,
+        "cityName": "לוזית"
+      },
+      {
+        "routeId": 29462,
+        "agencyId": 15,
+        "agencyName": "מטרופולין",
+        "routeName": "31",
+        "routeLongName": "לב הפארק/וייצמן<->הרצליה קניון ארנה",
+        "oppositeDirectionId": 29463,
+        "cityName": "הרצליה"
+      },
+      {
+        "routeId": 3726,
+        "agencyId": 3,
+        "agencyName": "אגד",
+        "routeName": "31",
+        "routeLongName": "טכניון/מעונות העמים<->רכבת בת גלים",
+        "oppositeDirectionId": 3729,
+        "cityName": "חיפה"
+      },
+      {
+        "routeId": 3729,
+        "agencyId": 3,
+        "agencyName": "אגד",
+        "routeName": "31",
+        "routeLongName": "ת. רכבת בת גלים<->טכניון",
+        "oppositeDirectionId": 3726,
+        "cityName": "חיפה"
+      }
+    ]
+  },
+  "31 ירושלים": {
+    "status": 200,
+    "success": true,
+    "count": 100,
+    "sample": [
+      {
+        "routeId": 33287,
+        "agencyId": 16,
+        "agencyName": "סופרבוס",
+        "routeName": "31",
+        "routeLongName": "מסוף גילה/המרגלית<->רמות",
+        "oppositeDirectionId": null,
+        "cityName": "ירושלים"
+      },
+      {
+        "routeId": 33286,
+        "agencyId": 16,
+        "agencyName": "סופרבוס",
+        "routeName": "31",
+        "routeLongName": "מסוף גילה/המרגלית<->רמות",
+        "oppositeDirectionId": 33285,
+        "cityName": "ירושלים"
+      },
+      {
+        "routeId": 33285,
+        "agencyId": 16,
+        "agencyName": "סופרבוס",
+        "routeName": "31",
+        "routeLongName": "מירסקי/מינץ<->גילה",
+        "oppositeDirectionId": 33286,
+        "cityName": "ירושלים"
+      },
+      {
+        "routeId": 18707,
+        "agencyId": 18,
+        "agencyName": "קווים",
+        "routeName": "31",
+        "routeLongName": "מלבר/סמטת מאלה<->לוזית מרכז",
+        "oppositeDirectionId": 18367,
+        "cityName": "לוזית"
+      },
+      {
+        "routeId": 29462,
+        "agencyId": 15,
+        "agencyName": "מטרופולין",
+        "routeName": "31",
+        "routeLongName": "לב הפארק/וייצמן<->הרצליה קניון ארנה",
+        "oppositeDirectionId": 29463,
+        "cityName": "הרצליה"
+      }
+    ]
+  },
+  "קו 3": {
+    "status": 200,
+    "success": true,
+    "count": 88,
+    "sample": [
+      {
+        "routeId": 16705,
+        "agencyId": 31,
+        "agencyName": "דן בדרום",
+        "routeName": "3",
+        "routeLongName": "ת. רכבת אופקים רציפים/עירוני<->אפיקים בנגב",
+        "oppositeDirectionId": 16707,
+        "cityName": "אופקים"
+      },
+      {
+        "routeId": 41222,
+        "agencyId": 3,
+        "agencyName": "אגד",
+        "routeName": "3",
+        "routeLongName": "ת.כבאות/ששת הימים<->מבואות אילת",
+        "oppositeDirectionId": 41223,
+        "cityName": "אילת"
+      },
+      {
+        "routeId": 41223,
+        "agencyId": 3,
+        "agencyName": "אגד",
+        "routeName": "3",
+        "routeLongName": "חניון אגד<->שחמון",
+        "oppositeDirectionId": 41222,
+        "cityName": "אילת"
+      },
+      {
+        "routeId": 33274,
+        "agencyId": 15,
+        "agencyName": "מטרופולין",
+        "routeName": "3",
+        "routeLongName": "המוביל/טארק עבד אל חי<->רכבת טירה כוכב יאיר",
+        "oppositeDirectionId": 33273,
+        "cityName": "טירה"
+      },
+      {
+        "routeId": 7,
+        "agencyId": 25,
+        "agencyName": "אלקטרה אפיקים",
+        "routeName": "3",
+        "routeLongName": "ת. רכבת יבנה מערב<->רכבת יבנה מזרח",
+        "oppositeDirectionId": 8,
+        "cityName": "יבנה"
+      }
+    ]
+  }
+}

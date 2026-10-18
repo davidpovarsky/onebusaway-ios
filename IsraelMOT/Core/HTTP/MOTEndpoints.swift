@@ -114,6 +114,31 @@ nonisolated public struct MOTEndpoints: Sendable {
         return schedulerBaseURL.appendingPathComponent("Routes/GetNextStopTimesAndLocation")
     }
 
+    // MARK: - Scheduler / Calendar Endpoints
+
+    public func routeDailyCalendarURL(startStopID: Int, endStopID: Int, routeID: MOTRouteID, day: String) -> URL {
+        var components = URLComponents(url: schedulerBaseURL.appendingPathComponent("Calendar/GetRouteDailyCalendar"), resolvingAgainstBaseURL: true)!
+        components.queryItems = [
+            URLQueryItem(name: "startStopId", value: String(startStopID)),
+            URLQueryItem(name: "endStopId", value: String(endStopID)),
+            URLQueryItem(name: "routeId", value: String(routeID.rawValue)),
+            URLQueryItem(name: "day", value: day)
+        ]
+        return components.url!
+    }
+
+    public func tripCalendarURL(routeID: MOTRouteID, stopID: Int, date: String, stopSequence: Int = 1) -> URL {
+        var components = URLComponents(url: schedulerBaseURL.appendingPathComponent("Calendar/GetTripCalendar"), resolvingAgainstBaseURL: true)!
+        components.queryItems = [
+            URLQueryItem(name: "routeId", value: String(routeID.rawValue)),
+            URLQueryItem(name: "stopId", value: String(stopID)),
+            URLQueryItem(name: "date", value: date),
+            URLQueryItem(name: "isDispatch", value: "false"),
+            URLQueryItem(name: "stopSequence", value: String(stopSequence))
+        ]
+        return components.url!
+    }
+
     // MARK: - Route Planning Endpoints
 
     public func getRoutesURL() -> URL {
