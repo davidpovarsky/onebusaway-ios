@@ -65,6 +65,7 @@ targets:
           AppGroup: group.org.onebusaway.iphone
           AppStoreID: "329380089"
           BundledRegionsFileName: regions.json
+          FixedRegionName: Israel
           Donations:
             Enabled: true
             DonationManagementPortal: "https://opentransitsoftwarefoundation.org/manage-donations"
