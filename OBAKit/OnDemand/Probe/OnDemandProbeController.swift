@@ -607,6 +607,9 @@ final class OnDemandProbeController: NSObject, ObservableObject {
 
     private static func isKnownUnsupported(_ apiService: RESTAPIService?) -> Bool {
         guard let apiService else { return false }
+        // The MOT deployment has no /api/ondemand OBA service at all.
+        // Prevent background point probes independently of map-layer flags.
+        if apiService.configuration.regionIdentifier == 972 { return true }
         return apiService.onDemandSupport.isKnownUnsupported(baseURL: apiService.baseURL)
     }
 }
