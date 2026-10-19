@@ -41,6 +41,11 @@ nonisolated public struct MOTStopInternalID: RawRepresentable, Hashable, Codable
         self.rawValue = value
     }
 
+    public init?(_ string: String) {
+        guard let value = Int(string.trimmingCharacters(in: .whitespacesAndNewlines)) else { return nil }
+        self.rawValue = value
+    }
+
     public var description: String {
         return String(rawValue)
     }
