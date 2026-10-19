@@ -15,7 +15,7 @@ import XCTest
 /// (`-OBACurrentRegionIdentifierUserDefaultsKey <integer>1</integer>` = Puget Sound,
 /// which is bundled in regions.json), so onboarding is skipped without any
 /// stored state on the simulator.
-final class MainFlowUITests: XCTestCase {
+nonisolated final class MainFlowUITests: XCTestCase {
 
     private var app: XCUIApplication!
 
