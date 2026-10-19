@@ -1494,14 +1494,8 @@ class MapViewController: UIViewController,
 #endif
     }
 
-    public func mapRegionManager(_ manager: MapRegionManager, viewportDidSettle rect: MKMapRect) {
 #if DEBUG
-        updateStressProbe()
-#endif
-    }
-
-#if DEBUG
-    private func updateStressProbe() {
+    func updateStressProbe() {
         guard IsraelMapStressProbe.isEnabled else { return }
         let mapView = mapRegionManager.mapView
         let region = mapView.region

@@ -189,5 +189,8 @@ extension MapViewController {
             center: manager.mapView.centerCoordinate,
             zoomLevel: OnDemandZoomLevel.level(forVisibleHeight: rect.height)
         )
+#if DEBUG
+        updateStressProbe()
+#endif
     }
 }
