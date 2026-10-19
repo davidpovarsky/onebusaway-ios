@@ -11,7 +11,6 @@ import UIKit
 import CoreLocation
 import MapKit
 import OBAKitCore
-import IsraelMOT
 
 /// Diagnostic probe for the automated Israel map zoom stress reproduction.
 /// Active ONLY in DEBUG builds when `ISRAEL_MAP_STRESS_TEST=1` is passed in the environment.
