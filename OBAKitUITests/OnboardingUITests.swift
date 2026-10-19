@@ -15,7 +15,7 @@ import XCTest
 /// `TEST_ONBOARDING=1` (a DEBUG-only environment variable the app already supports)
 /// forces the onboarding flow regardless of stored state and appends two debug pages
 /// after the region picker.
-nonisolated final class OnboardingUITests: XCTestCase {
+final class OnboardingUITests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false

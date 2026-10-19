@@ -11,7 +11,7 @@ targets:
     settings:
       base:
         TEST_TARGET_NAME: App
-        SWIFT_DEFAULT_ACTOR_ISOLATION: nonisolated
+        SWIFT_VERSION: "5.0"
     scheme:
       testTargets:
         - OBAKitUITests

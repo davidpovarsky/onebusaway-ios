@@ -9,7 +9,7 @@
 import XCTest
 import CoreLocation
 
-nonisolated final class IsraelMapZoomStressUITests: XCTestCase {
+final class IsraelMapZoomStressUITests: XCTestCase {
 
     private var app: XCUIApplication!
 
