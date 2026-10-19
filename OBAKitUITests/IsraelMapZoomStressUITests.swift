@@ -270,6 +270,21 @@ final class IsraelMapZoomStressUITests: XCTestCase {
         }
 
         app.launch()
+        dismissSystemAlertsIfPresent()
+    }
+
+    private func dismissSystemAlertsIfPresent() {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let alert = springboard.alerts.firstMatch
+        if alert.waitForExistence(timeout: 2.0) {
+            for label in ["Allow While Using App", "Allow Once", "Allow While Using the App", "Allow", "OK", "אישור", "אפשר בעת שימוש ביישום", "אפשר פעם אחת"] {
+                let button = alert.buttons[label]
+                if button.exists {
+                    button.tap()
+                    break
+                }
+            }
+        }
     }
 
     private func locateAndVerifyMap(useMapPanel: Bool = false) throws -> XCUIElement {
@@ -277,10 +292,7 @@ final class IsraelMapZoomStressUITests: XCTestCase {
             app.activate()
         }
 
-        let window = app.windows.firstMatch
-        if window.waitForExistence(timeout: 5) {
-            window.tap()
-        }
+        dismissSystemAlertsIfPresent()
 
         let map = app.maps.firstMatch
         if map.waitForExistence(timeout: 20) {

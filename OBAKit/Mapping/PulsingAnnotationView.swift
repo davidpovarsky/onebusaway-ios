@@ -191,7 +191,15 @@ class PulsingAnnotationView: MKAnnotationView {
     private static func buildPulseAnimationGroup(outerPulseAnimationDuration: TimeInterval, delayBetweenPulseCycles: TimeInterval) -> CAAnimationGroup {
         let pulseAnimationGroup = CAAnimationGroup()
         pulseAnimationGroup.duration = outerPulseAnimationDuration + delayBetweenPulseCycles
+#if DEBUG
+        if ProcessInfo.processInfo.environment["ISRAEL_MAP_STRESS_TEST"] == "1" {
+            pulseAnimationGroup.repeatCount = 1
+        } else {
+            pulseAnimationGroup.repeatCount = .infinity
+        }
+#else
         pulseAnimationGroup.repeatCount = .infinity
+#endif
         pulseAnimationGroup.isRemovedOnCompletion = false
         pulseAnimationGroup.timingFunction = CAMediaTimingFunction(name: .default)
 
@@ -245,7 +253,15 @@ class PulsingAnnotationView: MKAnnotationView {
             let defaultCurve = CAMediaTimingFunction(name: CAMediaTimingFunctionName.default)
             let animationGroup = CAAnimationGroup()
             animationGroup.duration = pulseAnimationDuration
+#if DEBUG
+            if ProcessInfo.processInfo.environment["ISRAEL_MAP_STRESS_TEST"] == "1" {
+                animationGroup.repeatCount = 1
+            } else {
+                animationGroup.repeatCount = .infinity
+            }
+#else
             animationGroup.repeatCount = .infinity
+#endif
             animationGroup.isRemovedOnCompletion = false
             animationGroup.autoreverses = true
             animationGroup.timingFunction = defaultCurve
