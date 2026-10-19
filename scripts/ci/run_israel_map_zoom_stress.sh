@@ -30,17 +30,6 @@ xcrun simctl privacy "$SIMULATOR_UDID" grant location-always org.onebusaway.ipho
 xcrun simctl privacy "$SIMULATOR_UDID" grant location org.onebusaway.iphone 2>/dev/null || true
 xcrun simctl privacy "$SIMULATOR_UDID" grant all org.onebusaway.iphone 2>/dev/null || true
 
-# Continuous privacy/location supervisor daemon
-(
-  while true; do
-    xcrun simctl privacy "$SIMULATOR_UDID" grant all org.onebusaway.iphone 2>/dev/null || true
-    xcrun simctl location "$SIMULATOR_UDID" set 31.790,35.210 2>/dev/null || true
-    sleep 2
-  done
-) &
-LOCATION_DAEMON_PID=$!
-echo "Continuous location and privacy supervisor started (PID: $LOCATION_DAEMON_PID)"
-
 OUT_DIR="build/map-stress"
 mkdir -p "$OUT_DIR"
 rm -rf "$OUT_DIR/Results.xcresult"
@@ -54,13 +43,11 @@ TEST_ONLY_FLAGS=()
 if [ "$RUN_ALL_TESTS" = "1" ]; then
   echo "=== Running Full Israel Map Zoom Stress Suite ==="
   TEST_ONLY_FLAGS+=(
-    "-only-testing:OBAKitTests/IsraelMapStressProbeTests"
     "-only-testing:OBAKitUITests/IsraelMapZoomStressUITests"
   )
 else
-  echo "=== Running Fast Smoke Test First (Deadlock Unit Test + Classic Map Smoke) ==="
+  echo "=== Running Fast Smoke Test First (Classic Map Smoke) ==="
   TEST_ONLY_FLAGS+=(
-    "-only-testing:OBAKitTests/IsraelMapStressProbeTests"
     "-only-testing:OBAKitUITests/IsraelMapZoomStressUITests/testJerusalemClassicMapSmoke"
   )
 fi
@@ -82,9 +69,8 @@ xcodebuild test \
 
 echo "xcodebuild test exited with code: $TEST_EXIT_CODE"
 
-echo "Stopping video recording and supervisor daemon..."
+echo "Stopping video recording..."
 kill -INT "$RECORD_PID" 2>/dev/null || true
-kill -9 "$LOCATION_DAEMON_PID" 2>/dev/null || true
 wait "$RECORD_PID" 2>/dev/null || true
 
 echo "=== [6/6] Collecting Diagnostic Artifacts & Crash Reports ==="

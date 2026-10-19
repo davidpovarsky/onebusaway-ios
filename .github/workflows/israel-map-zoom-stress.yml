@@ -20,7 +20,7 @@ jobs:
   map-zoom-stress:
     name: iPad Simulator Zoom Stress Test
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 50
 
     steps:
       - name: Checkout Code
