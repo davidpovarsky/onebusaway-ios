@@ -17,6 +17,13 @@ echo "=== [3/6] Booting iPad Simulator ==="
 xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
 xcrun simctl bootstatus "$SIMULATOR_UDID" -b
 
+echo "=== [3.5/6] Disabling Stage Manager on iPad Simulator ==="
+xcrun simctl spawn "$SIMULATOR_UDID" defaults write com.apple.springboard SBStageManagerEnabled -bool false
+xcrun simctl spawn "$SIMULATOR_UDID" defaults write com.apple.springboard SBChamoisWindowingEnabled -bool false
+xcrun simctl spawn "$SIMULATOR_UDID" defaults write com.apple.springboard SBShowStageManagerInControlCenter -bool false
+xcrun simctl spawn "$SIMULATOR_UDID" killall -9 SpringBoard 2>/dev/null || true
+xcrun simctl bootstatus "$SIMULATOR_UDID" -b
+
 echo "=== [4/6] Setting Simulator Location to Jerusalem (31.790, 35.210) & Granting Privacy ==="
 xcrun simctl location "$SIMULATOR_UDID" set 31.790,35.210
 xcrun simctl privacy "$SIMULATOR_UDID" grant all org.onebusaway.iphone 2>/dev/null || true
@@ -67,7 +74,7 @@ fi
 echo "Extracting app unified log..."
 xcrun simctl spawn "$SIMULATOR_UDID" log show \
   --predicate 'process == "App" OR process == "OneBusAway" OR subsystem CONTAINS "onebusaway" OR message CONTAINS "STRESS"' \
-  --last 20m > "$OUT_DIR/app_unified.log" 2>&1 || true
+  --last 60m > "$OUT_DIR/app_unified.log" 2>&1 || true
 
 echo "Diagnostics collected in $OUT_DIR"
 exit "$TEST_EXIT_CODE"

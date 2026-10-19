@@ -273,29 +273,35 @@ final class IsraelMapZoomStressUITests: XCTestCase {
     }
 
     private func locateAndVerifyMap(useMapPanel: Bool = false) throws -> XCUIElement {
-        // If in classic UIKit mode, check tab bar (SwiftUI MapPanelRootView has no tab bar)
-        if !useMapPanel {
-            let tabBar = app.tabBars.firstMatch
-            if tabBar.waitForExistence(timeout: 25) {
-                for label in ["Map", "מפה"] {
-                    let tab = tabBar.buttons[label]
-                    if tab.exists {
-                        tab.tap()
-                        break
-                    }
-                }
-            }
+        if app.state != .runningForeground {
+            app.activate()
         }
 
-        // Locate map element
+        // The map is the initial screen on launch (Page 0 in ClassicApplicationRootController / MapPanelRootView).
         let mapById = app.descendants(matching: .any)["oba.map.view"]
         if mapById.waitForExistence(timeout: 25) {
             return mapById
         }
 
         let map = app.maps.firstMatch
-        XCTAssertTrue(map.waitForExistence(timeout: 25), "Map element must exist on launch")
-        return map
+        if map.waitForExistence(timeout: 25) {
+            return map
+        }
+
+        // Fallback: If map not immediately found, try tapping the Map tab if present
+        let tabBar = app.tabBars.firstMatch
+        if tabBar.exists {
+            for label in ["Map", "מפה"] {
+                let tab = tabBar.buttons[label]
+                if tab.exists {
+                    tab.tap()
+                    break
+                }
+            }
+        }
+
+        XCTAssertTrue(mapById.waitForExistence(timeout: 10) || map.waitForExistence(timeout: 10), "Map element must exist on launch")
+        return mapById.exists ? mapById : map
     }
 
     private func verifyRealIsraelStopsLoaded(expectedCityLat: Double, minStops: Int) throws {

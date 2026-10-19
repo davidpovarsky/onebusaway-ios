@@ -74,6 +74,12 @@ static BOOL OBAHasAPNsEntitlement(void) {
             OBAAnalyticsKeys.reportingEnabledUserDefaultsKey: @(YES)
         }];
 
+#if DEBUG
+        if ([NSProcessInfo.processInfo.environment[@"ISRAEL_MAP_STRESS_TEST"] isEqualToString:@"1"]) {
+            [_userDefaults setBool:NO forKey:OBAAnalyticsKeys.reportingEnabledUserDefaultsKey];
+        }
+#endif
+
 //        // If you need to debug a user's NSUserDefaults data, drop the XML file they provide into Xcode's Project Navigator
 //        // with the name "userdefaults.xml". Then, uncomment this section.
 //        NSData *data = [NSData dataWithContentsOfFile:[NSBundle.mainBundle pathForResource:@"userdefaults" ofType:@"xml"]];
