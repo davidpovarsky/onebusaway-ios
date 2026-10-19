@@ -59,7 +59,7 @@ final class IsraelMapZoomStressUITests: XCTestCase {
         let location = CLLocation(latitude: 31.790, longitude: 35.210)
         launchApp(useMapPanel: false, location: location)
 
-        let map = try locateAndVerifyMap()
+        let map = try locateAndVerifyMap(useMapPanel: false)
         try verifyRealIsraelStopsLoaded(expectedCityLat: 31.790, minStops: 10)
 
         for cycle in 1...12 {
@@ -108,7 +108,7 @@ final class IsraelMapZoomStressUITests: XCTestCase {
     ) throws {
         launchApp(useMapPanel: useMapPanel, location: location)
 
-        let map = try locateAndVerifyMap()
+        let map = try locateAndVerifyMap(useMapPanel: useMapPanel)
 
         // 1. Mandatory verification: real stops must be loaded and rendered
         try verifyRealIsraelStopsLoaded(expectedCityLat: location.coordinate.latitude, minStops: 10)
@@ -252,7 +252,8 @@ final class IsraelMapZoomStressUITests: XCTestCase {
             "-AppleLocale", "he_IL",
             "-OBACurrentRegionIdentifierUserDefaultsKey", "<integer>972</integer>",
             "-OBAAutomaticallySelectRegionUserDefaultsKey", "<false/>",
-            "-OBAUseMapPanelExperience", useMapPanel ? "<true/>" : "<false/>"
+            "-OBAUseMapPanelExperience", useMapPanel ? "<true/>" : "<false/>",
+            "-OBAOnboardingSeenStepVersions", "<dict><key>migration</key><integer>1</integer><key>welcome</key><integer>1</integer><key>location</key><integer>1</integer><key>region</key><integer>1</integer><key>notifications</key><integer>1</integer><key>done</key><integer>1</integer></dict>"
         ]
         app.launchEnvironment["TEST_SUPPRESS_ALERT_BULLETINS"] = "1"
         app.launchEnvironment["ISRAEL_MAP_STRESS_TEST"] = "1"
@@ -271,27 +272,29 @@ final class IsraelMapZoomStressUITests: XCTestCase {
         app.launch()
     }
 
-    private func locateAndVerifyMap() throws -> XCUIElement {
-        // If tab bar exists, tap the Map tab if not already selected
-        let tabBar = app.tabBars.firstMatch
-        if tabBar.waitForExistence(timeout: 8) {
-            for label in ["Map", "מפה"] {
-                let tab = tabBar.buttons[label]
-                if tab.exists {
-                    tab.tap()
-                    break
+    private func locateAndVerifyMap(useMapPanel: Bool = false) throws -> XCUIElement {
+        // If in classic UIKit mode, check tab bar (SwiftUI MapPanelRootView has no tab bar)
+        if !useMapPanel {
+            let tabBar = app.tabBars.firstMatch
+            if tabBar.waitForExistence(timeout: 25) {
+                for label in ["Map", "מפה"] {
+                    let tab = tabBar.buttons[label]
+                    if tab.exists {
+                        tab.tap()
+                        break
+                    }
                 }
             }
         }
 
         // Locate map element
         let mapById = app.descendants(matching: .any)["oba.map.view"]
-        if mapById.waitForExistence(timeout: 10) {
+        if mapById.waitForExistence(timeout: 25) {
             return mapById
         }
 
         let map = app.maps.firstMatch
-        XCTAssertTrue(map.waitForExistence(timeout: 15), "Map element must exist on launch")
+        XCTAssertTrue(map.waitForExistence(timeout: 25), "Map element must exist on launch")
         return map
     }
 

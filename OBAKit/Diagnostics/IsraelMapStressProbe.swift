@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 import CoreLocation
 import MapKit
+import OSLog
 import OBAKitCore
 
 /// Diagnostic probe for the automated Israel map zoom stress reproduction.
@@ -17,6 +18,7 @@ import OBAKitCore
 public final class IsraelMapStressProbe: @unchecked Sendable {
     public static let shared = IsraelMapStressProbe()
     public static let statusAccessibilityIdentifier = "israel.map.stress.status"
+    private static let osLogger = os.Logger(subsystem: "org.onebusaway.iphone", category: "IsraelMapStress")
 
     public static var isEnabled: Bool {
         ProcessInfo.processInfo.environment["ISRAEL_MAP_STRESS_TEST"] == "1"
@@ -112,6 +114,8 @@ public final class IsraelMapStressProbe: @unchecked Sendable {
         lock.unlock()
 
         print("ISRAEL_MAP_STRESS: \(statusString)")
+        NSLog("ISRAEL_MAP_STRESS: %@", statusString)
+        Self.osLogger.notice("ISRAEL_MAP_STRESS: \(statusString, privacy: .public)")
     }
 }
 #endif

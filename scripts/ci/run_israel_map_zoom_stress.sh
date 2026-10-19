@@ -55,6 +55,7 @@ echo "=== [6/6] Collecting Diagnostic Artifacts & Crash Reports ==="
 CRASH_DIR="$OUT_DIR/crashes"
 mkdir -p "$CRASH_DIR"
 find ~/Library/Logs/DiagnosticReports -type f \( -name "*OneBusAway*" -o -name "*App*" -o -name "*xctest*" \) -exec cp {} "$CRASH_DIR/" \; 2>/dev/null || true
+find ~/Library/Developer/CoreSimulator/Devices/"$SIMULATOR_UDID"/data/Library/Logs/DiagnosticReports -type f -exec cp {} "$CRASH_DIR/" \; 2>/dev/null || true
 
 CRASH_COUNT=$(find "$CRASH_DIR" -type f | wc -l | tr -d ' ')
 echo "Collected $CRASH_COUNT crash reports in $CRASH_DIR"
@@ -65,8 +66,8 @@ fi
 
 echo "Extracting app unified log..."
 xcrun simctl spawn "$SIMULATOR_UDID" log show \
-  --predicate 'process == "OneBusAway" OR subsystem CONTAINS "onebusaway" OR message CONTAINS "ISRAEL_MAP_STRESS"' \
-  --last 15m > "$OUT_DIR/app_unified.log" 2>&1 || true
+  --predicate 'process == "App" OR process == "OneBusAway" OR subsystem CONTAINS "onebusaway" OR message CONTAINS "STRESS"' \
+  --last 20m > "$OUT_DIR/app_unified.log" 2>&1 || true
 
 echo "Diagnostics collected in $OUT_DIR"
 exit "$TEST_EXIT_CODE"
