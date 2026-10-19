@@ -109,17 +109,17 @@ final class IsraelMapZoomStressUITests: XCTestCase {
                 let beforeHeight = Double(beforeStatus["visibleMapRectHeight"] ?? "0") ?? 0
 
                 // Burst 1: 3 rapid zoom outs
-                map.pinch(withScale: 0.65, velocity: 2.0)
-                map.pinch(withScale: 0.65, velocity: 2.0)
-                map.pinch(withScale: 0.65, velocity: 2.0)
+                performMeasuredPinch(map: map, scale: 0.65, velocity: 2.0, activityName: "RapidCancel_Cycle\(cycle)_Out1")
+                performMeasuredPinch(map: map, scale: 0.65, velocity: 2.0, activityName: "RapidCancel_Cycle\(cycle)_Out2")
+                performMeasuredPinch(map: map, scale: 0.65, velocity: 2.0, activityName: "RapidCancel_Cycle\(cycle)_Out3")
 
                 // Burst 2: 2 rapid zoom ins immediately
-                map.pinch(withScale: 1.5, velocity: 2.0)
-                map.pinch(withScale: 1.5, velocity: 2.0)
+                performMeasuredPinch(map: map, scale: 1.5, velocity: 2.0, activityName: "RapidCancel_Cycle\(cycle)_In1")
+                performMeasuredPinch(map: map, scale: 1.5, velocity: 2.0, activityName: "RapidCancel_Cycle\(cycle)_In2")
 
                 // Burst 3: Rapid switch
-                map.pinch(withScale: 0.55, velocity: 2.0)
-                map.pinch(withScale: 1.8, velocity: 2.0)
+                performMeasuredPinch(map: map, scale: 0.55, velocity: 2.0, activityName: "RapidCancel_Cycle\(cycle)_Out4")
+                performMeasuredPinch(map: map, scale: 1.8, velocity: 2.0, activityName: "RapidCancel_Cycle\(cycle)_In3")
 
                 Thread.sleep(forTimeInterval: 0.4)
 
@@ -276,7 +276,19 @@ final class IsraelMapZoomStressUITests: XCTestCase {
         let beforeHeight = Double(before["visibleMapRectHeight"] ?? "0") ?? 0
         let beforeLatSpan = Double(before["latitudeSpan"] ?? "0") ?? 0
 
-        map.pinch(withScale: scale, velocity: velocity)
+        // Apple XCTest API contract requirement:
+        // velocity must be less than zero when scale is less than 1 (zoom out / pinch closed)
+        // velocity must be greater than zero when scale is greater than 1 (zoom in / pinch open)
+        let normalizedVelocity: CGFloat
+        if scale < 1.0 {
+            normalizedVelocity = -abs(velocity == 0 ? 1.0 : velocity)
+        } else if scale > 1.0 {
+            normalizedVelocity = abs(velocity == 0 ? 1.0 : velocity)
+        } else {
+            normalizedVelocity = velocity
+        }
+
+        map.pinch(withScale: scale, velocity: normalizedVelocity)
         Thread.sleep(forTimeInterval: 0.7)
 
         let after = readCurrentStatus(map: map)
@@ -287,7 +299,7 @@ final class IsraelMapZoomStressUITests: XCTestCase {
         let spanDelta = abs(afterLatSpan - beforeLatSpan)
         let didChange = heightDelta > 5.0 || spanDelta > 0.0005
 
-        print("ISRAEL_MAP_GESTURE [\(activityName)] scale=\(scale) vel=\(velocity) didChange=\(didChange) " +
+        print("ISRAEL_MAP_GESTURE [\(activityName)] scale=\(scale) vel=\(normalizedVelocity) didChange=\(didChange) " +
               "beforeHeight=\(beforeHeight) afterHeight=\(afterHeight) deltaH=\(heightDelta) " +
               "beforeSpan=\(beforeLatSpan) afterSpan=\(afterLatSpan) deltaSpan=\(spanDelta) " +
               "loadedStops=\(after["loadedStopsCount"] ?? "?") renderedStops=\(after["renderedStopsCount"] ?? "?") mem=\(after["memoryFootprintMB"] ?? "?")MB")
