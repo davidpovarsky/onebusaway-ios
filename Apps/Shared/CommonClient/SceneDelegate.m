@@ -33,6 +33,13 @@
 
     UIWindowScene *windowScene = (UIWindowScene *)scene;
     self.window = [[UIWindow alloc] initWithWindowScene:windowScene];
+#if DEBUG
+    CGRect bounds = windowScene.coordinateSpace.bounds;
+    if (CGRectIsEmpty(bounds)) {
+        bounds = UIScreen.mainScreen.bounds;
+    }
+    self.window.frame = bounds;
+#endif
     [self.window makeKeyAndVisible];
 
     AppDelegate *appDelegate = (AppDelegate *)UIApplication.sharedApplication.delegate;

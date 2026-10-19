@@ -44,11 +44,14 @@ for runtime in sorted(devices.keys(), key=ios_version, reverse=True):
 
     def priority(d):
         name = d.get("name", "")
-        if "iPad Pro" in name:
+        # Prefer standard full-screen iPad devices (iPad 10th/9th gen) to avoid Stage Manager windowing stalls
+        if "iPad (" in name:
             return 0
         if "iPad Air" in name:
             return 1
-        return 2
+        if "iPad Pro" in name:
+            return 2
+        return 3
 
     ipads.sort(key=priority)
     selected_device = ipads[0]

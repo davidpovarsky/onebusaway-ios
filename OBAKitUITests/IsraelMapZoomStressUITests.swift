@@ -277,15 +277,19 @@ final class IsraelMapZoomStressUITests: XCTestCase {
             app.activate()
         }
 
-        // The map is the initial screen on launch (Page 0 in ClassicApplicationRootController / MapPanelRootView).
-        let mapById = app.descendants(matching: .any)["oba.map.view"]
-        if mapById.waitForExistence(timeout: 25) {
-            return mapById
+        let window = app.windows.firstMatch
+        if window.waitForExistence(timeout: 5) {
+            window.tap()
         }
 
         let map = app.maps.firstMatch
-        if map.waitForExistence(timeout: 25) {
+        if map.waitForExistence(timeout: 20) {
             return map
+        }
+
+        let mapById = app.descendants(matching: .any)["oba.map.view"]
+        if mapById.waitForExistence(timeout: 10) {
+            return mapById
         }
 
         // Fallback: If map not immediately found, try tapping the Map tab if present
@@ -300,19 +304,19 @@ final class IsraelMapZoomStressUITests: XCTestCase {
             }
         }
 
-        XCTAssertTrue(mapById.waitForExistence(timeout: 10) || map.waitForExistence(timeout: 10), "Map element must exist on launch")
-        return mapById.exists ? mapById : map
+        XCTAssertTrue(map.waitForExistence(timeout: 10) || mapById.waitForExistence(timeout: 10), "Map element must exist on launch")
+        return map.exists ? map : mapById
     }
 
     private func verifyRealIsraelStopsLoaded(expectedCityLat: Double, minStops: Int) throws {
+        let map = app.maps.firstMatch.exists ? app.maps.firstMatch : app.descendants(matching: .any)["oba.map.view"]
         let probe = app.descendants(matching: .any)["israel.map.stress.status"]
-        let map = app.descendants(matching: .any)["oba.map.view"]
 
         let deadline = Date().addingTimeInterval(35.0)
         var lastStatus: [String: String] = [:]
 
         while Date() < deadline {
-            let rawStatus = (probe.exists ? probe.value as? String : nil) ?? (map.exists ? map.value as? String : nil)
+            let rawStatus = (map.exists ? map.value as? String : nil) ?? (probe.exists ? probe.value as? String : nil)
             if let valueStr = rawStatus, !valueStr.isEmpty {
                 lastStatus = parseStatus(valueStr)
                 let loaded = Int(lastStatus["loadedStopsCount"] ?? "0") ?? 0
@@ -341,8 +345,7 @@ final class IsraelMapZoomStressUITests: XCTestCase {
     }
 
     private func readCurrentStatus(map: XCUIElement) -> [String: String] {
-        let probe = app.descendants(matching: .any)["israel.map.stress.status"]
-        let raw = (probe.exists ? probe.value as? String : nil) ?? (map.value as? String) ?? ""
+        let raw = (map.value as? String) ?? (app.descendants(matching: .any)["israel.map.stress.status"].exists ? app.descendants(matching: .any)["israel.map.stress.status"].value as? String : nil) ?? ""
         return parseStatus(raw)
     }
 

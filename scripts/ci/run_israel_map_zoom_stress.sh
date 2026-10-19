@@ -18,9 +18,9 @@ xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
 xcrun simctl bootstatus "$SIMULATOR_UDID" -b
 
 echo "=== [3.5/6] Disabling Stage Manager on iPad Simulator ==="
-xcrun simctl spawn "$SIMULATOR_UDID" defaults write com.apple.springboard SBStageManagerEnabled -bool false
-xcrun simctl spawn "$SIMULATOR_UDID" defaults write com.apple.springboard SBChamoisWindowingEnabled -bool false
-xcrun simctl spawn "$SIMULATOR_UDID" defaults write com.apple.springboard SBShowStageManagerInControlCenter -bool false
+xcrun simctl spawn "$SIMULATOR_UDID" defaults write com.apple.SpringBoard SBStageManagerEnabled -bool false
+xcrun simctl spawn "$SIMULATOR_UDID" defaults write com.apple.SpringBoard SBChamoisWindowingEnabled -bool false
+xcrun simctl spawn "$SIMULATOR_UDID" defaults write com.apple.SpringBoard SBShowStageManagerInControlCenter -bool false
 xcrun simctl spawn "$SIMULATOR_UDID" killall -9 SpringBoard 2>/dev/null || true
 xcrun simctl bootstatus "$SIMULATOR_UDID" -b
 
