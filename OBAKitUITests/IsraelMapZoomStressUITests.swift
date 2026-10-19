@@ -246,11 +246,17 @@ final class IsraelMapZoomStressUITests: XCTestCase {
             for cycle in 1...6 {
                 XCTAssertEqual(app.state, .runningForeground, "App crashed in Scenario D cycle \(cycle)")
 
-                performMeasuredPinch(map: map, scale: 0.50, velocity: 2.0, activityName: "\(testName)_D_Cycle\(cycle)_PinchOut")
-                performMeasuredPan(map: map, from: CGVector(dx: 0.50, dy: 0.40), to: CGVector(dx: 0.80, dy: 0.40), activityName: "\(testName)_D_Cycle\(cycle)_DragRight")
+                let isOdd = (cycle % 2 == 1)
+                let dragOutTarget = isOdd ? CGVector(dx: 0.80, dy: 0.40) : CGVector(dx: 0.20, dy: 0.40)
+                let dragInTarget = isOdd ? CGVector(dx: 0.20, dy: 0.40) : CGVector(dx: 0.80, dy: 0.40)
+                let dragOutName = isOdd ? "DragRight" : "DragLeft"
+                let dragInName = isOdd ? "DragLeft" : "DragRight"
 
-                performMeasuredPinch(map: map, scale: 1.80, velocity: 2.0, activityName: "\(testName)_D_Cycle\(cycle)_PinchIn")
-                performMeasuredPan(map: map, from: CGVector(dx: 0.50, dy: 0.40), to: CGVector(dx: 0.20, dy: 0.40), activityName: "\(testName)_D_Cycle\(cycle)_DragLeft")
+                performMeasuredPinch(map: map, scale: 0.50, velocity: 2.0, activityName: "\(testName)_D_Cycle\(cycle)_PinchOut")
+                performMeasuredPan(map: map, from: CGVector(dx: 0.50, dy: 0.40), to: dragOutTarget, activityName: "\(testName)_D_Cycle\(cycle)_\(dragOutName)")
+
+                performMeasuredPinch(map: map, scale: 2.00, velocity: 2.0, activityName: "\(testName)_D_Cycle\(cycle)_PinchIn")
+                performMeasuredPan(map: map, from: CGVector(dx: 0.50, dy: 0.40), to: dragInTarget, activityName: "\(testName)_D_Cycle\(cycle)_\(dragInName)")
 
                 let status = readCurrentStatus(map: map)
                 print("ISRAEL_MAP_STRESS [\(testName) Continuous Cycle \(cycle)] mem=\(status["memoryFootprintMB"] ?? "?")MB loaded=\(status["loadedStopsCount"] ?? "?") rendered=\(status["renderedStopsCount"] ?? "?")")
@@ -289,7 +295,7 @@ final class IsraelMapZoomStressUITests: XCTestCase {
         }
 
         map.pinch(withScale: scale, velocity: normalizedVelocity)
-        Thread.sleep(forTimeInterval: 0.7)
+        Thread.sleep(forTimeInterval: 0.35)
 
         let after = readCurrentStatus(map: map)
         let afterHeight = Double(after["visibleMapRectHeight"] ?? "0") ?? 0
@@ -321,7 +327,7 @@ final class IsraelMapZoomStressUITests: XCTestCase {
         let startCoord = map.coordinate(withNormalizedOffset: from)
         let endCoord = map.coordinate(withNormalizedOffset: to)
         startCoord.press(forDuration: 0.05, thenDragTo: endCoord)
-        Thread.sleep(forTimeInterval: 0.6)
+        Thread.sleep(forTimeInterval: 0.35)
 
         let after = readCurrentStatus(map: map)
         let afterLat = Double(after["centerLatitude"] ?? "0") ?? 0

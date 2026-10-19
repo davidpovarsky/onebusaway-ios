@@ -67,11 +67,12 @@ if [ "$RUN_ALL_TESTS" = "1" ]; then
     "-only-testing:OBAKitUITests/IsraelMapZoomStressUITests"
   )
 else
-  echo "=== Running Smoke Test + Jerusalem Classic (UIKit) & SwiftUI Zoom/Pan Stress ==="
+  echo "=== Running Smoke Test + Jerusalem Classic (UIKit), SwiftUI & Tel Aviv (Dense City) Zoom/Pan Stress ==="
   TEST_ONLY_FLAGS+=(
     "-only-testing:OBAKitUITests/IsraelMapZoomStressUITests/testJerusalemClassicMapSmoke"
     "-only-testing:OBAKitUITests/IsraelMapZoomStressUITests/testJerusalemClassicMapZoomPanStress"
     "-only-testing:OBAKitUITests/IsraelMapZoomStressUITests/testJerusalemSwiftUIMapZoomPanStress"
+    "-only-testing:OBAKitUITests/IsraelMapZoomStressUITests/testDenseCityMapStress"
   )
 fi
 
@@ -95,6 +96,11 @@ echo "xcodebuild test exited with code: $TEST_EXIT_CODE"
 echo "Stopping video recording..."
 kill -INT "$RECORD_PID" 2>/dev/null || true
 wait "$RECORD_PID" 2>/dev/null || true
+
+if [ "$TEST_EXIT_CODE" -eq 0 ] && [ "$KEEP_VIDEO" != "1" ]; then
+  echo "Tests passed! Removing bulky video recording to optimize artifact upload..."
+  rm -f "$OUT_DIR/simulator_run.mp4"
+fi
 
 echo "=== [6/6] Collecting Diagnostic Artifacts & Crash Reports ==="
 CRASH_DIR="$OUT_DIR/crashes"
