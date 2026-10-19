@@ -17,8 +17,9 @@ echo "=== [3/6] Booting iPad Simulator ==="
 xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
 xcrun simctl bootstatus "$SIMULATOR_UDID" -b
 
-echo "=== [4/6] Setting Simulator Location to Jerusalem (31.790, 35.210) ==="
+echo "=== [4/6] Setting Simulator Location to Jerusalem (31.790, 35.210) & Granting Privacy ==="
 xcrun simctl location "$SIMULATOR_UDID" set 31.790,35.210
+xcrun simctl privacy "$SIMULATOR_UDID" grant all org.onebusaway.iphone 2>/dev/null || true
 
 OUT_DIR="build/map-stress"
 mkdir -p "$OUT_DIR"

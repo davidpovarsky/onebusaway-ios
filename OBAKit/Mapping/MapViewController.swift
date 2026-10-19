@@ -131,16 +131,16 @@ class MapViewController: UIViewController,
 
 #if DEBUG
         if IsraelMapStressProbe.isEnabled {
-            let probeView = UILabel()
+            let probeView = UILabel(frame: CGRect(x: 0, y: 0, width: 20, height: 20))
             probeView.accessibilityIdentifier = IsraelMapStressProbe.statusAccessibilityIdentifier
             probeView.isAccessibilityElement = true
             probeView.text = "israel.map.stress.status"
             probeView.accessibilityValue = IsraelMapStressProbe.shared.serializedStatus()
-            probeView.alpha = 0.01
+            probeView.alpha = 0.05
             probeView.isUserInteractionEnabled = false
             view.addSubview(probeView)
-            probeView.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
             self.stressProbeLabel = probeView
+            mapView.accessibilityValue = IsraelMapStressProbe.shared.serializedStatus()
         }
 #endif
 
@@ -1519,7 +1519,9 @@ class MapViewController: UIViewController,
             loadedStopsCount: loaded,
             renderedStopsCount: rendered
         )
-        stressProbeLabel?.accessibilityValue = IsraelMapStressProbe.shared.serializedStatus()
+        let statusStr = IsraelMapStressProbe.shared.serializedStatus()
+        stressProbeLabel?.accessibilityValue = statusStr
+        mapView.accessibilityValue = statusStr
     }
 #endif
 

@@ -281,6 +281,7 @@ struct MapPanelRootView: View {
             tripFocusMapContent(for: tripFocusDisplay.display)
         }
         .accessibilityIdentifier("oba.map.view")
+        .accessibilityValue(stressProbeStatus)
     }
 
     private var mapWithCameraAndInteraction: some View {
@@ -369,8 +370,9 @@ struct MapPanelRootView: View {
 #if DEBUG
             .overlay {
                 if IsraelMapStressProbe.isEnabled {
-                    Color.clear
-                        .frame(width: 1, height: 1)
+                    Color.primary.opacity(0.01)
+                        .frame(width: 20, height: 20)
+                        .accessibilityElement(children: .ignore)
                         .accessibilityIdentifier(IsraelMapStressProbe.statusAccessibilityIdentifier)
                         .accessibilityValue(stressProbeStatus)
                         .allowsHitTesting(false)
