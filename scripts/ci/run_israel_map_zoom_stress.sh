@@ -39,6 +39,21 @@ xcrun simctl io "$SIMULATOR_UDID" recordVideo --codec=h264 "$OUT_DIR/simulator_r
 RECORD_PID=$!
 echo "Video recording started (PID: $RECORD_PID)"
 
+TEST_ONLY_FLAGS=()
+if [ "$RUN_ALL_TESTS" = "1" ]; then
+  echo "=== Running Full Israel Map Zoom Stress Suite ==="
+  TEST_ONLY_FLAGS+=(
+    "-only-testing:OBAKitTests/IsraelMapStressProbeTests"
+    "-only-testing:OBAKitUITests/IsraelMapZoomStressUITests"
+  )
+else
+  echo "=== Running Fast Smoke Test First (Deadlock Unit Test + Classic Map Smoke) ==="
+  TEST_ONLY_FLAGS+=(
+    "-only-testing:OBAKitTests/IsraelMapStressProbeTests"
+    "-only-testing:OBAKitUITests/IsraelMapZoomStressUITests/testJerusalemClassicMapSmoke"
+  )
+fi
+
 TEST_EXIT_CODE=0
 xcodebuild test \
   -project OBAKit.xcodeproj \
@@ -48,7 +63,7 @@ xcodebuild test \
   -derivedDataPath DerivedData \
   -resultBundlePath "$OUT_DIR/Results.xcresult" \
   -parallel-testing-enabled NO \
-  -only-testing:OBAKitUITests/IsraelMapZoomStressUITests \
+  "${TEST_ONLY_FLAGS[@]}" \
   CODE_SIGNING_ALLOWED=NO \
   CODE_SIGNING_REQUIRED=NO \
   CODE_SIGN_IDENTITY="" \
@@ -65,6 +80,13 @@ CRASH_DIR="$OUT_DIR/crashes"
 mkdir -p "$CRASH_DIR"
 find ~/Library/Logs/DiagnosticReports -type f \( -name "*OneBusAway*" -o -name "*App*" -o -name "*xctest*" \) -exec cp {} "$CRASH_DIR/" \; 2>/dev/null || true
 find ~/Library/Developer/CoreSimulator/Devices/"$SIMULATOR_UDID"/data/Library/Logs/DiagnosticReports -type f -exec cp {} "$CRASH_DIR/" \; 2>/dev/null || true
+
+# Capture simulator screenshot and process stack sample if needed
+xcrun simctl io "$SIMULATOR_UDID" screenshot "$OUT_DIR/simulator_final_state.png" 2>/dev/null || true
+if [ "$TEST_EXIT_CODE" -ne 0 ]; then
+  echo "Attempting to sample App process stack..."
+  xcrun simctl spawn "$SIMULATOR_UDID" sample App 3 10 -file "$OUT_DIR/app_sample.txt" 2>/dev/null || true
+fi
 
 CRASH_COUNT=$(find "$CRASH_DIR" -type f | wc -l | tr -d ' ')
 echo "Collected $CRASH_COUNT crash reports in $CRASH_DIR"

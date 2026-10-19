@@ -5,6 +5,12 @@ on:
     branches:
       - 'test/israel-map-zoom-stress/**'
   workflow_dispatch:
+    inputs:
+      run_all:
+        description: 'Run full stress suite instead of smoke only'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -14,7 +20,7 @@ jobs:
   map-zoom-stress:
     name: iPad Simulator Zoom Stress Test
     runs-on: macos-15
-    timeout-minutes: 60
+    timeout-minutes: 30
 
     steps:
       - name: Checkout Code
@@ -39,6 +45,8 @@ jobs:
           chmod +x scripts/resolve_ipad_simulator_udid scripts/ci/run_israel_map_zoom_stress.sh scripts/generate_project
 
       - name: Run Israel Map Zoom Stress UI Tests on iPad Simulator
+        env:
+          RUN_ALL_TESTS: ${{ (github.event.inputs.run_all == true || github.event.inputs.run_all == 'true') && '1' || '0' }}
         run: |
           scripts/ci/run_israel_map_zoom_stress.sh
 
@@ -53,4 +61,6 @@ jobs:
             build/map-stress/xcodebuild.log
             build/map-stress/app_unified.log
             build/map-stress/crashes
+            build/map-stress/simulator_final_state.png
+            build/map-stress/app_sample.txt
           retention-days: 14

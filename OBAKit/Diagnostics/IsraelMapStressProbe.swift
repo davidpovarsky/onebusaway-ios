@@ -24,7 +24,7 @@ public final class IsraelMapStressProbe: @unchecked Sendable {
         ProcessInfo.processInfo.environment["ISRAEL_MAP_STRESS_TEST"] == "1"
     }
 
-    private let lock = NSLock()
+    private let lock = NSRecursiveLock()
     public private(set) var mapMode: String = "unknown"
     public private(set) var regionID: Int = 0
     public private(set) var providerID: String = "none"
@@ -38,6 +38,23 @@ public final class IsraelMapStressProbe: @unchecked Sendable {
     public private(set) var renderedStopsCount: Int = 0
     public private(set) var pendingRequests: Int = 0
     public private(set) var lastCameraSettledAt: TimeInterval = 0.0
+
+    public struct Snapshot: Sendable, Equatable {
+        public let mapMode: String
+        public let regionID: Int
+        public let providerID: String
+        public let centerLatitude: Double
+        public let centerLongitude: Double
+        public let latitudeSpan: Double
+        public let longitudeSpan: Double
+        public let visibleMapRectHeight: Double
+        public let catalogAvailable: Bool
+        public let loadedStopsCount: Int
+        public let renderedStopsCount: Int
+        public let pendingRequests: Int
+        public let lastCameraSettledAt: TimeInterval
+        public let memoryFootprintMB: Double
+    }
 
     /// Returns resident memory in megabytes for the current process.
     public var memoryFootprintMB: Double {
@@ -54,9 +71,7 @@ public final class IsraelMapStressProbe: @unchecked Sendable {
         return 0.0
     }
 
-    public func serializedStatus() -> String {
-        lock.lock()
-        defer { lock.unlock() }
+    private func unlockedSerializedStatus() -> String {
         let mem = String(format: "%.1f", memoryFootprintMB)
         let cLat = String(format: "%.6f", centerLatitude)
         let cLon = String(format: "%.6f", centerLongitude)
@@ -81,6 +96,33 @@ public final class IsraelMapStressProbe: @unchecked Sendable {
                "lastCameraSettledAt=\(settled)"
     }
 
+    public func snapshot() -> Snapshot {
+        lock.lock()
+        defer { lock.unlock() }
+        return Snapshot(
+            mapMode: mapMode,
+            regionID: regionID,
+            providerID: providerID,
+            centerLatitude: centerLatitude,
+            centerLongitude: centerLongitude,
+            latitudeSpan: latitudeSpan,
+            longitudeSpan: longitudeSpan,
+            visibleMapRectHeight: visibleMapRectHeight,
+            catalogAvailable: catalogAvailable,
+            loadedStopsCount: loadedStopsCount,
+            renderedStopsCount: renderedStopsCount,
+            pendingRequests: pendingRequests,
+            lastCameraSettledAt: lastCameraSettledAt,
+            memoryFootprintMB: memoryFootprintMB
+        )
+    }
+
+    public func serializedStatus() -> String {
+        lock.lock()
+        defer { lock.unlock() }
+        return unlockedSerializedStatus()
+    }
+
     public func update(
         mapMode: String? = nil,
         regionID: Int? = nil,
@@ -96,6 +138,7 @@ public final class IsraelMapStressProbe: @unchecked Sendable {
         pendingRequests: Int? = nil
     ) {
         guard Self.isEnabled else { return }
+        let statusString: String
         lock.lock()
         if let mapMode = mapMode { self.mapMode = mapMode }
         if let regionID = regionID { self.regionID = regionID }
@@ -110,7 +153,7 @@ public final class IsraelMapStressProbe: @unchecked Sendable {
         if let renderedStopsCount = renderedStopsCount { self.renderedStopsCount = renderedStopsCount }
         if let pendingRequests = pendingRequests { self.pendingRequests = pendingRequests }
         self.lastCameraSettledAt = Date().timeIntervalSince1970
-        let statusString = serializedStatus()
+        statusString = unlockedSerializedStatus()
         lock.unlock()
 
         print("ISRAEL_MAP_STRESS: \(statusString)")
