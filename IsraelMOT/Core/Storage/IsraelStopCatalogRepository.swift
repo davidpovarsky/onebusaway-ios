@@ -154,6 +154,15 @@ nonisolated public final class IsraelStopCatalogRepository: @unchecked Sendable 
         latSpan: Double,
         lonSpan: Double
     ) -> [TransitStop] {
+#if DEBUG
+        let startTime = CFAbsoluteTimeGetCurrent()
+        defer {
+            let elapsedMs = (CFAbsoluteTimeGetCurrent() - startTime) * 1000.0
+            if ProcessInfo.processInfo.environment["ISRAEL_MAP_STRESS_TEST"] == "1" {
+                print("ISRAEL_MAP_STRESS: [SQLite] viewportStops latSpan=\(String(format: "%.4f", latSpan)) queried in \(String(format: "%.2f", elapsedMs))ms")
+            }
+        }
+#endif
         // Zoom gate
         if latSpan > 0.25 {
             return []

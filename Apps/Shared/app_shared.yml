@@ -111,6 +111,8 @@ targets:
         - name: OBAKitTests
           parallelizable: false
           randomExecutionOrder: true
+        - name: OBAKitUITests
+          parallelizable: false
     settings:
       base:
         CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED: true

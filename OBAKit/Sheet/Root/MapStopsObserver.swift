@@ -264,6 +264,14 @@ final class MapStopsObserver: NSObject, ObservableObject, MapRegionDelegate, Reg
                     accessibilityLabel: Formatters.formattedAccessibilityLabel(stop: $0)
                 )
             }
+#if DEBUG
+        if IsraelMapStressProbe.isEnabled {
+            IsraelMapStressProbe.shared.update(
+                loadedStopsCount: application.mapRegionManager.stops.count,
+                renderedStopsCount: renderStops.count + bookmarks.count
+            )
+        }
+#endif
     }
 
     /// Republishes the render set. Only called after a real mutation, so a

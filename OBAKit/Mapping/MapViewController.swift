@@ -82,6 +82,10 @@ class MapViewController: UIViewController,
     var onDemandDockHost: OnDemandDockHostController?
     var tripPlannerFallback = TripPlannerFallbackContext()
 
+#if DEBUG
+    private weak var stressProbeLabel: UILabel?
+#endif
+
     // MARK: - Init
 
     public init(application: Application) {
@@ -121,8 +125,24 @@ class MapViewController: UIViewController,
         super.viewDidLoad()
 
         let mapView = mapRegionManager.mapView
+        mapView.accessibilityIdentifier = "oba.map.view"
         view.addSubview(mapView)
         mapView.pinToSuperview(.edges)
+
+#if DEBUG
+        if IsraelMapStressProbe.isEnabled {
+            let probeView = UILabel()
+            probeView.accessibilityIdentifier = IsraelMapStressProbe.statusAccessibilityIdentifier
+            probeView.isAccessibilityElement = true
+            probeView.text = "israel.map.stress.status"
+            probeView.accessibilityValue = IsraelMapStressProbe.shared.serializedStatus()
+            probeView.alpha = 0.01
+            probeView.isUserInteractionEnabled = false
+            view.addSubview(probeView)
+            probeView.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
+            self.stressProbeLabel = probeView
+        }
+#endif
 
         mapStatusView.configure(with: application.locationService)
 
@@ -224,6 +244,9 @@ class MapViewController: UIViewController,
         showMapLayersTipIfNeeded()
         showExternallyRequestedContent()
         Task { @MainActor [weak viewModel] in await viewModel?.checkForSurveyPrompt() }
+#if DEBUG
+        updateStressProbe()
+#endif
     }
 
     public override func viewWillDisappear(_ animated: Bool) {
@@ -1464,6 +1487,47 @@ class MapViewController: UIViewController,
     public func mapRegionManagerDismissSearch(_ manager: MapRegionManager) {
         mapPanelController.exitSearchMode()
     }
+
+    public func mapRegionManager(_ manager: MapRegionManager, stopsUpdated stops: [Stop]) {
+#if DEBUG
+        updateStressProbe()
+#endif
+    }
+
+    public func mapRegionManager(_ manager: MapRegionManager, viewportDidSettle rect: MKMapRect) {
+#if DEBUG
+        updateStressProbe()
+#endif
+    }
+
+#if DEBUG
+    private func updateStressProbe() {
+        guard IsraelMapStressProbe.isEnabled else { return }
+        let mapView = mapRegionManager.mapView
+        let region = mapView.region
+        let rectH = mapView.visibleMapRect.height
+        let regID = application.currentRegion?.regionIdentifier ?? 0
+        let prov = TransitProviderSelectionStore.currentProviderID().rawValue
+        let catAvail = IsraelStopCatalogRepository.shared.isAvailable
+        let loaded = mapRegionManager.stops.count
+        let rendered = mapView.annotations.filter { $0 is Stop || $0 is Bookmark }.count
+
+        IsraelMapStressProbe.shared.update(
+            mapMode: "classic",
+            regionID: regID,
+            providerID: prov,
+            centerLatitude: region.center.latitude,
+            centerLongitude: region.center.longitude,
+            latitudeSpan: region.span.latitudeDelta,
+            longitudeSpan: region.span.longitudeDelta,
+            visibleMapRectHeight: rectH,
+            catalogAvailable: catAvail,
+            loadedStopsCount: loaded,
+            renderedStopsCount: rendered
+        )
+        stressProbeLabel?.accessibilityValue = IsraelMapStressProbe.shared.serializedStatus()
+    }
+#endif
 
     // MARK: - LocationServiceDelegate
 

@@ -1,0 +1,56 @@
+name: Israel Map Zoom Stress Reproduction (iPad Simulator)
+
+on:
+  push:
+    branches:
+      - 'test/israel-map-zoom-stress/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  map-zoom-stress:
+    name: iPad Simulator Zoom Stress Test
+    runs-on: macos-15
+    timeout-minutes: 50
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: 'latest-stable'
+
+      - name: Cache SPM Packages
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Install Tools
+        run: |
+          brew install xcodegen
+          chmod +x scripts/resolve_ipad_simulator_udid scripts/ci/run_israel_map_zoom_stress.sh scripts/generate_project
+
+      - name: Run Israel Map Zoom Stress UI Tests on iPad Simulator
+        run: |
+          scripts/ci/run_israel_map_zoom_stress.sh
+
+      - name: Upload Test Results & Diagnostic Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: israel-map-stress-artifacts
+          path: |
+            build/map-stress/Results.xcresult
+            build/map-stress/simulator_run.mp4
+            build/map-stress/xcodebuild.log
+            build/map-stress/app_unified.log
+            build/map-stress/crashes
+          retention-days: 14

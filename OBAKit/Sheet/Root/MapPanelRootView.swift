@@ -156,6 +156,10 @@ struct MapPanelRootView: View {
     /// opacity ramps from 1 → 0 across this window as the sheet approaches `halfScreenHeight`.
     private let toolbarFadeRange: CGFloat = 50
 
+#if DEBUG
+    @State private var stressProbeStatus: String = ""
+#endif
+
     private let application: Application
     private let factory: AppSheetViewFactory
     private let viewportRecorder: MapViewportRecorder
@@ -276,6 +280,7 @@ struct MapPanelRootView: View {
             tripPlannerMapContent(for: tripPlannerDisplay)
             tripFocusMapContent(for: tripFocusDisplay.display)
         }
+        .accessibilityIdentifier("oba.map.view")
     }
 
     private var mapWithCameraAndInteraction: some View {
@@ -361,6 +366,17 @@ struct MapPanelRootView: View {
             .overlay(alignment: .bottom) {
                 onDemandDock
             }
+#if DEBUG
+            .overlay {
+                if IsraelMapStressProbe.isEnabled {
+                    Color.clear
+                        .frame(width: 1, height: 1)
+                        .accessibilityIdentifier(IsraelMapStressProbe.statusAccessibilityIdentifier)
+                        .accessibilityValue(stressProbeStatus)
+                        .allowsHitTesting(false)
+                }
+            }
+#endif
     }
 
     private var topStatusPillOverlay: some View {
@@ -407,6 +423,27 @@ struct MapPanelRootView: View {
             showStopLabels = false
             application.mapRegionManager.cancelScheduledStopsRequest()
             stopsObserver.reset()
+#if DEBUG
+            if IsraelMapStressProbe.isEnabled {
+                let regID = application.currentRegion?.regionIdentifier ?? 0
+                let prov = TransitProviderSelectionStore.currentProviderID().rawValue
+                let catAvail = IsraelStopCatalogRepository.shared.isAvailable
+                IsraelMapStressProbe.shared.update(
+                    mapMode: "swiftui",
+                    regionID: regID,
+                    providerID: prov,
+                    centerLatitude: context.region.center.latitude,
+                    centerLongitude: context.region.center.longitude,
+                    latitudeSpan: context.region.span.latitudeDelta,
+                    longitudeSpan: context.region.span.longitudeDelta,
+                    visibleMapRectHeight: context.rect.height,
+                    catalogAvailable: catAvail,
+                    loadedStopsCount: 0,
+                    renderedStopsCount: 0
+                )
+                stressProbeStatus = IsraelMapStressProbe.shared.serializedStatus()
+            }
+#endif
             return
         }
         recomputeStopLabels()
@@ -416,6 +453,29 @@ struct MapPanelRootView: View {
         // directly — and `updateViewport` is the observer's prune step.
         // Only rendering is gated, in the `ForEach` above.
         stopsObserver.updateViewport(context.region)
+#if DEBUG
+        if IsraelMapStressProbe.isEnabled {
+            let regID = application.currentRegion?.regionIdentifier ?? 0
+            let prov = TransitProviderSelectionStore.currentProviderID().rawValue
+            let catAvail = IsraelStopCatalogRepository.shared.isAvailable
+            let loaded = application.mapRegionManager.stops.count
+            let rendered = stopsObserver.renderStops.count + stopsObserver.bookmarks.count
+            IsraelMapStressProbe.shared.update(
+                mapMode: "swiftui",
+                regionID: regID,
+                providerID: prov,
+                centerLatitude: context.region.center.latitude,
+                centerLongitude: context.region.center.longitude,
+                latitudeSpan: context.region.span.latitudeDelta,
+                longitudeSpan: context.region.span.longitudeDelta,
+                visibleMapRectHeight: context.rect.height,
+                catalogAvailable: catAvail,
+                loadedStopsCount: loaded,
+                renderedStopsCount: rendered
+            )
+            stressProbeStatus = IsraelMapStressProbe.shared.serializedStatus()
+        }
+#endif
         guard !searchDisplay.suppressesAmbientStops,
               !tripPlannerDisplay.isShowingTrip,
               !tripFocusDisplay.isShowingTrip else { return }
