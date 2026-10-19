@@ -340,6 +340,8 @@ final class IsraelMapZoomStressUITests: XCTestCase {
         ]
         app.launchEnvironment["TEST_SUPPRESS_ALERT_BULLETINS"] = "1"
         app.launchEnvironment["ISRAEL_MAP_STRESS_TEST"] = "1"
+        app.launchEnvironment["ISRAEL_MAP_TEST_LAT"] = "\(location.coordinate.latitude)"
+        app.launchEnvironment["ISRAEL_MAP_TEST_LON"] = "\(location.coordinate.longitude)"
 
         addUIInterruptionMonitor(withDescription: "Location Permission") { alert in
             for label in ["Allow Once", "Allow While Using App", "Allow While Using the App", "Allow", "OK", "אישור", "אפשר בעת שימוש ביישום", "אפשר פעם אחת"] {
@@ -404,25 +406,29 @@ final class IsraelMapZoomStressUITests: XCTestCase {
     }
 
     private func verifyRealIsraelStopsLoaded(expectedCityLat: Double, minStops: Int) throws {
-        let map = app.maps.firstMatch.exists ? app.maps.firstMatch : app.descendants(matching: .any)["oba.map.view"]
-        let probe = app.descendants(matching: .any)["israel.map.stress.status"]
-
+        let map = try locateAndVerifyMap()
         let deadline = Date().addingTimeInterval(35.0)
         var lastStatus: [String: String] = [:]
+        var loopIteration = 0
 
         while Date() < deadline {
-            let rawStatus = (map.exists ? map.value as? String : nil) ?? (probe.exists ? probe.value as? String : nil)
-            if let valueStr = rawStatus, !valueStr.isEmpty {
-                lastStatus = parseStatus(valueStr)
-                let loaded = Int(lastStatus["loadedStopsCount"] ?? "0") ?? 0
-                let rendered = Int(lastStatus["renderedStopsCount"] ?? "0") ?? 0
-                let catalogAvailable = lastStatus["catalogAvailable"] == "true"
-                let regionID = Int(lastStatus["regionID"] ?? "0") ?? 0
+            loopIteration += 1
+            let status = readCurrentStatus(map: map)
+            if !status.isEmpty {
+                lastStatus = status
+                let loaded = Int(status["loadedStopsCount"] ?? "0") ?? 0
+                let rendered = Int(status["renderedStopsCount"] ?? "0") ?? 0
+                let catalogAvailable = status["catalogAvailable"] == "true"
+                let regionID = Int(status["regionID"] ?? "0") ?? 0
+
+                if loopIteration % 4 == 0 {
+                    print("ISRAEL_MAP_STRESS: Waiting for stops... loaded=\(loaded) rendered=\(rendered) catalogAvailable=\(catalogAvailable) regionID=\(regionID) rectH=\(status["visibleMapRectHeight"] ?? "?")")
+                }
 
                 if catalogAvailable && regionID == 972 && loaded >= minStops && rendered >= 1 {
-                    let provider = lastStatus["providerID"] ?? ""
-                    let lat = Double(lastStatus["centerLatitude"] ?? "0") ?? 0
-                    let lon = Double(lastStatus["centerLongitude"] ?? "0") ?? 0
+                    let provider = status["providerID"] ?? ""
+                    let lat = Double(status["centerLatitude"] ?? "0") ?? 0
+                    let lon = Double(status["centerLongitude"] ?? "0") ?? 0
 
                     XCTAssertEqual(provider, "israel-mot", "Active transit provider must be israel-mot")
                     XCTAssertEqual(regionID, 972, "Region must be 972 (Israel)")
@@ -440,8 +446,22 @@ final class IsraelMapZoomStressUITests: XCTestCase {
     }
 
     private func readCurrentStatus(map: XCUIElement) -> [String: String] {
-        let raw = (map.value as? String) ?? (app.descendants(matching: .any)["israel.map.stress.status"].exists ? app.descendants(matching: .any)["israel.map.stress.status"].value as? String : nil) ?? ""
-        return parseStatus(raw)
+        let probe = app.descendants(matching: .any)["israel.map.stress.status"]
+        if probe.exists {
+            if let val = probe.value as? String, !val.isEmpty, val.contains("regionID") {
+                return parseStatus(val)
+            }
+            if let lbl = probe.label as String?, !lbl.isEmpty, lbl.contains("regionID") {
+                return parseStatus(lbl)
+            }
+        }
+        if let mapStr = map.value as? String, !mapStr.isEmpty, mapStr.contains("regionID") {
+            return parseStatus(mapStr)
+        }
+        if let mapLbl = map.label as String?, !mapLbl.isEmpty, mapLbl.contains("regionID") {
+            return parseStatus(mapLbl)
+        }
+        return [:]
     }
 
     private func parseStatus(_ text: String) -> [String: String] {

@@ -134,13 +134,25 @@ class MapViewController: UIViewController,
             let probeView = UILabel(frame: CGRect(x: 0, y: 0, width: 20, height: 20))
             probeView.accessibilityIdentifier = IsraelMapStressProbe.statusAccessibilityIdentifier
             probeView.isAccessibilityElement = true
-            probeView.text = "israel.map.stress.status"
-            probeView.accessibilityValue = IsraelMapStressProbe.shared.serializedStatus()
+            let initialStatus = IsraelMapStressProbe.shared.serializedStatus()
+            probeView.text = initialStatus
+            probeView.accessibilityValue = initialStatus
+            probeView.accessibilityLabel = initialStatus
             probeView.alpha = 0.05
             probeView.isUserInteractionEnabled = false
             view.addSubview(probeView)
             self.stressProbeLabel = probeView
-            mapView.accessibilityValue = IsraelMapStressProbe.shared.serializedStatus()
+            mapView.accessibilityValue = initialStatus
+            mapView.accessibilityLabel = initialStatus
+
+            if application.currentRegion?.regionIdentifier == 972 && !initialMapChangeMade {
+                let testLat = Double(ProcessInfo.processInfo.environment["ISRAEL_MAP_TEST_LAT"] ?? "") ?? 31.790
+                let testLon = Double(ProcessInfo.processInfo.environment["ISRAEL_MAP_TEST_LON"] ?? "") ?? 35.210
+                let startCoord = CLLocationCoordinate2D(latitude: testLat, longitude: testLon)
+                let initialRegion = MKCoordinateRegion(center: startCoord, latitudinalMeters: MapViewController.programmaticRadiusInMeters, longitudinalMeters: MapViewController.programmaticRadiusInMeters)
+                mapRegionManager.mapView.setRegion(initialRegion, animated: false)
+                initialMapChangeMade = true
+            }
         }
 #endif
 
@@ -1520,8 +1532,11 @@ class MapViewController: UIViewController,
             renderedStopsCount: rendered
         )
         let statusStr = IsraelMapStressProbe.shared.serializedStatus()
+        stressProbeLabel?.text = statusStr
         stressProbeLabel?.accessibilityValue = statusStr
+        stressProbeLabel?.accessibilityLabel = statusStr
         mapView.accessibilityValue = statusStr
+        mapView.accessibilityLabel = statusStr
     }
 #endif
 

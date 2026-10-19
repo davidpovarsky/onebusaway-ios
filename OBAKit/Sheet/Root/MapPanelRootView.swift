@@ -192,7 +192,7 @@ struct MapPanelRootView: View {
         // `.userLocation` follows the device, which is what opened Taipei
         // over Puget Sound (#615).
         let fallback: MapCameraPosition = application.currentRegion.map { .rect($0.serviceRect) } ?? .automatic
-        let initialPosition: MapCameraPosition
+        var initialPosition: MapCameraPosition
         if let selected = application.currentRegion {
             switch LaunchMapCamera.target(
                 selectedRegion: selected,
@@ -207,6 +207,15 @@ struct MapPanelRootView: View {
         } else {
             initialPosition = fallback
         }
+#if DEBUG
+        if IsraelMapStressProbe.isEnabled && application.currentRegion?.regionIdentifier == 972 {
+            let testLat = Double(ProcessInfo.processInfo.environment["ISRAEL_MAP_TEST_LAT"] ?? "") ?? 31.790
+            let testLon = Double(ProcessInfo.processInfo.environment["ISRAEL_MAP_TEST_LON"] ?? "") ?? 35.210
+            let startCoord = CLLocationCoordinate2D(latitude: testLat, longitude: testLon)
+            let initialRegion = MKCoordinateRegion(center: startCoord, latitudinalMeters: 200.0, longitudinalMeters: 200.0)
+            initialPosition = .region(initialRegion)
+        }
+#endif
         _cameraPosition = State(initialValue: initialPosition)
 
         // A returning user already has a fix here, so the `.onChange` below
@@ -375,6 +384,7 @@ struct MapPanelRootView: View {
                         .accessibilityElement(children: .ignore)
                         .accessibilityIdentifier(IsraelMapStressProbe.statusAccessibilityIdentifier)
                         .accessibilityValue(stressProbeStatus)
+                        .accessibilityLabel(stressProbeStatus)
                         .allowsHitTesting(false)
                 }
             }
