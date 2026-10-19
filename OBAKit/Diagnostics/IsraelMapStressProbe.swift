@@ -15,7 +15,7 @@ import OBAKitCore
 
 /// Diagnostic probe for the automated Israel map zoom stress reproduction.
 /// Active ONLY in DEBUG builds when `ISRAEL_MAP_STRESS_TEST=1` is passed in the environment.
-public final class IsraelMapStressProbe: @unchecked Sendable {
+nonisolated public final class IsraelMapStressProbe: @unchecked Sendable {
     public static let shared = IsraelMapStressProbe()
     public static let statusAccessibilityIdentifier = "israel.map.stress.status"
     private static let osLogger = os.Logger(subsystem: "org.onebusaway.iphone", category: "IsraelMapStress")

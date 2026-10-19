@@ -14,7 +14,7 @@ import Testing
 struct IsraelMapStressProbeTests {
 
     @Test("Concurrent update and serializedStatus do not deadlock")
-    func testConcurrentUpdatesAndSerializationDoNotDeadlock() async throws {
+    nonisolated func testConcurrentUpdatesAndSerializationDoNotDeadlock() async throws {
         setenv("ISRAEL_MAP_STRESS_TEST", "1", 1)
         defer { unsetenv("ISRAEL_MAP_STRESS_TEST") }
 
