@@ -104,7 +104,10 @@ nonisolated public struct MOTAgencyID: RawRepresentable, Hashable, Codable, Send
 
 /// Identifiers namespace and utilities for scoping IDs in OneBusAway
 nonisolated public enum MOTIdentityFormatter {
-    public static func scopedStopID(code: MOTStopCode) -> String {
+    public static func scopedStopID(code: MOTStopCode, internalID: MOTStopInternalID? = nil) -> String {
+        if let internalID = internalID {
+            return "mot:stop:\(code.rawValue)_\(internalID.rawValue)"
+        }
         return "mot:stop:\(code.rawValue)"
     }
 
@@ -117,11 +120,28 @@ nonisolated public enum MOTIdentityFormatter {
     }
 
     public static func parseStopCode(fromScopedID scopedID: String) -> MOTStopCode? {
+        let stripped: String
         if scopedID.hasPrefix("mot:stop:") {
-            let num = scopedID.dropFirst("mot:stop:".count)
-            return MOTStopCode(String(num))
+            stripped = String(scopedID.dropFirst("mot:stop:".count))
+        } else {
+            stripped = scopedID
         }
-        return MOTStopCode(scopedID)
+        let codePart = stripped.split(separator: "_").first.map(String.init) ?? stripped
+        return MOTStopCode(codePart)
+    }
+
+    public static func parseStopInternalID(fromScopedID scopedID: String) -> MOTStopInternalID? {
+        let stripped: String
+        if scopedID.hasPrefix("mot:stop:") {
+            stripped = String(scopedID.dropFirst("mot:stop:".count))
+        } else {
+            stripped = scopedID
+        }
+        let parts = stripped.split(separator: "_")
+        guard parts.count >= 2, let internalPart = parts.dropFirst().first else {
+            return nil
+        }
+        return MOTStopInternalID(String(internalPart))
     }
 
     public static func parseRouteID(fromScopedID scopedID: String) -> MOTRouteID? {

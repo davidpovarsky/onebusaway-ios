@@ -229,7 +229,21 @@ class NearbyStopsListViewController: UIViewController, UICollectionViewDelegate,
             let nearbyStopsHeader = Item(headerForSection: .nearbyStops)
             sectionSnapshot.append([nearbyStopsHeader])
 
-            let nearbyStops = dataSource.stops.map(Item.init)
+            var seenStopIDs = Set<Stop.ID>()
+            var deduplicatedStops: [Stop] = []
+            var duplicateCount = 0
+            for stop in stops {
+                if seenStopIDs.insert(stop.id).inserted {
+                    deduplicatedStops.append(stop)
+                } else {
+                    duplicateCount += 1
+                }
+            }
+            if duplicateCount > 0 {
+                Logger.warn("NearbyStopsListViewController: filtered out \(duplicateCount) duplicate stop(s) with conflicting Stop.ID from nearby stops list to protect collection view diffable data source.")
+            }
+
+            let nearbyStops = deduplicatedStops.map(Item.init)
             sectionSnapshot.append(nearbyStops)
 
             stopsSectionSnapshot = sectionSnapshot

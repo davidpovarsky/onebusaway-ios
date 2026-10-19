@@ -157,8 +157,8 @@ struct IsraelStopCatalogTests {
         let firstTrip = grouping.tripsWithStopTimes[0]
         #expect(!firstTrip.tripID.isEmpty)
         #expect(firstTrip.stopTimes.count == 2)
-        #expect(firstTrip.stopTimes[0].stopID == "mot:stop:5997")
-        #expect(firstTrip.stopTimes[1].stopID == "mot:stop:2899")
+        #expect(firstTrip.stopTimes[0].stopID == "mot:stop:5997_11622")
+        #expect(firstTrip.stopTimes[1].stopID == "mot:stop:2899_10168")
         #expect(firstTrip.stopTimes[0].departureTime > 0)
         #expect(firstTrip.stopTimes[1].arrivalTime >= firstTrip.stopTimes[0].departureTime)
     }
@@ -195,5 +195,87 @@ struct IsraelStopCatalogTests {
         for s in textResults {
             #expect(s.name.he?.contains("סילבר") == true)
         }
+    }
+
+    @Test
+    func testStop4170DeterministicParentStationLookup() {
+        let repo = IsraelStopCatalogRepository.shared
+        guard repo.isAvailable else { return }
+
+        // Jerusalem Central Station has 40 rows in GTFS.
+        // stop(forCode:) must deterministically return the parent station (stop_id 10758)
+        let stop = repo.stop(forCode: MOTStopCode(4170))
+        #expect(stop != nil)
+        #expect(stop?.code.rawValue == 4170)
+        #expect(stop?.internalID?.rawValue == 10758)
+        #expect(stop?.name.he?.contains("מרכזית ירושלים") == true)
+    }
+
+    @Test
+    func testStop4170MultiplePlatformsQuery() {
+        let repo = IsraelStopCatalogRepository.shared
+        guard repo.isAvailable else { return }
+
+        let allPlatforms = repo.stops(forCode: MOTStopCode(4170))
+        #expect(allPlatforms.count == 40)
+        // First entry must be the parent station
+        #expect(allPlatforms.first?.internalID?.rawValue == 10758)
+
+        // Subsequent entries include platforms with platform codes
+        let platform15 = allPlatforms.first { $0.platformNumber == "15" }
+        #expect(platform15 != nil)
+        #expect(platform15?.internalID?.rawValue == 36144)
+    }
+
+    @Test
+    func testResolveStopWithVariousIDFormats() {
+        let repo = IsraelStopCatalogRepository.shared
+        guard repo.isAvailable else { return }
+
+        // Format 1: Scoped composite ID
+        let resolvedPlatform = repo.resolveStop(stopID: "mot:stop:4170_36144")
+        #expect(resolvedPlatform != nil)
+        #expect(resolvedPlatform?.code.rawValue == 4170)
+        #expect(resolvedPlatform?.internalID?.rawValue == 36144)
+        #expect(resolvedPlatform?.platformNumber == "15")
+
+        // Format 2: Scoped legacy stop code (ambiguous 4170 resolves to parent station)
+        let resolvedParent = repo.resolveStop(stopID: "mot:stop:4170")
+        #expect(resolvedParent != nil)
+        #expect(resolvedParent?.code.rawValue == 4170)
+        #expect(resolvedParent?.internalID?.rawValue == 10758)
+
+        // Format 3: Legacy stop code for unambiguous station 5997
+        let resolvedSingle = repo.resolveStop(stopID: "mot:stop:5997")
+        #expect(resolvedSingle != nil)
+        #expect(resolvedSingle?.code.rawValue == 5997)
+        #expect(resolvedSingle?.internalID?.rawValue == 11622)
+
+        // Format 4: Unscoped numeric stop code
+        let resolvedNumeric = repo.resolveStop(stopID: "5997")
+        #expect(resolvedNumeric != nil)
+        #expect(resolvedNumeric?.code.rawValue == 5997)
+    }
+
+    @Test
+    func testMOTIdentityFormatterCompositeAndLegacyScoping() {
+        // Scoped formatting
+        let scopedWithInternal = MOTIdentityFormatter.scopedStopID(code: MOTStopCode(4170), internalID: MOTStopInternalID(36144))
+        #expect(scopedWithInternal == "mot:stop:4170_36144")
+
+        let scopedLegacy = MOTIdentityFormatter.scopedStopID(code: MOTStopCode(4170))
+        #expect(scopedLegacy == "mot:stop:4170")
+
+        // Parsing stop code
+        #expect(MOTIdentityFormatter.parseStopCode(fromScopedID: "mot:stop:4170_36144")?.rawValue == 4170)
+        #expect(MOTIdentityFormatter.parseStopCode(fromScopedID: "mot:stop:4170")?.rawValue == 4170)
+        #expect(MOTIdentityFormatter.parseStopCode(fromScopedID: "4170_36144")?.rawValue == 4170)
+        #expect(MOTIdentityFormatter.parseStopCode(fromScopedID: "4170")?.rawValue == 4170)
+
+        // Parsing stop internal ID
+        #expect(MOTIdentityFormatter.parseStopInternalID(fromScopedID: "mot:stop:4170_36144")?.rawValue == 36144)
+        #expect(MOTIdentityFormatter.parseStopInternalID(fromScopedID: "4170_36144")?.rawValue == 36144)
+        #expect(MOTIdentityFormatter.parseStopInternalID(fromScopedID: "mot:stop:4170") == nil)
+        #expect(MOTIdentityFormatter.parseStopInternalID(fromScopedID: "4170") == nil)
     }
 }

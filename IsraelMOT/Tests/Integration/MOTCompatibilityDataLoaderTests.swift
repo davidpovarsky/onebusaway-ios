@@ -123,7 +123,7 @@ struct MOTCompatibilityDataLoaderTests {
             return
         }
         #expect(list.count == 1)
-        #expect(list[0]["id"] as? String == "mot:stop:5997")
+        #expect(list[0]["id"] as? String == "mot:stop:5997_11622")
         #expect(list[0]["code"] as? String == "5997")
 
         guard let references = data["references"] as? [String: Any] else {
@@ -203,7 +203,7 @@ struct MOTCompatibilityDataLoaderTests {
             Issue.record("Expected entry dictionary")
             return
         }
-        #expect(entry["id"] as? String == "mot:stop:5997")
+        #expect(entry["id"] as? String == "mot:stop:5997_11622")
         #expect(entry["code"] as? String == "5997")
     }
 
@@ -385,9 +385,16 @@ struct MOTCompatibilityDataLoaderTests {
     func testNativeOBAStopDetailDecoderWithReferences() throws {
         let payload = OBACompatibilityBridge.stopDetailResponse(stop: jerusalemStop)
         let response = try decodeAppResponse(payload, as: Stop.self)
-        #expect(response.entry.id == "mot:stop:5997")
+        #expect(response.entry.id == "mot:stop:5997_11622")
+        #expect(response.entry.code == "5997")
         #expect(response.entry.routes.count == 1)
         #expect(response.entry.routes[0].agency?.name == "סופרבוס")
+
+        // Backward compatibility for legacy requested ID without internal ID
+        let legacyPayload = OBACompatibilityBridge.stopDetailResponse(stop: jerusalemStop, requestedStopID: "mot:stop:5997")
+        let legacyResponse = try decodeAppResponse(legacyPayload, as: Stop.self)
+        #expect(legacyResponse.entry.id == "mot:stop:5997")
+        #expect(legacyResponse.entry.code == "5997")
     }
 
     @Test
@@ -418,7 +425,7 @@ struct MOTCompatibilityDataLoaderTests {
             stop: jerusalemStop, arrivals: [arrival]
         )
         let response = try decodeAppResponse(json, as: StopArrivals.self)
-        #expect(response.entry.stop?.id == "mot:stop:5997")
+        #expect(response.entry.stop?.id == "mot:stop:5997_11622")
         let first = try #require(response.entry.arrivalsAndDepartures.first)
         #expect(first.predicted)
         #expect(first.route?.shortName == "31")
@@ -428,6 +435,13 @@ struct MOTCompatibilityDataLoaderTests {
         // Current adapter lacks a complete authoritative TripStatus. Do not
         // silently assume vehicle tracking works merely because a key exists.
         #expect(first.tripStatus == nil)
+
+        // Backward compatibility for legacy requested stop ID
+        let legacyJson = OBACompatibilityBridge.stopArrivalsResponse(
+            stop: jerusalemStop, arrivals: [arrival], requestedStopID: "mot:stop:5997"
+        )
+        let legacyResponse = try decodeAppResponse(legacyJson, as: StopArrivals.self)
+        #expect(legacyResponse.entry.stop?.id == "mot:stop:5997")
     }
 
     @Test

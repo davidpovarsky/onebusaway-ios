@@ -58,6 +58,7 @@ jobs:
           path: |
             build/map-stress/Results.xcresult
             build/map-stress/simulator_run.mp4
+            build/map-stress/unit_tests.log
             build/map-stress/xcodebuild.log
             build/map-stress/app_unified.log
             build/map-stress/crashes

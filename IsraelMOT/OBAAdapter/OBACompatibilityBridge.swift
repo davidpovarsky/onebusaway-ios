@@ -110,12 +110,18 @@ nonisolated public enum OBACompatibilityBridge {
 
     public static func stopDetailResponse(
         stop: TransitStop,
+        requestedStopID: String? = nil,
         currentTime: Date = Date()
     ) -> [String: Any] {
-        let stopDict = serializeStop(stop)
+        let stopDict = serializeStop(stop, overrideID: requestedStopID)
         var referencesAgencies: [String: [String: Any]] = [:]
         var referencesRoutes: [String: [String: Any]] = [:]
-        let referencesStops: [String: [String: Any]] = [stopDict["id"] as! String: stopDict]
+        var referencesStops: [String: [String: Any]] = [stopDict["id"] as! String: stopDict]
+
+        let canonicalID = MOTIdentityFormatter.scopedStopID(code: stop.code, internalID: stop.internalID)
+        if canonicalID != stopDict["id"] as! String {
+            referencesStops[canonicalID] = serializeStop(stop)
+        }
 
         for route in stop.routes {
             let routeDict = serializeRouteSummary(route)
@@ -156,13 +162,28 @@ nonisolated public enum OBACompatibilityBridge {
     public static func stopArrivalsResponse(
         stop: TransitStop,
         arrivals: [TransitArrival],
+        requestedStopID: String? = nil,
+        nearbyStops: [TransitStop] = [],
         currentTime: Date = Date()
     ) -> [String: Any] {
-        let stopDict = serializeStop(stop)
+        let stopDict = serializeStop(stop, overrideID: requestedStopID)
         var referencesAgencies: [String: [String: Any]] = [:]
         var referencesRoutes: [String: [String: Any]] = [:]
-        let referencesStops: [String: [String: Any]] = [stopDict["id"] as! String: stopDict]
+        var referencesStops: [String: [String: Any]] = [stopDict["id"] as! String: stopDict]
         var referencesTrips: [String: [String: Any]] = [:]
+
+        let canonicalID = MOTIdentityFormatter.scopedStopID(code: stop.code, internalID: stop.internalID)
+        if canonicalID != stopDict["id"] as! String {
+            referencesStops[canonicalID] = serializeStop(stop)
+        }
+
+        var nearbyStopIds: [String] = []
+        for nStop in nearbyStops {
+            let nDict = serializeStop(nStop)
+            let nId = nDict["id"] as! String
+            referencesStops[nId] = nDict
+            nearbyStopIds.append(nId)
+        }
 
         var obaArrivals: [[String: Any]] = []
 
@@ -268,7 +289,7 @@ nonisolated public enum OBACompatibilityBridge {
         let entry: [String: Any] = [
             "stopId": stopDict["id"] as! String,
             "arrivalsAndDepartures": obaArrivals,
-            "nearbyStopIds": [],
+            "nearbyStopIds": nearbyStopIds,
             "situationIds": []
         ]
 
@@ -538,13 +559,22 @@ nonisolated public enum OBACompatibilityBridge {
 
     // MARK: - Serializers
 
-    private static func serializeStop(_ stop: TransitStop) -> [String: Any] {
-        let scopedId = MOTIdentityFormatter.scopedStopID(code: stop.code)
+    private static func serializeStop(_ stop: TransitStop, overrideID: String? = nil) -> [String: Any] {
+        let scopedId = overrideID ?? MOTIdentityFormatter.scopedStopID(code: stop.code, internalID: stop.internalID)
         let routeIds = stop.routes.map { MOTIdentityFormatter.scopedRouteID(id: $0.routeID) }
+        
+        var name = stop.name.localizedName()
+        if let platform = stop.platformNumber, !platform.isEmpty {
+            let platformSuffix = "(רציף \(platform))"
+            if !name.contains(platformSuffix) && !name.contains("רציף \(platform)") {
+                name = "\(name) \(platformSuffix)"
+            }
+        }
+
         return [
             "id": scopedId,
             "code": stop.code.description,
-            "name": stop.name.localizedName(),
+            "name": name,
             "lat": stop.location.latitude,
             "lon": stop.location.longitude,
             "direction": "unknown",

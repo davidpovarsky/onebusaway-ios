@@ -34,7 +34,28 @@ OUT_DIR="build/map-stress"
 mkdir -p "$OUT_DIR"
 rm -rf "$OUT_DIR/Results.xcresult"
 
-echo "=== [5/6] Starting Video Recording & Running Tests ==="
+echo "=== [4.5/6] Running Unit Tests (Deduplication, Catalog & Stop Identity) ==="
+xcodebuild test \
+  -project OBAKit.xcodeproj \
+  -scheme App \
+  -configuration Debug \
+  -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+  -derivedDataPath DerivedData \
+  -only-testing:OBAKitTests/NearbyStopsListViewControllerTests \
+  -only-testing:OBAKitTests/IsraelStopCatalogTests \
+  -only-testing:OBAKitTests/MOTCompatibilityDataLoaderTests \
+  CODE_SIGNING_ALLOWED=NO \
+  CODE_SIGNING_REQUIRED=NO \
+  CODE_SIGN_IDENTITY="" \
+  2>&1 | tee "$OUT_DIR/unit_tests.log"
+UNIT_EXIT_CODE=${PIPESTATUS[0]}
+if [ "$UNIT_EXIT_CODE" -ne 0 ]; then
+  echo "Unit tests failed with code $UNIT_EXIT_CODE!"
+  exit "$UNIT_EXIT_CODE"
+fi
+echo "Unit tests PASSED successfully."
+
+echo "=== [5/6] Starting Video Recording & Running UI Tests ==="
 xcrun simctl io "$SIMULATOR_UDID" recordVideo --codec=h264 "$OUT_DIR/simulator_run.mp4" &
 RECORD_PID=$!
 echo "Video recording started (PID: $RECORD_PID)"
@@ -46,10 +67,11 @@ if [ "$RUN_ALL_TESTS" = "1" ]; then
     "-only-testing:OBAKitUITests/IsraelMapZoomStressUITests"
   )
 else
-  echo "=== Running Smoke Test + Jerusalem Classic Map Zoom/Pan Stress ==="
+  echo "=== Running Smoke Test + Jerusalem Classic (UIKit) & SwiftUI Zoom/Pan Stress ==="
   TEST_ONLY_FLAGS+=(
     "-only-testing:OBAKitUITests/IsraelMapZoomStressUITests/testJerusalemClassicMapSmoke"
     "-only-testing:OBAKitUITests/IsraelMapZoomStressUITests/testJerusalemClassicMapZoomPanStress"
+    "-only-testing:OBAKitUITests/IsraelMapZoomStressUITests/testJerusalemSwiftUIMapZoomPanStress"
   )
 fi
 

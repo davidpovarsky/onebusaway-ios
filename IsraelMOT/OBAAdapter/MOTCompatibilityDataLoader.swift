@@ -127,19 +127,21 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
 
         // 1. If search query is provided
         if let q = query, !q.isEmpty {
-            // If query is a numeric stop code, try live enrichment first, then local catalog
+            // If query is a numeric stop code, try local catalog first (returning all platforms), then live enrichment
             if let stopCodeInt = Int(q) {
                 let code = MOTStopCode(rawValue: stopCodeInt)
+                let localStops = IsraelStopCatalogRepository.shared.stops(forCode: code)
+                if !localStops.isEmpty {
+                    let envelope = OBACompatibilityBridge.stopsForLocationResponse(stops: localStops)
+                    let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
+                    let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
+                    return (data, response)
+                }
                 let targetURL = endpoints.stopFullDataURL(stopCode: code)
                 if let res: StopFullDataResponseDTOServiceResponse = try? await client.get(targetURL),
                    let dto = res.data {
                     let domainStop = MOTStopMapper.map(from: dto)
                     let envelope = OBACompatibilityBridge.stopsForLocationResponse(stops: [domainStop])
-                    let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
-                    let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
-                    return (data, response)
-                } else if let localStop = IsraelStopCatalogRepository.shared.stop(forCode: code) {
-                    let envelope = OBACompatibilityBridge.stopsForLocationResponse(stops: [localStop])
                     let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
                     let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
                     return (data, response)
@@ -231,35 +233,105 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
     }
 
     private func handleStopDetail(url: URL) async throws -> (Data, URLResponse) {
+        let requestedStopID = url.deletingPathExtension().lastPathComponent
         guard let stopCode = extractStopCode(from: url) else {
             return try await notFoundResponse(for: url)
+        }
+        let stopInternalID = extractStopInternalID(from: url)
+
+        let catalog = IsraelStopCatalogRepository.shared
+        let localStop: TransitStop?
+        if let internalID = stopInternalID {
+            localStop = catalog.stop(forInternalID: internalID)
+        } else {
+            localStop = catalog.stop(forCode: stopCode)
         }
 
         let targetURL = endpoints.stopFullDataURL(stopCode: stopCode)
         do {
             let res: StopFullDataResponseDTOServiceResponse = try await client.get(targetURL)
-            guard let dto = res.data else {
+            if let dto = res.data {
+                let remoteStop = MOTStopMapper.map(from: dto)
+                let domainStop: TransitStop
+                if let local = localStop {
+                    domainStop = TransitStop(
+                        code: local.code,
+                        internalID: local.internalID,
+                        name: local.name,
+                        cityName: local.cityName ?? remoteStop.cityName,
+                        streetName: local.streetName ?? remoteStop.streetName,
+                        location: local.location,
+                        platformNumber: local.platformNumber ?? remoteStop.platformNumber,
+                        isAccessible: local.isAccessible ?? remoteStop.isAccessible,
+                        routes: remoteStop.routes
+                    )
+                } else {
+                    domainStop = remoteStop
+                }
+                let envelope = OBACompatibilityBridge.stopDetailResponse(
+                    stop: domainStop,
+                    requestedStopID: requestedStopID
+                )
+                let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
+                let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
+                return (data, response)
+            } else if let local = localStop {
+                let envelope = OBACompatibilityBridge.stopDetailResponse(
+                    stop: local,
+                    requestedStopID: requestedStopID
+                )
+                let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
+                let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
+                return (data, response)
+            } else {
                 return try await notFoundResponse(for: url)
             }
-            let domainStop = MOTStopMapper.map(from: dto)
-            let envelope = OBACompatibilityBridge.stopDetailResponse(stop: domainStop)
-            let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
-            let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
-            return (data, response)
         } catch let error as MOTHTTPError {
-            // Only a genuine 404 means the resource is absent.
             if case .httpError(statusCode: 404, responseBody: _) = error {
+                if let local = localStop {
+                    let envelope = OBACompatibilityBridge.stopDetailResponse(
+                        stop: local,
+                        requestedStopID: requestedStopID
+                    )
+                    let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
+                    let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
+                    return (data, response)
+                }
                 return try await notFoundResponse(for: url)
             }
             throw error
         } catch {
+            if let local = localStop {
+                let envelope = OBACompatibilityBridge.stopDetailResponse(
+                    stop: local,
+                    requestedStopID: requestedStopID
+                )
+                let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
+                let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
+                return (data, response)
+            }
             throw error
         }
     }
 
     private func handleArrivalsAndDepartures(url: URL) async throws -> (Data, URLResponse) {
+        let requestedStopID = url.deletingPathExtension().lastPathComponent
         guard let stopCode = extractStopCode(from: url) else {
             return try await notFoundResponse(for: url)
+        }
+        let stopInternalID = extractStopInternalID(from: url)
+
+        let catalog = IsraelStopCatalogRepository.shared
+        let localStop: TransitStop?
+        if let internalID = stopInternalID {
+            localStop = catalog.stop(forInternalID: internalID)
+        } else {
+            localStop = catalog.stop(forCode: stopCode)
+        }
+
+        // Sibling platforms for the same stop code (e.g. platforms at central station)
+        let siblingPlatforms = catalog.stops(forCode: stopCode).filter {
+            $0.internalID != (localStop?.internalID ?? stopInternalID)
         }
 
         let targetURL = endpoints.stopFullDataURL(stopCode: stopCode)
@@ -268,7 +340,23 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             guard let dto = res.data else {
                 return try await notFoundResponse(for: url)
             }
-            let domainStop = MOTStopMapper.map(from: dto)
+            let remoteStop = MOTStopMapper.map(from: dto)
+            let domainStop: TransitStop
+            if let local = localStop {
+                domainStop = TransitStop(
+                    code: local.code,
+                    internalID: local.internalID,
+                    name: local.name,
+                    cityName: local.cityName ?? remoteStop.cityName,
+                    streetName: local.streetName ?? remoteStop.streetName,
+                    location: local.location,
+                    platformNumber: local.platformNumber ?? remoteStop.platformNumber,
+                    isAccessible: local.isAccessible ?? remoteStop.isAccessible,
+                    routes: remoteStop.routes
+                )
+            } else {
+                domainStop = remoteStop
+            }
             let routesInStop = dto.routesInStop ?? []
 
             // Query live arrivals/departures for lines serving this stop (bounded concurrency)
@@ -295,7 +383,12 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             }
 
             let arrivals = MOTArrivalsMapper.map(routesInStop: routesInStop, stopTimesByRouteDesc: stopTimesByRouteDesc)
-            let envelope = OBACompatibilityBridge.stopArrivalsResponse(stop: domainStop, arrivals: arrivals)
+            let envelope = OBACompatibilityBridge.stopArrivalsResponse(
+                stop: domainStop,
+                arrivals: arrivals,
+                requestedStopID: requestedStopID,
+                nearbyStops: siblingPlatforms
+            )
             let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
             return (data, response)
@@ -502,6 +595,11 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
     private func extractStopCode(from url: URL) -> MOTStopCode? {
         let lastComponent = url.deletingPathExtension().lastPathComponent
         return MOTIdentityFormatter.parseStopCode(fromScopedID: lastComponent)
+    }
+
+    private func extractStopInternalID(from url: URL) -> MOTStopInternalID? {
+        let lastComponent = url.deletingPathExtension().lastPathComponent
+        return MOTIdentityFormatter.parseStopInternalID(fromScopedID: lastComponent)
     }
 
     private func extractRouteID(from url: URL) -> MOTRouteID? {

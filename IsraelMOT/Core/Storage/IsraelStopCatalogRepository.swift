@@ -220,6 +220,8 @@ nonisolated public final class IsraelStopCatalogRepository: @unchecked Sendable 
     // MARK: - Point & Code Lookups
 
     /// Retrieves a single stop by its public signpost code (e.g., 5997).
+    /// Deterministically selects the parent station (location_type = 1) or canonical platform
+    /// when multiple GTFS rows share the same stop_code.
     public func stop(forCode code: MOTStopCode) -> TransitStop? {
         lock.lock()
         defer { lock.unlock() }
@@ -230,6 +232,7 @@ nonisolated public final class IsraelStopCatalogRepository: @unchecked Sendable 
                street, city, platform_code, lat, lon, location_type, parent_station
         FROM stops
         WHERE stop_code = ?
+        ORDER BY location_type DESC, parent_station IS NULL DESC, platform_code ASC, stop_id ASC
         LIMIT 1;
         """
 
@@ -243,6 +246,60 @@ nonisolated public final class IsraelStopCatalogRepository: @unchecked Sendable 
 
         if sqlite3_step(stmt) == SQLITE_ROW {
             return parseStop(from: stmt)
+        }
+        return nil
+    }
+
+    /// Retrieves all stops/platforms sharing the given public stop code, ordered deterministically.
+    public func stops(forCode code: MOTStopCode) -> [TransitStop] {
+        lock.lock()
+        defer { lock.unlock() }
+        guard let db = db else { return [] }
+
+        let sql = """
+        SELECT stop_id, stop_code, name_he, name_en, name_ar,
+               street, city, platform_code, lat, lon, location_type, parent_station
+        FROM stops
+        WHERE stop_code = ?
+        ORDER BY location_type DESC, parent_station IS NULL DESC, platform_code ASC, stop_id ASC;
+        """
+
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
+            return []
+        }
+        defer { sqlite3_finalize(stmt) }
+
+        sqlite3_bind_int(stmt, 1, Int32(code.rawValue))
+
+        var results: [TransitStop] = []
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            if let stop = parseStop(from: stmt) {
+                results.append(stop)
+            }
+        }
+        return results
+    }
+
+    /// Resolves a stop by any valid scoped or unscoped ID (e.g. "mot:stop:4170_10758", "mot:stop:4170", "4170_10758", "10758").
+    public func resolveStop(stopID: String) -> TransitStop? {
+        if let internalID = MOTIdentityFormatter.parseStopInternalID(fromScopedID: stopID) {
+            if let stop = self.stop(forInternalID: internalID) {
+                return stop
+            }
+        }
+        if let code = MOTIdentityFormatter.parseStopCode(fromScopedID: stopID) {
+            if let stop = self.stop(forCode: code) {
+                return stop
+            }
+        }
+        if let numericID = Int(stopID.trimmingCharacters(in: .whitespacesAndNewlines)) {
+            if let stop = self.stop(forInternalID: MOTStopInternalID(rawValue: numericID)) {
+                return stop
+            }
+            if let stop = self.stop(forCode: MOTStopCode(rawValue: numericID)) {
+                return stop
+            }
         }
         return nil
     }
@@ -294,7 +351,7 @@ nonisolated public final class IsraelStopCatalogRepository: @unchecked Sendable 
                    street, city, platform_code, lat, lon, location_type, parent_station
             FROM stops
             WHERE stop_code LIKE ?
-            ORDER BY stop_code = ? DESC, stop_code ASC
+            ORDER BY (stop_code = ?) DESC, location_type DESC, parent_station IS NULL DESC, platform_code ASC, stop_code ASC
             LIMIT ?;
             """
         } else {
@@ -303,7 +360,7 @@ nonisolated public final class IsraelStopCatalogRepository: @unchecked Sendable 
                    street, city, platform_code, lat, lon, location_type, parent_station
             FROM stops
             WHERE name_he LIKE ? OR city LIKE ?
-            ORDER BY name_he LIKE ? DESC, name_he ASC
+            ORDER BY (name_he LIKE ?) DESC, location_type DESC, parent_station IS NULL DESC, stop_code ASC
             LIMIT ?;
             """
         }

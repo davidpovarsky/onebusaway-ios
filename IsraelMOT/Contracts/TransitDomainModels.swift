@@ -32,7 +32,12 @@ nonisolated public struct TransitMultiLanguageName: Hashable, Codable, Sendable 
 
 /// Normalized domain representation of a transit stop in Israel.
 nonisolated public struct TransitStop: Identifiable, Hashable, Codable, Sendable {
-    public var id: MOTStopCode { code }
+    public var id: String {
+        if let internalID = internalID {
+            return "\(code.rawValue)_\(internalID.rawValue)"
+        }
+        return "\(code.rawValue)"
+    }
     public let code: MOTStopCode
     public let internalID: MOTStopInternalID?
     public let name: TransitMultiLanguageName
