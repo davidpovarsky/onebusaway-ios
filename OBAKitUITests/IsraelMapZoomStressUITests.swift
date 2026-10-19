@@ -277,7 +277,7 @@ final class IsraelMapZoomStressUITests: XCTestCase {
         let beforeLatSpan = Double(before["latitudeSpan"] ?? "0") ?? 0
 
         map.pinch(withScale: scale, velocity: velocity)
-        Thread.sleep(forTimeInterval: 0.5)
+        Thread.sleep(forTimeInterval: 0.7)
 
         let after = readCurrentStatus(map: map)
         let afterHeight = Double(after["visibleMapRectHeight"] ?? "0") ?? 0
@@ -309,7 +309,7 @@ final class IsraelMapZoomStressUITests: XCTestCase {
         let startCoord = map.coordinate(withNormalizedOffset: from)
         let endCoord = map.coordinate(withNormalizedOffset: to)
         startCoord.press(forDuration: 0.05, thenDragTo: endCoord)
-        Thread.sleep(forTimeInterval: 0.4)
+        Thread.sleep(forTimeInterval: 0.6)
 
         let after = readCurrentStatus(map: map)
         let afterLat = Double(after["centerLatitude"] ?? "0") ?? 0

@@ -46,9 +46,10 @@ if [ "$RUN_ALL_TESTS" = "1" ]; then
     "-only-testing:OBAKitUITests/IsraelMapZoomStressUITests"
   )
 else
-  echo "=== Running Fast Smoke Test First (Classic Map Smoke) ==="
+  echo "=== Running Smoke Test + Jerusalem Classic Map Zoom/Pan Stress ==="
   TEST_ONLY_FLAGS+=(
     "-only-testing:OBAKitUITests/IsraelMapZoomStressUITests/testJerusalemClassicMapSmoke"
+    "-only-testing:OBAKitUITests/IsraelMapZoomStressUITests/testJerusalemClassicMapZoomPanStress"
   )
 fi
 
