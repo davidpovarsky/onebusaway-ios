@@ -287,6 +287,9 @@ jobs:
               has_catalog_in_ipa = any(n.endswith("IsraelStopCatalog.sqlite") for n in names)
               if has_catalog_in_source and not has_catalog_in_ipa:
                   raise SystemExit("Source has stop catalog, but signed IPA does not")
+              framework_scripts = [n for n in names if "/Frameworks/" in n and any(n.endswith(ext) for ext in [".py", ".sh", ".js"])]
+              if framework_scripts:
+                  raise SystemExit(f"Found forbidden uncompiled scripts in frameworks: {framework_scripts}")
           print("Signed IPA IDs and branch-specific embedded resources: VERIFIED")
           PY
           cd build/OneBusAwayIsrael.xcarchive
@@ -306,10 +309,21 @@ jobs:
           chmod 600 "$key_path"
           IPA=$(find build/testflight-export -maxdepth 1 -name '*.ipa' -print -quit)
           test -n "$IPA"
-          xcrun altool --validate-app \
-            -f "$IPA" -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
-          xcrun altool --upload-app \
-            -f "$IPA" -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+          echo "Validating actual IPA via altool..."
+          ALTOOL_VAL=$(xcrun altool --validate-app -f "$IPA" -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID" 2>&1)
+          echo "$ALTOOL_VAL"
+          if echo "$ALTOOL_VAL" | grep -E -q "VERIFY FAILED|Validation failed|ERROR:"; then
+            echo "altool validation failed!"
+            exit 1
+          fi
+
+          echo "Uploading actual IPA via altool..."
+          ALTOOL_UP=$(xcrun altool --upload-app -f "$IPA" -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID" 2>&1)
+          echo "$ALTOOL_UP"
+          if echo "$ALTOOL_UP" | grep -E -q "UPLOAD FAILED|Validation failed|ERROR:"; then
+            echo "altool upload failed!"
+            exit 1
+          fi
           echo "Upload accepted by transport. Apple processing and TestFlight availability remain to verify."
 
       - name: Save non-secret release evidence for crash symbolication
