@@ -37,7 +37,11 @@ targets:
         headerVisibility: public
       - path: ../IsraelMOT
         type: group
-        excludes: ["Tests"]
+        excludes:
+          - "Tests"
+          - "Scripts"
+          - "Docs"
+          - "Resources"
     dependencies:
       - target: OBAKitCore
       - package: FloatingPanel
