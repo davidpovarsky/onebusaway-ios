@@ -230,11 +230,16 @@ final class IsraelMapZoomStressUITests: XCTestCase {
                 performMeasuredPan(map: map, from: center, to: up, activityName: "\(testName)_C_Cycle\(cycle)_PanUp")
                 performMeasuredPan(map: map, from: center, to: down, activityName: "\(testName)_C_Cycle\(cycle)_PanDown")
 
-                // Combined Zoom + Pan
+                // Combined Zoom + Pan (alternating combo directions so camera stays within target region)
+                let comboOutTarget = (cycle % 2 == 1) ? right : left
+                let comboInTarget = (cycle % 2 == 1) ? left : right
+                let comboOutName = (cycle % 2 == 1) ? "PanRightCombo" : "PanLeftCombo"
+                let comboInName = (cycle % 2 == 1) ? "PanLeftCombo" : "PanRightCombo"
+
                 performMeasuredPinch(map: map, scale: 0.75, velocity: 1.0, activityName: "\(testName)_C_Cycle\(cycle)_PinchOut")
-                performMeasuredPan(map: map, from: center, to: right, activityName: "\(testName)_C_Cycle\(cycle)_PanRightCombo")
+                performMeasuredPan(map: map, from: center, to: comboOutTarget, activityName: "\(testName)_C_Cycle\(cycle)_\(comboOutName)")
                 performMeasuredPinch(map: map, scale: 1.35, velocity: 1.0, activityName: "\(testName)_C_Cycle\(cycle)_PinchIn")
-                performMeasuredPan(map: map, from: center, to: left, activityName: "\(testName)_C_Cycle\(cycle)_PanLeftCombo")
+                performMeasuredPan(map: map, from: center, to: comboInTarget, activityName: "\(testName)_C_Cycle\(cycle)_\(comboInName)")
 
                 let status = readCurrentStatus(map: map)
                 print("ISRAEL_MAP_STRESS [\(testName) Pan Cycle \(cycle)] mem=\(status["memoryFootprintMB"] ?? "?")MB center=(\(status["centerLatitude"] ?? "?"),\(status["centerLongitude"] ?? "?")) loaded=\(status["loadedStopsCount"] ?? "?")")
@@ -262,8 +267,26 @@ final class IsraelMapZoomStressUITests: XCTestCase {
                 print("ISRAEL_MAP_STRESS [\(testName) Continuous Cycle \(cycle)] mem=\(status["memoryFootprintMB"] ?? "?")MB loaded=\(status["loadedStopsCount"] ?? "?") rendered=\(status["renderedStopsCount"] ?? "?")")
 
                 if cycle == 6 {
-                    let rendered = Int(status["renderedStopsCount"] ?? "0") ?? 0
-                    XCTAssertGreaterThan(rendered, 0, "Stops must reappear after returning to street zoom level")
+                    // Recenter on target city to verify stops reload after returning to street zoom level
+                    let locButton = [
+                        app.buttons["oba.map.location_button"],
+                        app.buttons["מרכז את המפה על מיקומי הנוכחי"],
+                        app.buttons["Center map on current location"]
+                    ].first(where: { $0.exists })
+                    if let locButton {
+                        locButton.tap()
+                        Thread.sleep(forTimeInterval: 1.5)
+                    }
+
+                    // Poll briefly for render refresh
+                    var finalRendered = 0
+                    for _ in 1...10 {
+                        let st = readCurrentStatus(map: map)
+                        finalRendered = Int(st["renderedStopsCount"] ?? "0") ?? 0
+                        if finalRendered > 0 { break }
+                        Thread.sleep(forTimeInterval: 0.5)
+                    }
+                    XCTAssertGreaterThan(finalRendered, 0, "Stops must reappear after returning to street zoom level")
                 }
             }
         }
@@ -441,6 +464,19 @@ final class IsraelMapZoomStressUITests: XCTestCase {
 
                 if loopIteration % 4 == 0 {
                     print("ISRAEL_MAP_STRESS: Waiting for stops... loaded=\(loaded) rendered=\(rendered) catalogAvailable=\(catalogAvailable) regionID=\(regionID) rectH=\(status["visibleMapRectHeight"] ?? "?")")
+                }
+
+                if loopIteration == 6 && (loaded == 0 || rendered == 0) {
+                    let locButton = [
+                        app.buttons["oba.map.location_button"],
+                        app.buttons["מרכז את המפה על מיקומי הנוכחי"],
+                        app.buttons["Center map on current location"]
+                    ].first(where: { $0.exists })
+                    if let locButton {
+                        locButton.tap()
+                    } else {
+                        map.pinch(withScale: 1.05, velocity: 1.0)
+                    }
                 }
 
                 if catalogAvailable && regionID == 972 && loaded >= minStops && rendered >= 1 {

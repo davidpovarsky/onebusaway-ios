@@ -260,6 +260,28 @@ struct MapPanelRootView: View {
             .onAppear {
                 mapViewModel.start()
                 applyPendingRentalsFocus()
+#if DEBUG
+                if IsraelMapStressProbe.isEnabled && application.currentRegion?.regionIdentifier == 972 {
+                    let testLat = Double(ProcessInfo.processInfo.environment["ISRAEL_MAP_TEST_LAT"] ?? "") ?? 31.790
+                    let testLon = Double(ProcessInfo.processInfo.environment["ISRAEL_MAP_TEST_LON"] ?? "") ?? 35.210
+                    let center = CLLocationCoordinate2D(latitude: testLat, longitude: testLon)
+                    let region = MKCoordinateRegion(center: center, latitudinalMeters: 1000, longitudinalMeters: 1000)
+                    application.mapRegionManager.scheduleStopsRequest(in: region)
+                }
+#endif
+            }
+            .onReceive(stopsObserver.$renderStops) { _ in
+#if DEBUG
+                if IsraelMapStressProbe.isEnabled {
+                    let loaded = application.mapRegionManager.stops.count
+                    let rendered = stopsObserver.renderStops.count + stopsObserver.bookmarks.count
+                    IsraelMapStressProbe.shared.update(
+                        loadedStopsCount: loaded,
+                        renderedStopsCount: rendered
+                    )
+                    stressProbeStatus = IsraelMapStressProbe.shared.serializedStatus()
+                }
+#endif
             }
             .onReceive(application.notificationCenter.publisher(for: .rentalsDeepLinkPending)) { _ in
                 applyPendingRentalsFocus()

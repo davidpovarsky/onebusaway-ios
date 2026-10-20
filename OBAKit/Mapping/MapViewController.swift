@@ -465,6 +465,7 @@ class MapViewController: UIViewController,
         let button = UIButton(type: .system)
         button.setImage(Icons.nearMe, for: .normal)
         button.addTarget(self, action: #selector(centerMapOnUserLocationViaTap), for: .touchUpInside)
+        button.accessibilityIdentifier = "oba.map.location_button"
         button.accessibilityLabel = OBALoc("map_controller.center_user_location", value: "Center map on current location", comment: "Map controller for centering the map on the user's current location.")
         return button
     }()
