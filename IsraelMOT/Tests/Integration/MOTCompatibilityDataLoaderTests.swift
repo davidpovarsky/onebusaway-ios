@@ -629,18 +629,19 @@ struct MOTCompatibilityDataLoaderTests {
 
         // 2. Real departure: creates authentic schedule entry and tripsWithStopTimes
         let departure = TransitArrival(
+            routeID: MOTRouteID(rawValue: 33285),
             lineName: "31",
             destination: "רמות",
             scheduledTime: Date(timeIntervalSince1970: 1700000000),
             estimatedTime: nil,
-            isRealTime: false,
             minutesToArrival: nil,
+            isRealTime: false,
             vehicleLocation: nil,
             staticTripId: "12345",
             tripIdToDate: 67890,
-            routeDesc: "15031-1-0",
+            routeDesc: MOTRouteDesc(rawValue: "15031-1-0"),
             stopSequence: 1,
-            agencyID: 16,
+            agencyID: MOTAgencyID(rawValue: 16),
             agencyName: "סופרבוס"
         )
         let realEnvelope = OBACompatibilityBridge.scheduleForRouteResponse(route: domainRoute, departures: [departure])
@@ -677,7 +678,13 @@ struct MOTCompatibilityDataLoaderTests {
             stopsDTO: stopsResponse.data?.route
         )
 
-        let envelope = OBACompatibilityBridge.shapeResponse(route: domainRoute)
+        guard let envelope = OBACompatibilityBridge.shapeResponse(
+            routeID: domainRoute.routeID,
+            polyline: domainRoute.polyline
+        ) else {
+            Issue.record("Expected shape envelope")
+            return
+        }
         let jsonData = try JSONSerialization.data(withJSONObject: envelope)
 
         let decoder = JSONDecoder()
@@ -713,29 +720,16 @@ struct MOTCompatibilityDataLoaderTests {
             stopsDTO: stopsResponse.data?.route
         )
 
-        let arrival = TransitArrival(
-            lineName: "31",
-            destination: "רמות",
-            scheduledTime: Date(timeIntervalSince1970: 1700000000),
-            estimatedTime: Date(timeIntervalSince1970: 1700000000),
-            isRealTime: true,
-            minutesToArrival: 5,
-            vehicleLocation: CLLocationCoordinate2D(latitude: 31.78, longitude: 35.20),
-            staticTripId: "12345",
-            tripIdToDate: 67890,
-            routeDesc: "15031-1-0",
-            stopSequence: 1,
-            agencyID: 16,
-            agencyName: "סופרבוס"
-        )
-
         let tripID = "mot:trip:33285_12345_20261020"
         let serviceDate = Date(timeIntervalSince1970: 1700000000)
+        let stopTimes: [(stop: TransitStop, arrivalSec: Int, departureSec: Int)] = domainRoute.stops.enumerated().map { idx, stop in
+            (stop: stop, arrivalSec: 36000 + idx * 60, departureSec: 36000 + idx * 60)
+        }
 
         let envelope = OBACompatibilityBridge.tripDetailsResponse(
             tripID: tripID,
             route: domainRoute,
-            targetArrival: arrival,
+            stopTimes: stopTimes,
             serviceDate: serviceDate
         )
         let jsonData = try JSONSerialization.data(withJSONObject: envelope)
@@ -751,9 +745,6 @@ struct MOTCompatibilityDataLoaderTests {
         #expect(tripDetails.trip != nil)
         #expect(tripDetails.trip.routeID == "mot:route:33285")
         #expect(tripDetails.trip.shapeID == "mot:shape:33285")
-        #expect(tripDetails.status != nil)
-        #expect(tripDetails.status?.position != nil)
-        #expect(tripDetails.status?.lastKnownOrientation == 0.0)
 
         // Verify strictly resolvable references
         #expect(response.references?.routes.count == 1)
@@ -771,43 +762,27 @@ struct MOTCompatibilityDataLoaderTests {
             cityName: "ירושלים",
             location: CLLocationCoordinate2D(latitude: 31.815188, longitude: 35.203022)
         )
-        let domainRoute = TransitRoute(
-            routeID: MOTRouteID(33285),
-            lineName: "31",
-            longName: "רמות - גילה",
-            routeDesc: MOTRouteDesc("15031-1-0"),
-            agencyID: MOTAgencyID(16),
-            agencyName: "סופרבוס",
-            cityName: "ירושלים",
-            polyline: nil,
-            stops: [stop]
-        )
 
         let arrival = TransitArrival(
+            routeID: MOTRouteID(rawValue: 33285),
             lineName: "31",
             destination: "רמות",
             scheduledTime: Date(timeIntervalSince1970: 1700000000),
             estimatedTime: Date(timeIntervalSince1970: 1700000300),
-            isRealTime: true,
             minutesToArrival: 5,
+            isRealTime: true,
             vehicleLocation: CLLocationCoordinate2D(latitude: 31.81, longitude: 35.20),
             staticTripId: "12345",
             tripIdToDate: 67890,
-            routeDesc: "15031-1-0",
+            routeDesc: MOTRouteDesc(rawValue: "15031-1-0"),
             stopSequence: 1,
-            agencyID: 16,
+            agencyID: MOTAgencyID(rawValue: 16),
             agencyName: "סופרבוס"
         )
 
-        let tripID = "mot:trip:33285_12345_20261020"
-        let serviceDate = Date(timeIntervalSince1970: 1700000000)
-
         let envelope = OBACompatibilityBridge.arrivalAndDepartureForStopResponse(
             stop: stop,
-            route: domainRoute,
-            arrival: arrival,
-            tripID: tripID,
-            serviceDate: serviceDate
+            arrival: arrival
         )
         let jsonData = try JSONSerialization.data(withJSONObject: envelope)
 
@@ -817,7 +792,7 @@ struct MOTCompatibilityDataLoaderTests {
 
         let arrDep = response.entry
         #expect(arrDep.stopID == "mot:stop:5997")
-        #expect(arrDep.tripID == tripID)
+        #expect(arrDep.tripID == "mot:trip:33285_12345")
         #expect(arrDep.routeID == "mot:route:33285")
         #expect(arrDep.routeShortName == "31")
         #expect(arrDep.tripHeadsign == "רמות")
