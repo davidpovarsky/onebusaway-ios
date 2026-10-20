@@ -402,8 +402,9 @@ class TripViewController: UIViewController,
     private func openStop(_ stopTime: TripStopTime, on mapView: MKMapView) {
         var transferContext: TransferContext?
         if let arrivalDeparture = tripConvertible.arrivalDeparture,
-           stopTime.stopID != arrivalDeparture.stopID {
-            transferContext = .from(arrivalDeparture: arrivalDeparture, arrivalDate: stopTime.arrivalDate)
+           stopTime.stopID != arrivalDeparture.stopID,
+           let arrivalDate = stopTime.arrivalDate {
+            transferContext = .from(arrivalDeparture: arrivalDeparture, arrivalDate: arrivalDate)
         }
 
         // Same reason as `MapViewController`: leaving the tapped pin selected

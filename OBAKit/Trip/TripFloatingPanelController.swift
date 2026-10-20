@@ -398,9 +398,10 @@ class TripFloatingPanelController: UIViewController,
 
         // Only provide transfer context for stops that are not the user's
         // boarding stop — transferring to the same stop is not meaningful.
-        guard tripStop.stop.id != arrivalDeparture.stopID else { return nil }
+        guard tripStop.stop.id != arrivalDeparture.stopID,
+              let arrivalDate = tripStop.stopTime.arrivalDate else { return nil }
 
-        return .from(arrivalDeparture: arrivalDeparture, arrivalDate: tripStop.stopTime.arrivalDate)
+        return .from(arrivalDeparture: arrivalDeparture, arrivalDate: arrivalDate)
     }
 
     private func showOnMap(_ tripStop: TripStopViewModel) {
