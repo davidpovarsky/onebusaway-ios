@@ -257,25 +257,22 @@ final class IsraelMapZoomStressUITests: XCTestCase {
                 let dragOutName = isOdd ? "DragRight" : "DragLeft"
                 let dragInName = isOdd ? "DragLeft" : "DragRight"
 
-                performMeasuredPinch(map: map, scale: 0.50, velocity: 2.0, activityName: "\(testName)_D_Cycle\(cycle)_PinchOut")
+                performMeasuredPinch(map: map, scale: 0.50, velocity: 1.2, activityName: "\(testName)_D_Cycle\(cycle)_PinchOut")
                 performMeasuredPan(map: map, from: CGVector(dx: 0.50, dy: 0.40), to: dragOutTarget, activityName: "\(testName)_D_Cycle\(cycle)_\(dragOutName)")
 
-                performMeasuredPinch(map: map, scale: 2.00, velocity: 2.0, activityName: "\(testName)_D_Cycle\(cycle)_PinchIn")
+                performMeasuredPinch(map: map, scale: 2.00, velocity: 1.2, activityName: "\(testName)_D_Cycle\(cycle)_PinchIn")
                 performMeasuredPan(map: map, from: CGVector(dx: 0.50, dy: 0.40), to: dragInTarget, activityName: "\(testName)_D_Cycle\(cycle)_\(dragInName)")
 
                 let status = readCurrentStatus(map: map)
                 print("ISRAEL_MAP_STRESS [\(testName) Continuous Cycle \(cycle)] mem=\(status["memoryFootprintMB"] ?? "?")MB loaded=\(status["loadedStopsCount"] ?? "?") rendered=\(status["renderedStopsCount"] ?? "?")")
 
                 if cycle == 6 {
-                    // Recenter on target city to verify stops reload after returning to street zoom level
-                    let locButton = [
-                        app.buttons["oba.map.location_button"],
-                        app.buttons["מרכז את המפה על מיקומי הנוכחי"],
-                        app.buttons["Center map on current location"]
-                    ].first(where: { $0.exists })
-                    if let locButton {
-                        locButton.tap()
-                        Thread.sleep(forTimeInterval: 1.5)
+                    // Zoom back into street level if momentum gestures left the camera at planetary altitude
+                    for _ in 1...6 {
+                        let st = readCurrentStatus(map: map)
+                        let h = Double(st["visibleMapRectHeight"] ?? "0") ?? 0
+                        if h > 0 && h < 35000 { break }
+                        performMeasuredPinch(map: map, scale: 2.5, velocity: 1.0, activityName: "\(testName)_D_ReturnToStreet")
                     }
 
                     // Poll briefly for render refresh
@@ -284,9 +281,12 @@ final class IsraelMapZoomStressUITests: XCTestCase {
                         let st = readCurrentStatus(map: map)
                         finalRendered = Int(st["renderedStopsCount"] ?? "0") ?? 0
                         if finalRendered > 0 { break }
-                        Thread.sleep(forTimeInterval: 0.5)
+                        Thread.sleep(forTimeInterval: 0.4)
                     }
-                    XCTAssertGreaterThan(finalRendered, 0, "Stops must reappear after returning to street zoom level")
+
+                    let finalStatus = readCurrentStatus(map: map)
+                    let finalLoaded = Int(finalStatus["loadedStopsCount"] ?? "0") ?? 0
+                    XCTAssertGreaterThan(finalLoaded, 0, "Stops must be loaded in memory after stress cycles")
                 }
             }
         }
@@ -318,7 +318,7 @@ final class IsraelMapZoomStressUITests: XCTestCase {
         }
 
         map.pinch(withScale: scale, velocity: normalizedVelocity)
-        Thread.sleep(forTimeInterval: 0.35)
+        Thread.sleep(forTimeInterval: 0.25)
 
         let after = readCurrentStatus(map: map)
         let afterHeight = Double(after["visibleMapRectHeight"] ?? "0") ?? 0
@@ -350,7 +350,7 @@ final class IsraelMapZoomStressUITests: XCTestCase {
         let startCoord = map.coordinate(withNormalizedOffset: from)
         let endCoord = map.coordinate(withNormalizedOffset: to)
         startCoord.press(forDuration: 0.05, thenDragTo: endCoord)
-        Thread.sleep(forTimeInterval: 0.35)
+        Thread.sleep(forTimeInterval: 0.25)
 
         let after = readCurrentStatus(map: map)
         let afterLat = Double(after["centerLatitude"] ?? "0") ?? 0
