@@ -15,15 +15,19 @@ struct IsraelLiveVehicleMappingTests {
     private func makeArrival(location: CLLocationCoordinate2D?, isRealTime: Bool) -> TransitArrival {
         return TransitArrival(
             routeID: MOTRouteID(31),
-            routeDesc: MOTRouteDesc("10031-1-0"),
             lineName: "31",
-            destinationName: "רמות",
-            agencyID: MOTAgencyID(16),
-            agencyName: "סופרבוס",
-            aimedArrivalTime: Date().addingTimeInterval(300),
-            expectedArrivalTime: isRealTime ? Date().addingTimeInterval(300) : nil,
+            destination: "רמות",
+            scheduledTime: Date().addingTimeInterval(300),
+            estimatedTime: isRealTime ? Date().addingTimeInterval(300) : nil,
+            minutesToArrival: 5,
             isRealTime: isRealTime,
-            vehicleLocation: location
+            vehicleLocation: location,
+            staticTripId: "86_01",
+            tripIdToDate: nil,
+            routeDesc: MOTRouteDesc("10031-1-0"),
+            stopSequence: 1,
+            agencyID: MOTAgencyID(16),
+            agencyName: "סופרבוס"
         )
     }
 

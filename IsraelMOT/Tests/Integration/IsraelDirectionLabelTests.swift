@@ -62,10 +62,11 @@ struct IsraelDirectionLabelTests {
         let route = TransitRoute(
             routeID: MOTRouteID(31),
             lineName: "31",
+            longName: "מוצא <-> יעד",
             routeDesc: MOTRouteDesc("10031-1-0"),
             agencyID: MOTAgencyID(16),
             agencyName: "סופרבוס",
-            longName: "מוצא <-> יעד",
+            cityName: "ירושלים",
             polyline: nil,
             stops: [stop1, stop2]
         )

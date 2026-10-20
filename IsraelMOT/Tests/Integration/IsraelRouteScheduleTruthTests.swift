@@ -64,15 +64,19 @@ struct IsraelRouteScheduleTruthTests {
 
         let arrival = TransitArrival(
             routeID: MOTRouteID(31),
-            routeDesc: MOTRouteDesc("10031-1-0"),
             lineName: "31",
-            destinationName: "רמות",
-            agencyID: MOTAgencyID(16),
-            agencyName: "סופרבוס",
-            aimedArrivalTime: Date().addingTimeInterval(600),
-            expectedArrivalTime: nil,
+            destination: "רמות",
+            scheduledTime: Date().addingTimeInterval(600),
+            estimatedTime: nil,
+            minutesToArrival: 10,
             isRealTime: false,
-            vehicleLocation: nil
+            vehicleLocation: nil,
+            staticTripId: nil,
+            tripIdToDate: nil,
+            routeDesc: MOTRouteDesc("10031-1-0"),
+            stopSequence: 1,
+            agencyID: MOTAgencyID(16),
+            agencyName: "סופרבוס"
         )
 
         let response = OBACompatibilityBridge.stopArrivalsResponse(
