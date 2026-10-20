@@ -166,7 +166,7 @@ public class SearchManager: NSObject {
             circularRegion = CLCircularRegion(mapRect: serviceRect)
         } else if let currentRegion = application.regionsService.currentRegion {
             circularRegion = CLCircularRegion(
-                center: CLLocationCoordinate2D(latitude: currentRegion.latitude, longitude: currentRegion.longitude),
+                center: currentRegion.centerCoordinate,
                 radius: 40000.0,
                 identifier: "DefaultRegionalRadius"
             )
