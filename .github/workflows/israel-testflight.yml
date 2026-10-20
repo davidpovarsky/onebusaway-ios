@@ -214,13 +214,25 @@ jobs:
         if: inputs.operation == 'upload'
         shell: bash
         run: |
-          set -euo pipefail
+          set -o pipefail
+          mkdir -p build/testflight
+          ARCHIVE_EXIT=0
           xcodebuild archive \
             -project OBAKit.xcodeproj -scheme App \
             -configuration Release -destination 'generic/platform=iOS' \
             -derivedDataPath DerivedData \
             -archivePath "$GITHUB_WORKSPACE/build/OneBusAwayIsrael.xcarchive" \
-            "CURRENT_PROJECT_VERSION=$GITHUB_RUN_NUMBER"
+            "CURRENT_PROJECT_VERSION=$GITHUB_RUN_NUMBER" 2>&1 | tee build/testflight/xcodebuild-archive.log || ARCHIVE_EXIT=$?
+
+          if [ "$ARCHIVE_EXIT" -ne 0 ]; then
+            echo "::error::xcodebuild archive failed with exit code $ARCHIVE_EXIT"
+            echo "=== TAIL OF ARCHIVE LOG (LAST 100 LINES) ==="
+            tail -n 100 build/testflight/xcodebuild-archive.log
+            echo "=== ERRORS EXTRACTED FROM ARCHIVE LOG ==="
+            grep -E -i "error:|failed|fatal" build/testflight/xcodebuild-archive.log | grep -v -E -i "no error|errors: 0" | head -n 50 || true
+            exit "$ARCHIVE_EXIT"
+          fi
+
           test -d "build/OneBusAwayIsrael.xcarchive/dSYMs"
           test -d "build/OneBusAwayIsrael.xcarchive/Products/Applications"
 
@@ -356,8 +368,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Israel-TestFlight-evidence-${{ github.run_number }}
-          path: build/testflight/release-evidence.txt
+          path: |
+            build/testflight/release-evidence.txt
+            build/testflight/xcodebuild-archive.log
           retention-days: 30
+          if-no-files-found: warn
 
       - name: Erase transient signing materials
         if: always()
