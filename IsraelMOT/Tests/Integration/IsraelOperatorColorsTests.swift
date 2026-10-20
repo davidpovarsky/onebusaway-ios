@@ -36,11 +36,11 @@ struct IsraelOperatorColorsTests {
         #expect(superbusTextHex == "FFFFFF")
 
         // Light/yellow color -> black text
-        let blackHex = MOTAgencyColorResolver.textColorHex(forHex: "FFFF00")
+        let blackHex = MOTAgencyColorResolver.contrastTextColor(forHex: "FFFF00")
         #expect(blackHex == "000000")
 
         // Dark color -> white text
-        let whiteHex = MOTAgencyColorResolver.textColorHex(forHex: "000000")
+        let whiteHex = MOTAgencyColorResolver.contrastTextColor(forHex: "000000")
         #expect(whiteHex == "FFFFFF")
     }
 
