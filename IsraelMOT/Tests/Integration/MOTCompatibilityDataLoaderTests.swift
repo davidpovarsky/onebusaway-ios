@@ -628,21 +628,12 @@ struct MOTCompatibilityDataLoaderTests {
         #expect(emptyResponse.entry.stopTripGroupings[0].tripIDs.isEmpty)
 
         // 2. Real departure: creates authentic schedule entry and tripsWithStopTimes
-        let departure = TransitArrival(
-            routeID: MOTRouteID(rawValue: 33285),
-            lineName: "31",
-            destination: "רמות",
-            scheduledTime: Date(timeIntervalSince1970: 1700000000),
-            estimatedTime: nil,
-            minutesToArrival: nil,
-            isRealTime: false,
-            vehicleLocation: nil,
-            staticTripId: "12345",
-            tripIdToDate: 67890,
-            routeDesc: MOTRouteDesc(rawValue: "15031-1-0"),
-            stopSequence: 1,
-            agencyID: MOTAgencyID(rawValue: 16),
-            agencyName: "סופרבוס"
+        let departure = DailyCalendarDepartureDTO(
+            tripId: "mot:trip:33285_12345",
+            stopid: 11622,
+            stopcode: 5997,
+            departureTime: "10:00:00",
+            departureTimeString: "10:00"
         )
         let realEnvelope = OBACompatibilityBridge.scheduleForRouteResponse(route: domainRoute, departures: [departure])
         let realJsonData = try JSONSerialization.data(withJSONObject: realEnvelope)
@@ -800,7 +791,8 @@ struct MOTCompatibilityDataLoaderTests {
         #expect(arrDep.trip != nil)
         #expect(arrDep.route != nil)
         #expect(arrDep.shapeID == "mot:shape:33285")
-        #expect(arrDep.predictedDepartureTime != nil)
+        #expect(arrDep.predicted == true)
+        #expect(arrDep.departureDate > Date(timeIntervalSince1970: 0))
     }
 
     @Test
