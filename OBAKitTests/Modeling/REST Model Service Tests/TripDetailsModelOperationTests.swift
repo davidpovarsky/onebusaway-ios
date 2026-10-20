@@ -45,8 +45,8 @@ final class TripDetailsModelOperationTests: OBATestCase {
         #expect(tripDetails.stopTimes.count == 53)
 
         let stopTime = tripDetails.stopTimes.first!
-        #expect(stopTime.arrivalDate.timeIntervalSince1970 == 1343690462)
-        #expect(stopTime.departureDate.timeIntervalSince1970 == 1343690462)
+        #expect(stopTime.arrivalDate?.timeIntervalSince1970 == 1343690462)
+        #expect(stopTime.departureDate?.timeIntervalSince1970 == 1343690462)
         #expect(stopTime.stopID == "1_9610")
 
         #expect(tripDetails.previousTrip!.id == "1_18196851")
