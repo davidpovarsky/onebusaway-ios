@@ -312,7 +312,9 @@ struct MapPanelRootView: View {
             tripFocusMapContent(for: tripFocusDisplay.display)
         }
         .accessibilityIdentifier("oba.map.view")
+#if DEBUG
         .accessibilityValue(stressProbeStatus)
+#endif
     }
 
     private var mapWithCameraAndInteraction: some View {
