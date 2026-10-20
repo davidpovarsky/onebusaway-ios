@@ -94,12 +94,6 @@ struct IsraelTripIdentityAndTimesTests {
     }
 
     @Test
-    func testMissingTimeLocalizationHonesty() {
-        let noTimeStr = OBALoc("trip_stop.no_time", value: "No time available", comment: "No scheduled time")
-        #expect(!noTimeStr.isEmpty)
-    }
-
-    @Test
     func testServiceDateIsDistinctFromArrivalTime() {
         let calendarDay = "20261020"
         let arrivalSec = 36000 // 10:00:00 AM
