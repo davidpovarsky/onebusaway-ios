@@ -28,6 +28,10 @@ nonisolated public struct TransitMultiLanguageName: Hashable, Codable, Sendable 
         if lang == "ar", let a = ar, !a.isEmpty { return a }
         return he ?? en ?? ar ?? ""
     }
+
+    public var userFacingName: String {
+        return localizedName()
+    }
 }
 
 /// Normalized domain representation of a transit stop in Israel.
@@ -114,7 +118,7 @@ nonisolated public struct TransitRoute: Identifiable, Hashable, Codable, Sendabl
     /// Preferred destination display name, extracted truthfully from verified stop sequence or parsed headsign.
     public var destinationName: String? {
         if stops.count >= 2, let lastStop = stops.last {
-            return lastStop.name.userFacingName
+            return lastStop.name.localizedName()
         }
         if let long = longName {
             return Self.parseDestination(from: long)
@@ -125,7 +129,7 @@ nonisolated public struct TransitRoute: Identifiable, Hashable, Codable, Sendabl
     /// Verified origin display name if available.
     public var originName: String? {
         if stops.count >= 2, let firstStop = stops.first {
-            return firstStop.name.userFacingName
+            return firstStop.name.localizedName()
         }
         if let long = longName {
             return Self.parseOrigin(from: long)
