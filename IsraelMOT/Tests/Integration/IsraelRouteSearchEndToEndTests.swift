@@ -54,11 +54,11 @@ struct IsraelRouteSearchEndToEndTests {
 
         #expect(list.count == 100)
         #expect(agencies.count >= 1)
-        #expect(agencies.contains { ($0["id"] as? String) == "16" })
+        #expect(agencies.contains { ($0["id"] as? String) == "mot:agency:16" })
 
         // Verify agencyId reference is present in every route
         for routeDict in list {
-            #expect((routeDict["agencyId"] as? String) == "16")
+            #expect((routeDict["agencyId"] as? String) == "mot:agency:16")
             #expect((routeDict["color"] as? String) == "004F9E") // Superbus blue
         }
     }

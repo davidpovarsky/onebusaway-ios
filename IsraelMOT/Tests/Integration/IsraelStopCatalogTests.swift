@@ -167,7 +167,7 @@ struct IsraelStopCatalogTests {
         #expect(firstTrip.stopTimes[0].stopID == "mot:stop:5997_11622")
         #expect(firstTrip.stopTimes[1].stopID == "mot:stop:2899_10168")
         #expect(firstTrip.stopTimes[0].departureTime > 0)
-        #expect(firstTrip.stopTimes[1].arrivalTime >= firstTrip.stopTimes[0].departureTime)
+        #expect(firstTrip.stopTimes[1].arrivalTime == -1) // Truth-first: intermediate stop time without timetable is -1
     }
 
     @Test

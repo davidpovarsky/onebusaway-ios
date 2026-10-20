@@ -39,7 +39,7 @@ struct IsraelDirectionLabelTests {
         let stop1 = TransitStop(
             code: MOTStopCode(1001),
             internalID: MOTStopInternalID(1),
-            name: TransitMultiLanguageName(he: "תחנת מוצא", en: "Origin", ar: nil),
+            name: TransitMultiLanguageName(he: "תחנת מוצא", en: nil, ar: nil),
             cityName: "ירושלים",
             streetName: "",
             location: .init(latitude: 31.8, longitude: 35.2),
@@ -50,7 +50,7 @@ struct IsraelDirectionLabelTests {
         let stop2 = TransitStop(
             code: MOTStopCode(1002),
             internalID: MOTStopInternalID(2),
-            name: TransitMultiLanguageName(he: "תחנת יעד", en: "Destination", ar: nil),
+            name: TransitMultiLanguageName(he: "תחנת יעד", en: nil, ar: nil),
             cityName: "ירושלים",
             streetName: "",
             location: .init(latitude: 31.9, longitude: 35.3),

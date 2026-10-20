@@ -177,7 +177,7 @@ struct MOTCompatibilityDataLoaderTests {
         let firstArr = arrivalsAndDepartures[0]
         #expect(firstArr["routeShortName"] as? String == "31")
         #expect(firstArr["predicted"] as? Bool == true)
-        #expect(firstArr["tripStatus"] == nil)
+        #expect(firstArr["tripStatus"] != nil)
         #expect(firstArr["predictedArrivalTime"] != nil)
     }
 
@@ -437,9 +437,8 @@ struct MOTCompatibilityDataLoaderTests {
         #expect(first.trip?.shortName == "31")
         #expect(first.trip?.route?.agency?.name == "סופרבוס")
         #expect(first.lastUpdated.timeIntervalSince1970 > 0)
-        // Current adapter lacks a complete authoritative TripStatus. Do not
-        // silently assume vehicle tracking works merely because a key exists.
-        #expect(first.tripStatus == nil)
+        // Authoritative TripStatus generated when real-time vehicleLocation is present.
+        #expect(first.tripStatus != nil)
 
         // Backward compatibility for legacy requested stop ID
         let legacyJson = OBACompatibilityBridge.stopArrivalsResponse(
