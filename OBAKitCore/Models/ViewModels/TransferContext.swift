@@ -47,7 +47,7 @@ public struct TransferContext: Equatable, Hashable {
         self.fromTripID = fromTripID
     }
 
-    /// Convenience factory that extracts route info from an `ArrivalDeparture` with a known non-nil arrival date.
+    /// Convenience factory that extracts route info from an `ArrivalDeparture`.
     public static func from(arrivalDeparture: ArrivalDeparture, arrivalDate: Date) -> TransferContext {
         TransferContext(
             arrivalTime: arrivalDate,
@@ -55,12 +55,6 @@ public struct TransferContext: Equatable, Hashable {
             fromTripHeadsign: arrivalDeparture.tripHeadsign ?? "",
             fromTripID: arrivalDeparture.tripID
         )
-    }
-
-    /// Convenience factory that extracts route info from an `ArrivalDeparture` when arrival date may be nil.
-    public static func from(arrivalDeparture: ArrivalDeparture, arrivalDate: Date?) -> TransferContext? {
-        guard let arrivalDate = arrivalDate else { return nil }
-        return from(arrivalDeparture: arrivalDeparture, arrivalDate: arrivalDate)
     }
 
     /// Computes minutes from the transfer arrival time to the given departure date.
