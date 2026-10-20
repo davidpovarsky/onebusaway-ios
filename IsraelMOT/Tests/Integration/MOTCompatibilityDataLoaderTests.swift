@@ -792,7 +792,7 @@ struct MOTCompatibilityDataLoaderTests {
         #expect(arrDep.route != nil)
         #expect(arrDep.shapeID == "mot:shape:33285")
         #expect(arrDep.predicted == true)
-        #expect(arrDep.departureDate > Date(timeIntervalSince1970: 0))
+        #expect(arrDep.arrivalDepartureDate > Date(timeIntervalSince1970: 0))
     }
 
     @Test
