@@ -9,7 +9,6 @@ import UIKit
 import CoreLocation
 @testable import OBAKit
 @testable import OBAKitCore
-@testable import IsraelMOT
 
 @Suite(.serialized)
 struct IsraelOperatorColorsTests {
