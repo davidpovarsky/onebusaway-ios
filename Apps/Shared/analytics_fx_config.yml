@@ -20,6 +20,12 @@ targets:
         script: |
           # Only upload dSYMs for Release builds
           if [ "${CONFIGURATION}" = "Release" ]; then
+            # Do not upload dSYMs during CI / automated builds or if explicitly disabled
+            if [ -n "${CI}" ] || [ "${SKIP_CRASHLYTICS_UPLOAD}" = "1" ]; then
+              echo "Skipping Crashlytics dSYM upload in CI / automated environment"
+              exit 0
+            fi
+
             echo "=== Crashlytics dSYM Upload ==="
             echo "Configuration: ${CONFIGURATION}"
             echo "Project Dir: ${PROJECT_DIR}"
