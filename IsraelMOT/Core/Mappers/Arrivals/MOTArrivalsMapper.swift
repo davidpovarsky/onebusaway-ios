@@ -19,6 +19,8 @@ nonisolated public enum MOTArrivalsMapper {
             let routeID = MOTRouteID(rawValue: route.routeId)
             let routeDesc = route.routeDesc ?? ""
             let stopTimes = stopTimesByRouteDesc[routeDesc] ?? []
+            let agencyID = route.agencyId.map { MOTAgencyID(rawValue: $0) }
+            let routeDescObj = route.routeDesc.map { MOTRouteDesc(rawValue: $0) }
 
             for st in stopTimes {
                 guard let arrivalDate = MOTDateParser.parse(st.arrivalTime) else {
@@ -42,7 +44,13 @@ nonisolated public enum MOTArrivalsMapper {
                     estimatedTime: estimatedDate,
                     minutesToArrival: mins,
                     isRealTime: isRealTime,
-                    vehicleLocation: vehicleLoc
+                    vehicleLocation: vehicleLoc,
+                    staticTripId: st.staticTripId,
+                    tripIdToDate: st.tripIdToDate,
+                    routeDesc: routeDescObj,
+                    stopSequence: st.stopOrder,
+                    agencyID: agencyID,
+                    agencyName: route.agencyName
                 )
                 arrivals.append(arrival)
             }

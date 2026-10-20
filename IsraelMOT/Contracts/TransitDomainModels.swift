@@ -139,10 +139,16 @@ nonisolated public struct TransitRoute: Identifiable, Hashable, Codable, Sendabl
     }
 }
 
-/// Real-time or scheduled arrival record at a stop.
+/// Real-time or scheduled arrival record at a stop with authentic trip and schedule provenance.
 nonisolated public struct TransitArrival: Identifiable, Hashable, Codable, Sendable {
     public var id: String {
-        return "\(routeID.rawValue)_\(scheduledTime.timeIntervalSince1970)"
+        if let staticTripId, !staticTripId.isEmpty {
+            return "\(routeID.rawValue)_\(staticTripId)"
+        }
+        if let tripIdToDate {
+            return "\(routeID.rawValue)_\(tripIdToDate)"
+        }
+        return "\(routeID.rawValue)_\(Int(scheduledTime.timeIntervalSince1970))"
     }
     public let routeID: MOTRouteID
     public let lineName: String
@@ -152,6 +158,12 @@ nonisolated public struct TransitArrival: Identifiable, Hashable, Codable, Senda
     public let minutesToArrival: Int?
     public let isRealTime: Bool
     public let vehicleLocation: CLLocationCoordinate2D?
+    public let staticTripId: String?
+    public let tripIdToDate: Int?
+    public let routeDesc: MOTRouteDesc?
+    public let stopSequence: Int?
+    public let agencyID: MOTAgencyID?
+    public let agencyName: String?
 
     public init(
         routeID: MOTRouteID,
@@ -161,7 +173,13 @@ nonisolated public struct TransitArrival: Identifiable, Hashable, Codable, Senda
         estimatedTime: Date? = nil,
         minutesToArrival: Int? = nil,
         isRealTime: Bool = false,
-        vehicleLocation: CLLocationCoordinate2D? = nil
+        vehicleLocation: CLLocationCoordinate2D? = nil,
+        staticTripId: String? = nil,
+        tripIdToDate: Int? = nil,
+        routeDesc: MOTRouteDesc? = nil,
+        stopSequence: Int? = nil,
+        agencyID: MOTAgencyID? = nil,
+        agencyName: String? = nil
     ) {
         self.routeID = routeID
         self.lineName = lineName
@@ -171,6 +189,12 @@ nonisolated public struct TransitArrival: Identifiable, Hashable, Codable, Senda
         self.minutesToArrival = minutesToArrival
         self.isRealTime = isRealTime
         self.vehicleLocation = vehicleLocation
+        self.staticTripId = staticTripId
+        self.tripIdToDate = tripIdToDate
+        self.routeDesc = routeDesc
+        self.stopSequence = stopSequence
+        self.agencyID = agencyID
+        self.agencyName = agencyName
     }
 }
 
@@ -185,4 +209,3 @@ nonisolated extension CLLocationCoordinate2D: @retroactive Hashable, @retroactiv
         return abs(lhs.latitude - rhs.latitude) < 0.000001 && abs(lhs.longitude - rhs.longitude) < 0.000001
     }
 }
-

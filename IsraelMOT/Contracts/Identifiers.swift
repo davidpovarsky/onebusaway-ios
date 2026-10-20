@@ -124,6 +124,14 @@ nonisolated public enum MOTIdentityFormatter {
         return "mot:agency:\(id.rawValue)"
     }
 
+    public static func scopedShapeID(routeID: MOTRouteID) -> String {
+        return "mot:shape:\(routeID.rawValue)"
+    }
+
+    public static func scopedTripID(routeID: MOTRouteID, suffix: String) -> String {
+        return "mot:trip:\(routeID.rawValue)_\(suffix)"
+    }
+
     public static func parseStopCode(fromScopedID scopedID: String) -> MOTStopCode? {
         let stripped: String
         if scopedID.hasPrefix("mot:stop:") {
@@ -155,5 +163,27 @@ nonisolated public enum MOTIdentityFormatter {
             return MOTRouteID(String(num))
         }
         return MOTRouteID(scopedID)
+    }
+
+    public static func parseRouteIDFromShapeID(_ shapeID: String) -> MOTRouteID? {
+        let stripped: String
+        if shapeID.hasPrefix("mot:shape:") {
+            stripped = String(shapeID.dropFirst("mot:shape:".count))
+        } else {
+            stripped = shapeID
+        }
+        return MOTRouteID(stripped)
+    }
+
+    public static func parseRouteIDFromTripID(_ tripID: String) -> MOTRouteID? {
+        let stripped: String
+        if tripID.hasPrefix("mot:trip:") {
+            stripped = String(tripID.dropFirst("mot:trip:".count))
+        } else {
+            stripped = tripID
+        }
+        let parts = stripped.split(separator: "_")
+        guard let first = parts.first else { return nil }
+        return MOTRouteID(String(first))
     }
 }

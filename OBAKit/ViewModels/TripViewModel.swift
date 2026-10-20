@@ -110,23 +110,24 @@ class TripViewModel: ObservableObject {
             guard let self else { return }
             isLoading = true
             do {
-                async let convertible = fetchTripConvertible()
-                async let details = fetchTripDetails()
-                async let polyline = fetchMapPolyline()
+                // Trip details is the essential payload (stop sequence & timeline).
+                async let detailsTask = fetchTripDetails()
+                // Polyline shape and refreshed arrival/departure are resiliently loaded.
+                async let polylineTask = fetchMapPolylineSilently()
+                async let convertibleTask = fetchTripConvertibleSilently()
 
-                // `try await` rethrows the first failure and cancels the sibling
-                // async-lets. No @Published state has been mutated up to this point.
-                let (newConvertible, newDetails, newPolyline) = try await (convertible, details, polyline)
+                let newDetails = try await detailsTask
+                let newPolyline = await polylineTask
+                let newConvertible = await convertibleTask
 
                 // Cancellation is cooperative: a load cancelled by a newer one or
                 // by `deactivate()` can still get its responses back. Applying
                 // them could overwrite the newer load's trip.
                 guard !Task.isCancelled else { return }
 
-                // All three fetches succeeded — apply atomically.
-                if let newConvertible { tripConvertible = newConvertible }
                 if let newDetails { tripDetails = newDetails }
                 if let newPolyline { routePolylineCoordinates = newPolyline }
+                if let newConvertible { tripConvertible = newConvertible }
                 operationError = nil
 
                 // After the details are applied, because the destination's row
@@ -171,6 +172,15 @@ class TripViewModel: ObservableObject {
         return TripConvertible(arrivalDeparture: newArrDep)
     }
 
+    private func fetchTripConvertibleSilently() async -> TripConvertible? {
+        do {
+            return try await fetchTripConvertible()
+        } catch {
+            Logger.warn("TripViewModel: optional convertible refresh failed: \(error)")
+            return nil
+        }
+    }
+
     private func fetchTripDetails() async throws -> TripDetails? {
         guard let apiService = application.apiService else { return nil }
 
@@ -193,6 +203,15 @@ class TripViewModel: ObservableObject {
         return Polyline(encodedPolyline: response.entry.points).coordinates
     }
 
+    private func fetchMapPolylineSilently() async -> [CLLocationCoordinate2D]? {
+        do {
+            return try await fetchMapPolyline()
+        } catch {
+            Logger.warn("TripViewModel: optional polyline fetch failed: \(error)")
+            return nil
+        }
+    }
+
     /// Loads the live arrival at the shared destination, for the progress
     /// header's countdown.
     ///
@@ -201,17 +220,11 @@ class TripViewModel: ObservableObject {
     /// loaded, and an error alert over one supplementary time would be out of
     /// proportion.
     private func loadDestinationArrival() async {
-        // Every trip without a shared destination stops here: there is nothing
-        // to count down to.
         guard let destinationStopID,
               let apiService = application.apiService,
               let arrivalDeparture = tripConvertible.arrivalDeparture,
               let tripDetails else { return }
 
-        // The same resolution the stop list uses, so the countdown targets the
-        // row that carries the destination marker. When the trip never reaches
-        // the destination after boarding, the list leaves the marker on the
-        // boarding stop, and there is no destination to count down to.
         guard let destinationIndex = TripStopListModel.riderStops(
             in: tripDetails.stopTimes,
             arrivalDeparture: arrivalDeparture,
@@ -227,13 +240,8 @@ class TripViewModel: ObservableObject {
                 tripID: arrivalDeparture.tripID,
                 serviceDate: arrivalDeparture.serviceDate,
                 vehicleID: arrivalDeparture.vehicleID,
-                // The row, not just the stop: a loop route can call at the
-                // destination more than once.
                 stopSequence: destinationIndex
             ).entry
-            // Cancellation is cooperative: a request already answered when this
-            // load was cancelled, by a newer refresh or `deactivate()`, still
-            // returns. Publishing it could overwrite the newer refresh's arrival.
             guard !Task.isCancelled else { return }
             destinationArrivalDeparture = arrival
         } catch {

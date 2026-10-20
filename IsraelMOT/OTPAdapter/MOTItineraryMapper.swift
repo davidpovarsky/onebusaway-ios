@@ -80,6 +80,7 @@ nonisolated public enum MOTItineraryMapper {
             let legDuration = section.travelSummary?.duration ?? max(Int(legEndTime.timeIntervalSince(legStartTime)), 0)
             let legDistance = Double(section.travelSummary?.length ?? 0)
 
+            let transitLegIndex = transitLegCount
             if isWalk {
                 totalWalkTime += legDuration
                 totalWalkDistance += legDistance
@@ -123,13 +124,35 @@ nonisolated public enum MOTItineraryMapper {
             let isRealTime = section.departure?.nextStopsTimes?.first?.isRealTime ?? false
             let steps = mapSteps(from: section.actions, polyline: section.polyline, fallbackCoord: originCoord)
 
+            let legColor = MOTLegStyleResolver.resolveColor(
+                transportColor: section.transport?.color,
+                transitLegIndex: transitLegIndex,
+                isWalk: isWalk
+            )
+            let legTextColor = MOTLegStyleResolver.resolveTextColor(forBackgroundColor: legColor)
+
+            let intermediateStops: [Place] = (section.intermediateStops ?? []).compactMap { stopDTO in
+                guard let placeDTO = stopDTO.departure?.place,
+                      let loc = placeDTO.location else {
+                    return nil
+                }
+                return Place(
+                    name: placeDTO.name ?? "",
+                    lon: loc.lng,
+                    lat: loc.lat,
+                    vertexType: "STOP",
+                    stopId: placeDTO.code,
+                    stopCode: placeDTO.code
+                )
+            }
+
             let leg = Leg(
                 startTime: legStartTime,
                 endTime: legEndTime,
                 mode: mode,
                 routeType: routeType,
-                routeColor: section.transport?.color,
-                routeTextColor: "#FFFFFF",
+                routeColor: legColor,
+                routeTextColor: legTextColor,
                 route: section.transport?.shortName ?? section.transport?.name,
                 agencyName: section.agency?.name,
                 from: fromPlace,
@@ -143,7 +166,7 @@ nonisolated public enum MOTItineraryMapper {
                 pathway: nil,
                 steps: steps.isEmpty ? nil : steps,
                 headsign: section.transport?.headsign,
-                intermediateStops: [],
+                intermediateStops: intermediateStops.isEmpty ? nil : intermediateStops,
                 departureDelay: 0,
                 arrivalDelay: 0,
                 rentedBike: false

@@ -23,6 +23,7 @@ nonisolated public struct RouteFullDataResponseDTO: Codable, Sendable {
     public let agencyName: String
     public let cityName: String?
     public let polyline: String?
+    public let stops: [StopOnRouteDTO]?
 }
 
 nonisolated public struct RouteStopsResponseDTOServiceResponse: Codable, Sendable {
@@ -51,4 +52,9 @@ nonisolated public struct StopOnRouteDTO: Codable, Sendable {
     public let desc: String?
     public let lat: Double?
     public let lng: Double?
+    public let stopSequence: Int?
+    public let isPickup: Bool?
+    public let isDropoff: Bool?
+    public let platformNumber: String?
+    public let nextStopsTimes: [NextStopTimeDTO]?
 }

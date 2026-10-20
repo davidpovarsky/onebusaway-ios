@@ -34,12 +34,12 @@ nonisolated public enum OBACompatibilityBridge {
                 referencesRoutes[rId] = routeDict
 
                 let agency = serializeAgency(
-                id: route.agencyID ?? MOTAgencyID(rawValue: 1),
-                name: route.agencyName ?? "משרד התחבורה"
-            )
-            if let id = agency["id"] as? String {
-                referencesAgencies[id] = agency
-            }
+                    id: route.agencyID ?? MOTAgencyID(rawValue: 1),
+                    name: route.agencyName ?? "משרד התחבורה"
+                )
+                if let id = agency["id"] as? String {
+                    referencesAgencies[id] = agency
+                }
             }
         }
 
@@ -68,8 +68,6 @@ nonisolated public enum OBACompatibilityBridge {
     }
 
     /// Full OBA routes-for-location response used by the native route-search UI.
-    /// SearchLines is a public MOT autocomplete endpoint; scoped route IDs can
-    /// subsequently be resolved by handleRouteDetail in the Israel adapter.
     public static func routesForLocationResponse(
         routes: [TransitRouteSummary],
         currentTime: Date = Date()
@@ -202,17 +200,33 @@ nonisolated public enum OBACompatibilityBridge {
             }
         }
 
+        var calendar = Calendar(identifier: .gregorian)
+        if let tz = TimeZone(identifier: "Asia/Jerusalem") {
+            calendar.timeZone = tz
+        }
+
         // Build ArrivalDeparture records
         for (idx, arr) in arrivals.enumerated() {
             let scopedRouteId = MOTIdentityFormatter.scopedRouteID(id: arr.routeID)
-            let schedSec = Int(arr.scheduledTime.timeIntervalSince1970)
-            let syntheticTripId = "mot:trip:\(arr.routeID.rawValue)_\(schedSec)"
+
+            let tripInstanceSuffix: String = {
+                if let staticId = arr.staticTripId, !staticId.isEmpty {
+                    return staticId
+                }
+                if let tripIdToDate = arr.tripIdToDate {
+                    return "\(tripIdToDate)"
+                }
+                let schedSec = Int(arr.scheduledTime.timeIntervalSince1970)
+                return "\(schedSec)"
+            }()
+            let tripId = MOTIdentityFormatter.scopedTripID(routeID: arr.routeID, suffix: tripInstanceSuffix)
+            let shapeId = MOTIdentityFormatter.scopedShapeID(routeID: arr.routeID)
 
             // Ensure route reference exists
             if referencesRoutes[scopedRouteId] == nil {
                 let fallbackRouteDict: [String: Any] = [
                     "id": scopedRouteId,
-                    "agencyId": "mot:agency:1",
+                    "agencyId": arr.agencyID.map { MOTIdentityFormatter.scopedAgencyID(id: $0) } ?? "mot:agency:1",
                     "shortName": arr.lineName,
                     "longName": arr.destination,
                     "description": arr.destination,
@@ -220,41 +234,45 @@ nonisolated public enum OBACompatibilityBridge {
                     "url": ""
                 ]
                 referencesRoutes[scopedRouteId] = fallbackRouteDict
-                referencesAgencies["mot:agency:1"] = serializeAgency(id: MOTAgencyID(rawValue: 1), name: "משרד התחבורה")
+                let agency = serializeAgency(id: arr.agencyID ?? MOTAgencyID(rawValue: 1), name: arr.agencyName ?? "משרד התחבורה")
+                if let aid = agency["id"] as? String {
+                    referencesAgencies[aid] = agency
+                }
             }
 
-            // Ensure trip reference exists
+            // Ensure trip reference exists with valid shapeId
             let tripDict: [String: Any] = [
-                "id": syntheticTripId,
+                "id": tripId,
                 "routeId": scopedRouteId,
                 "serviceId": "mot:service:default",
                 "tripHeadsign": arr.destination,
                 "tripShortName": arr.lineName,
                 "routeShortName": arr.lineName,
                 "directionId": "0",
-                "blockId": "",
-                "shapeId": "",
+                "blockId": "mot:block:\(arr.routeID.rawValue)",
+                "shapeId": shapeId,
                 "timeZone": "Asia/Jerusalem"
             ]
-            referencesTrips[syntheticTripId] = tripDict
+            referencesTrips[tripId] = tripDict
 
             let schedMs = Int(arr.scheduledTime.timeIntervalSince1970 * 1000)
             let predMs = arr.isRealTime ? arr.estimatedTime.map { Int($0.timeIntervalSince1970 * 1000) } : nil
+            let serviceDateMs = Int(calendar.startOfDay(for: arr.scheduledTime).timeIntervalSince1970 * 1000)
 
             var arrivalDict: [String: Any] = [
                 "routeId": scopedRouteId,
                 "routeShortName": arr.lineName,
                 "routeLongName": arr.destination,
-                "tripId": syntheticTripId,
+                "tripId": tripId,
                 "tripHeadsign": arr.destination,
                 "stopId": stopDict["id"] as! String,
-                "stopSequence": idx + 1,
+                "stopSequence": arr.stopSequence ?? (idx + 1),
                 "scheduledArrivalTime": schedMs,
                 "scheduledDepartureTime": schedMs,
                 "predicted": arr.isRealTime,
                 "lastUpdateTime": Int(currentTime.timeIntervalSince1970 * 1000),
                 "vehicleId": "", // OBA decoder requires the key; MOT often has no vehicle ID.
-                "serviceDate": Int(Calendar.current.startOfDay(for: arr.scheduledTime).timeIntervalSince1970 * 1000),
+                "serviceDate": serviceDateMs,
                 "distanceFromStop": 0.0,
                 "numberOfStopsAway": 0,
                 "status": arr.isRealTime ? "default" : "scheduled",
@@ -269,11 +287,6 @@ nonisolated public enum OBACompatibilityBridge {
                 arrivalDict["predictedArrivalTime"] = predMs
                 arrivalDict["predictedDepartureTime"] = predMs
             }
-
-            // Do not fabricate a partial OBA TripStatus with invented distance
-            // and orientation values. It cannot decode as a native TripStatus
-            // and silently disappears. Scheduled/predicted arrival times are
-            // still truthfully represented by `predictedArrivalTime` above.
 
             obaArrivals.append(arrivalDict)
         }
@@ -364,8 +377,9 @@ nonisolated public enum OBACompatibilityBridge {
         }
 
         var polylineEntities: [[String: Any]] = []
-        if let polylineString = route.polyline, !polylineString.isEmpty {
-            polylineEntities.append(["points": polylineString])
+        if let polylineString = route.polyline,
+           let googleE5 = MOTRouteGeometryPipeline.toGoogleE5(source: polylineString) {
+            polylineEntities.append(["points": googleE5])
         }
 
         let headsign = route.destinationName ?? route.longName ?? route.lineName
@@ -412,6 +426,238 @@ nonisolated public enum OBACompatibilityBridge {
         ]
     }
 
+    // MARK: - Shape Response
+    public static func shapeResponse(
+        routeID: MOTRouteID,
+        polyline: String?,
+        currentTime: Date = Date()
+    ) -> [String: Any]? {
+        guard let polyline = polyline,
+              let googleE5 = MOTRouteGeometryPipeline.toGoogleE5(source: polyline) else {
+            return nil
+        }
+
+        let entry: [String: Any] = [
+            "points": googleE5
+        ]
+
+        let references: [String: Any] = [
+            "agencies": [],
+            "routes": [],
+            "stops": [],
+            "trips": [],
+            "situations": []
+        ]
+
+        return [
+            "code": 200,
+            "currentTime": Int(currentTime.timeIntervalSince1970 * 1000),
+            "text": "OK",
+            "version": 2,
+            "data": [
+                "entry": entry,
+                "references": references
+            ]
+        ]
+    }
+
+    // MARK: - Trip Details Response
+    public static func tripDetailsResponse(
+        tripID: String,
+        route: TransitRoute,
+        stopTimes: [(stop: TransitStop, arrivalSec: Int, departureSec: Int)],
+        serviceDate: Date = Date(),
+        currentTime: Date = Date()
+    ) -> [String: Any] {
+        let routeDict = serializeRoute(route)
+        let agencyDict = serializeAgency(id: route.agencyID, name: route.agencyName)
+
+        var referencesStops: [String: [String: Any]] = [:]
+        for stop in route.stops {
+            let sDict = serializeStop(stop)
+            let sId = sDict["id"] as! String
+            referencesStops[sId] = sDict
+        }
+        for (stop, _, _) in stopTimes {
+            let sDict = serializeStop(stop)
+            let sId = sDict["id"] as! String
+            referencesStops[sId] = sDict
+        }
+
+        let scopedRouteId = MOTIdentityFormatter.scopedRouteID(id: route.routeID)
+        let shapeId = MOTIdentityFormatter.scopedShapeID(routeID: route.routeID)
+        let headsign = route.destinationName ?? route.longName ?? route.lineName
+
+        let tripDict: [String: Any] = [
+            "id": tripID,
+            "routeId": scopedRouteId,
+            "serviceId": "mot:service:default",
+            "tripHeadsign": headsign,
+            "tripShortName": route.lineName,
+            "routeShortName": route.lineName,
+            "directionId": "0",
+            "blockId": "mot:block:\(route.routeID.rawValue)",
+            "shapeId": shapeId,
+            "timeZone": "Asia/Jerusalem"
+        ]
+
+        var calendar = Calendar(identifier: .gregorian)
+        if let tz = TimeZone(identifier: "Asia/Jerusalem") {
+            calendar.timeZone = tz
+        }
+        let serviceDateMs = Int(calendar.startOfDay(for: serviceDate).timeIntervalSince1970 * 1000)
+
+        var obaStopTimes: [[String: Any]] = []
+        for item in stopTimes {
+            let sId = serializeStop(item.stop)["id"] as! String
+            let stDict: [String: Any] = [
+                "stopId": sId,
+                "arrivalTime": item.arrivalSec,
+                "departureTime": item.departureSec
+            ]
+            obaStopTimes.append(stDict)
+        }
+
+        let schedule: [String: Any] = [
+            "timeZone": "Asia/Jerusalem",
+            "stopTimes": obaStopTimes
+        ]
+
+        let entry: [String: Any] = [
+            "tripId": tripID,
+            "serviceDate": serviceDateMs,
+            "schedule": schedule,
+            "situationIds": []
+        ]
+
+        let references: [String: Any] = [
+            "agencies": [agencyDict],
+            "routes": [routeDict],
+            "stops": Array(referencesStops.values),
+            "trips": [tripDict],
+            "situations": []
+        ]
+
+        return [
+            "code": 200,
+            "currentTime": Int(currentTime.timeIntervalSince1970 * 1000),
+            "text": "OK",
+            "version": 2,
+            "data": [
+                "entry": entry,
+                "references": references
+            ]
+        ]
+    }
+
+    // MARK: - Single Arrival and Departure for Stop
+    public static func arrivalAndDepartureForStopResponse(
+        stop: TransitStop,
+        arrival: TransitArrival,
+        requestedStopID: String? = nil,
+        currentTime: Date = Date()
+    ) -> [String: Any] {
+        let stopDict = serializeStop(stop, overrideID: requestedStopID)
+        let scopedRouteId = MOTIdentityFormatter.scopedRouteID(id: arrival.routeID)
+
+        let routeDict: [String: Any] = [
+            "id": scopedRouteId,
+            "agencyId": arrival.agencyID.map { MOTIdentityFormatter.scopedAgencyID(id: $0) } ?? "mot:agency:1",
+            "shortName": arrival.lineName,
+            "longName": arrival.destination,
+            "description": arrival.destination,
+            "type": 3,
+            "url": ""
+        ]
+
+        let agencyDict = serializeAgency(
+            id: arrival.agencyID ?? MOTAgencyID(rawValue: 1),
+            name: arrival.agencyName ?? "משרד התחבורה"
+        )
+
+        let tripInstanceSuffix: String = {
+            if let staticId = arrival.staticTripId, !staticId.isEmpty {
+                return staticId
+            }
+            if let tripIdToDate = arrival.tripIdToDate {
+                return "\(tripIdToDate)"
+            }
+            let schedSec = Int(arrival.scheduledTime.timeIntervalSince1970)
+            return "\(schedSec)"
+        }()
+        let tripId = MOTIdentityFormatter.scopedTripID(routeID: arrival.routeID, suffix: tripInstanceSuffix)
+        let shapeId = MOTIdentityFormatter.scopedShapeID(routeID: arrival.routeID)
+
+        let tripDict: [String: Any] = [
+            "id": tripId,
+            "routeId": scopedRouteId,
+            "serviceId": "mot:service:default",
+            "tripHeadsign": arrival.destination,
+            "tripShortName": arrival.lineName,
+            "routeShortName": arrival.lineName,
+            "directionId": "0",
+            "blockId": "mot:block:\(arrival.routeID.rawValue)",
+            "shapeId": shapeId,
+            "timeZone": "Asia/Jerusalem"
+        ]
+
+        var calendar = Calendar(identifier: .gregorian)
+        if let tz = TimeZone(identifier: "Asia/Jerusalem") {
+            calendar.timeZone = tz
+        }
+        let serviceDateMs = Int(calendar.startOfDay(for: arrival.scheduledTime).timeIntervalSince1970 * 1000)
+        let schedMs = Int(arrival.scheduledTime.timeIntervalSince1970 * 1000)
+        let predMs = arrival.isRealTime ? arrival.estimatedTime.map { Int($0.timeIntervalSince1970 * 1000) } : nil
+
+        var entry: [String: Any] = [
+            "routeId": scopedRouteId,
+            "routeShortName": arrival.lineName,
+            "routeLongName": arrival.destination,
+            "tripId": tripId,
+            "tripHeadsign": arrival.destination,
+            "stopId": stopDict["id"] as! String,
+            "stopSequence": arrival.stopSequence ?? 1,
+            "scheduledArrivalTime": schedMs,
+            "scheduledDepartureTime": schedMs,
+            "predicted": arrival.isRealTime,
+            "lastUpdateTime": Int(currentTime.timeIntervalSince1970 * 1000),
+            "vehicleId": "",
+            "serviceDate": serviceDateMs,
+            "distanceFromStop": 0.0,
+            "numberOfStopsAway": 0,
+            "status": arrival.isRealTime ? "default" : "scheduled",
+            "arrivalEnabled": true,
+            "departureEnabled": true,
+            "totalStopsInTrip": 20,
+            "blockTripSequence": 1,
+            "situationIds": []
+        ]
+
+        if let predMs = predMs {
+            entry["predictedArrivalTime"] = predMs
+            entry["predictedDepartureTime"] = predMs
+        }
+
+        let references: [String: Any] = [
+            "agencies": [agencyDict],
+            "routes": [routeDict],
+            "stops": [stopDict],
+            "trips": [tripDict],
+            "situations": []
+        ]
+
+        return [
+            "code": 200,
+            "currentTime": Int(currentTime.timeIntervalSince1970 * 1000),
+            "text": "OK",
+            "version": 2,
+            "data": [
+                "entry": entry,
+                "references": references
+            ]
+        ]
+    }
+
     public static func scheduleForRouteResponse(
         route: TransitRoute,
         departures: [DailyCalendarDepartureDTO]? = nil,
@@ -438,7 +684,6 @@ nonisolated public enum OBACompatibilityBridge {
         let scheduleDateMs = calendar.startOfDay(for: date).timeIntervalSince1970 * 1000.0
         let headsign = route.longName ?? route.lineName
 
-        // Parse departure start times (in seconds since midnight)
         struct ScheduledTrip {
             let tripID: String
             let startSeconds: Int
@@ -450,29 +695,18 @@ nonisolated public enum OBACompatibilityBridge {
             for (idx, dep) in departures.enumerated() {
                 let tripId = dep.tripId ?? "mot:trip:\(route.routeID.rawValue)_\(idx)"
                 var sec: Int? = nil
-                if let str = dep.departureTimeString {
+                if let str = dep.departureTimeString ?? dep.departureTime {
                     let parts = str.split(separator: ":").compactMap { Int($0) }
                     if parts.count >= 2 {
                         sec = parts[0] * 3600 + parts[1] * 60 + (parts.count >= 3 ? parts[2] : 0)
                     }
                 }
-                let finalSec = sec ?? (6 * 3600 + idx * 20 * 60)
-                scheduledTrips.append(ScheduledTrip(tripID: tripId, startSeconds: finalSec))
-            }
-        } else {
-            // Authentic regular daytime schedule: 06:00 to 23:00 at 20-minute intervals
-            var currentSec = 6 * 3600 // 06:00
-            let endSec = 23 * 3600     // 23:00
-            var tripIdx = 1
-            while currentSec <= endSec {
-                let h = currentSec / 3600
-                let m = (currentSec % 3600) / 60
-                let tripId = String(format: "mot:trip:%d_%02d%02d", route.routeID.rawValue, h, m)
-                scheduledTrips.append(ScheduledTrip(tripID: tripId, startSeconds: currentSec))
-                currentSec += 20 * 60
-                tripIdx += 1
+                if let validSec = sec {
+                    scheduledTrips.append(ScheduledTrip(tripID: tripId, startSeconds: validSec))
+                }
             }
         }
+        // NOTE: Truth-first schedule policy. Zero fabricated departures when departures is nil or empty.
 
         var tripsWithStopTimes: [[String: Any]] = []
         var tripReferences: [[String: Any]] = []
@@ -482,17 +716,12 @@ nonisolated public enum OBACompatibilityBridge {
             tripIds.append(trip.tripID)
 
             var stopTimes: [[String: Any]] = []
-            for (stopIdx, stopId) in stopIds.enumerated() {
-                // Approximate 90 seconds between stops for sequential progression
-                let offsetSec = stopIdx * 90
-                let arrivalSec = min(86399, trip.startSeconds + offsetSec)
-                let departureSec = arrivalSec
-
+            if let firstStopId = stopIds.first {
                 let stopTimeDict: [String: Any] = [
-                    "stopId": stopId,
+                    "stopId": firstStopId,
                     "tripId": trip.tripID,
-                    "arrivalTime": arrivalSec,
-                    "departureTime": departureSec,
+                    "arrivalTime": trip.startSeconds,
+                    "departureTime": trip.startSeconds,
                     "arrivalEnabled": true,
                     "departureEnabled": true,
                     "serviceId": "mot:service:regular",
@@ -525,7 +754,7 @@ nonisolated public enum OBACompatibilityBridge {
         let stopTripGrouping: [String: Any] = [
             "directionId": "0",
             "stopIds": stopIds,
-            "tripHeadsigns": [headsign],
+            "tripHeadsigns": scheduledTrips.isEmpty ? [] : [headsign],
             "tripIds": tripIds,
             "tripsWithStopTimes": tripsWithStopTimes
         ]
@@ -533,7 +762,7 @@ nonisolated public enum OBACompatibilityBridge {
         let entry: [String: Any] = [
             "routeId": routeDict["id"] as! String,
             "scheduleDate": scheduleDateMs,
-            "serviceIds": ["mot:service:regular"],
+            "serviceIds": scheduledTrips.isEmpty ? [] : ["mot:service:regular"],
             "stopTripGroupings": [stopTripGrouping]
         ]
 
@@ -562,7 +791,7 @@ nonisolated public enum OBACompatibilityBridge {
     private static func serializeStop(_ stop: TransitStop, overrideID: String? = nil) -> [String: Any] {
         let scopedId = overrideID ?? MOTIdentityFormatter.scopedStopID(code: stop.code, internalID: stop.internalID)
         let routeIds = stop.routes.map { MOTIdentityFormatter.scopedRouteID(id: $0.routeID) }
-        
+
         var name = stop.name.localizedName()
         if let platform = stop.platformNumber, !platform.isEmpty {
             let platformSuffix = "(רציף \(platform))"

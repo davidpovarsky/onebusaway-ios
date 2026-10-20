@@ -10,6 +10,9 @@ import Testing
 import CoreLocation
 @testable import OBAKit
 @testable import OBAKitCore
+#if canImport(OTPKit)
+@testable import OTPKit
+#endif
 
 private nonisolated final class TestMockDataLoader: NSObject, URLDataLoader, @unchecked Sendable {
     var handledRequests: [URLRequest] = []
@@ -610,22 +613,288 @@ struct MOTCompatibilityDataLoaderTests {
             stops: [stop]
         )
 
-        let envelope = OBACompatibilityBridge.scheduleForRouteResponse(route: domainRoute)
-        let jsonData = try JSONSerialization.data(withJSONObject: envelope)
-
         let decoder = JSONDecoder()
-        let response = try decoder.decode(RESTAPIResponse<ScheduleForRoute>.self, from: jsonData)
-        #expect(response.code == 200)
 
-        let entry = response.entry
+        // 1. Truth-first: empty departures must yield zero synthetic trips (no fabricated 06:00-23:00)
+        let emptyEnvelope = OBACompatibilityBridge.scheduleForRouteResponse(route: domainRoute, departures: [])
+        let emptyJsonData = try JSONSerialization.data(withJSONObject: emptyEnvelope)
+        let emptyResponse = try decoder.decode(RESTAPIResponse<ScheduleForRoute>.self, from: emptyJsonData)
+        #expect(emptyResponse.code == 200)
+        #expect(emptyResponse.entry.id == "mot:route:33285")
+        #expect(emptyResponse.entry.stopTripGroupings.count == 1)
+        #expect(emptyResponse.entry.stopTripGroupings[0].tripsWithStopTimes.isEmpty)
+        #expect(emptyResponse.entry.stopTripGroupings[0].tripIDs.isEmpty)
 
-        #expect(entry.id == "mot:route:33285")
-        #expect(entry.stopTripGroupings.count == 1)
-        #expect(entry.stopTripGroupings[0].stopIDs.count == 1)
-        #expect(!entry.stopTripGroupings[0].tripsWithStopTimes.isEmpty)
-        #expect(!entry.stopTripGroupings[0].tripIDs.isEmpty)
-        let firstTrip = entry.stopTripGroupings[0].tripsWithStopTimes[0]
+        // 2. Real departure: creates authentic schedule entry and tripsWithStopTimes
+        let departure = TransitArrival(
+            lineName: "31",
+            destination: "רמות",
+            scheduledTime: Date(timeIntervalSince1970: 1700000000),
+            estimatedTime: nil,
+            isRealTime: false,
+            minutesToArrival: nil,
+            vehicleLocation: nil,
+            staticTripId: "12345",
+            tripIdToDate: 67890,
+            routeDesc: "15031-1-0",
+            stopSequence: 1,
+            agencyID: 16,
+            agencyName: "סופרבוס"
+        )
+        let realEnvelope = OBACompatibilityBridge.scheduleForRouteResponse(route: domainRoute, departures: [departure])
+        let realJsonData = try JSONSerialization.data(withJSONObject: realEnvelope)
+        let realResponse = try decoder.decode(RESTAPIResponse<ScheduleForRoute>.self, from: realJsonData)
+        #expect(realResponse.code == 200)
+        let realEntry = realResponse.entry
+        #expect(realEntry.id == "mot:route:33285")
+        #expect(realEntry.stopTripGroupings.count == 1)
+        #expect(realEntry.stopTripGroupings[0].stopIDs.count == 1)
+        #expect(!realEntry.stopTripGroupings[0].tripsWithStopTimes.isEmpty)
+        #expect(!realEntry.stopTripGroupings[0].tripIDs.isEmpty)
+        let firstTrip = realEntry.stopTripGroupings[0].tripsWithStopTimes[0]
         #expect(firstTrip.stopTimes.count == 1)
         #expect(firstTrip.stopTimes[0].departureTime > 0)
     }
+
+    @Test
+    func testShapeEnvelopeDecoding() throws {
+        let routeResponse = try MOTTestFixtures.decode(
+            fixture: "route_33285_fulldata.json",
+            as: RouteFullDataResponseDTOServiceResponse.self
+        )
+        let stopsResponse = try MOTTestFixtures.decode(
+            fixture: "route_33285_stops.json",
+            as: RouteStopsResponseDTOServiceResponse.self
+        )
+        guard let routeDTO = routeResponse.data else {
+            Issue.record("Expected route DTO")
+            return
+        }
+        let domainRoute = MOTRouteMapper.map(
+            routeDTO: routeDTO,
+            stopsDTO: stopsResponse.data?.route
+        )
+
+        let envelope = OBACompatibilityBridge.shapeResponse(route: domainRoute)
+        let jsonData = try JSONSerialization.data(withJSONObject: envelope)
+
+        let decoder = JSONDecoder()
+        let response = try decoder.decode(RESTAPIResponse<PolylineEntity>.self, from: jsonData)
+        #expect(response.code == 200)
+        #expect(!response.entry.points.isEmpty)
+
+        // Decode the points to ensure it's a valid Google E5 polyline with all points in Israel
+        let coords = GooglePolylineEncoder.decode(response.entry.points)
+        #expect(coords.count == 1488)
+        for coord in coords {
+            #expect(coord.latitude >= 29.0 && coord.latitude <= 34.0)
+            #expect(coord.longitude >= 34.0 && coord.longitude <= 36.5)
+        }
+    }
+
+    @Test
+    func testTripDetailsEnvelopeDecoding() throws {
+        let routeResponse = try MOTTestFixtures.decode(
+            fixture: "route_33285_fulldata.json",
+            as: RouteFullDataResponseDTOServiceResponse.self
+        )
+        let stopsResponse = try MOTTestFixtures.decode(
+            fixture: "route_33285_stops.json",
+            as: RouteStopsResponseDTOServiceResponse.self
+        )
+        guard let routeDTO = routeResponse.data else {
+            Issue.record("Expected route DTO")
+            return
+        }
+        let domainRoute = MOTRouteMapper.map(
+            routeDTO: routeDTO,
+            stopsDTO: stopsResponse.data?.route
+        )
+
+        let arrival = TransitArrival(
+            lineName: "31",
+            destination: "רמות",
+            scheduledTime: Date(timeIntervalSince1970: 1700000000),
+            estimatedTime: Date(timeIntervalSince1970: 1700000000),
+            isRealTime: true,
+            minutesToArrival: 5,
+            vehicleLocation: CLLocationCoordinate2D(latitude: 31.78, longitude: 35.20),
+            staticTripId: "12345",
+            tripIdToDate: 67890,
+            routeDesc: "15031-1-0",
+            stopSequence: 1,
+            agencyID: 16,
+            agencyName: "סופרבוס"
+        )
+
+        let tripID = "mot:trip:33285_12345_20261020"
+        let serviceDate = Date(timeIntervalSince1970: 1700000000)
+
+        let envelope = OBACompatibilityBridge.tripDetailsResponse(
+            tripID: tripID,
+            route: domainRoute,
+            targetArrival: arrival,
+            serviceDate: serviceDate
+        )
+        let jsonData = try JSONSerialization.data(withJSONObject: envelope)
+
+        let decoder = JSONDecoder()
+        let response = try decoder.decode(RESTAPIResponse<TripDetails>.self, from: jsonData)
+        #expect(response.code == 200)
+
+        let tripDetails = response.entry
+        #expect(tripDetails.tripID == tripID)
+        #expect(tripDetails.timeZone == "Asia/Jerusalem")
+        #expect(!tripDetails.stopTimes.isEmpty)
+        #expect(tripDetails.trip != nil)
+        #expect(tripDetails.trip.routeID == "mot:route:33285")
+        #expect(tripDetails.trip.shapeID == "mot:shape:33285")
+        #expect(tripDetails.status != nil)
+        #expect(tripDetails.status?.position != nil)
+        #expect(tripDetails.status?.lastKnownOrientation == 0.0)
+
+        // Verify strictly resolvable references
+        #expect(response.references?.routes.count == 1)
+        #expect(response.references?.agencies.count == 1)
+        #expect(response.references?.trips.count == 1)
+        #expect(response.references?.stops.count == domainRoute.stops.count)
+    }
+
+    @Test
+    func testArrivalAndDepartureForStopEnvelopeDecoding() throws {
+        let stop = TransitStop(
+            code: MOTStopCode(5997),
+            internalID: MOTStopInternalID(11622),
+            name: TransitMultiLanguageName(he: "סילבר/שכטמן", en: "Silver/Shekhtman", ar: nil),
+            cityName: "ירושלים",
+            location: CLLocationCoordinate2D(latitude: 31.815188, longitude: 35.203022)
+        )
+        let domainRoute = TransitRoute(
+            routeID: MOTRouteID(33285),
+            lineName: "31",
+            longName: "רמות - גילה",
+            routeDesc: MOTRouteDesc("15031-1-0"),
+            agencyID: MOTAgencyID(16),
+            agencyName: "סופרבוס",
+            cityName: "ירושלים",
+            polyline: nil,
+            stops: [stop]
+        )
+
+        let arrival = TransitArrival(
+            lineName: "31",
+            destination: "רמות",
+            scheduledTime: Date(timeIntervalSince1970: 1700000000),
+            estimatedTime: Date(timeIntervalSince1970: 1700000300),
+            isRealTime: true,
+            minutesToArrival: 5,
+            vehicleLocation: CLLocationCoordinate2D(latitude: 31.81, longitude: 35.20),
+            staticTripId: "12345",
+            tripIdToDate: 67890,
+            routeDesc: "15031-1-0",
+            stopSequence: 1,
+            agencyID: 16,
+            agencyName: "סופרבוס"
+        )
+
+        let tripID = "mot:trip:33285_12345_20261020"
+        let serviceDate = Date(timeIntervalSince1970: 1700000000)
+
+        let envelope = OBACompatibilityBridge.arrivalAndDepartureForStopResponse(
+            stop: stop,
+            route: domainRoute,
+            arrival: arrival,
+            tripID: tripID,
+            serviceDate: serviceDate
+        )
+        let jsonData = try JSONSerialization.data(withJSONObject: envelope)
+
+        let decoder = JSONDecoder()
+        let response = try decoder.decode(RESTAPIResponse<ArrivalDeparture>.self, from: jsonData)
+        #expect(response.code == 200)
+
+        let arrDep = response.entry
+        #expect(arrDep.stopID == "mot:stop:5997")
+        #expect(arrDep.tripID == tripID)
+        #expect(arrDep.routeID == "mot:route:33285")
+        #expect(arrDep.routeShortName == "31")
+        #expect(arrDep.tripHeadsign == "רמות")
+        #expect(arrDep.stop != nil)
+        #expect(arrDep.trip != nil)
+        #expect(arrDep.route != nil)
+        #expect(arrDep.shapeID == "mot:shape:33285")
+        #expect(arrDep.predictedDepartureTime != nil)
+    }
+
+    @Test
+    func testLegStyleResolverPaletteAndContrast() {
+        // Walking leg always receives neutral Apple gray
+        let walkColor = MOTLegStyleResolver.resolveColor(transportColor: nil, transitLegIndex: 0, isWalk: true)
+        #expect(walkColor == "#8E8E93")
+
+        // First transit leg defaults to Blue (#007AFF)
+        let leg0Color = MOTLegStyleResolver.resolveColor(transportColor: nil, transitLegIndex: 0, isWalk: false)
+        #expect(leg0Color == "#007AFF")
+
+        // Second transit leg defaults to Forest Green (#2E7D32)
+        let leg1Color = MOTLegStyleResolver.resolveColor(transportColor: nil, transitLegIndex: 1, isWalk: false)
+        #expect(leg1Color == "#2E7D32")
+        #expect(leg0Color != leg1Color)
+
+        // Official color is normalized to uppercase hex
+        let customColor = MOTLegStyleResolver.resolveColor(transportColor: "ff5500", transitLegIndex: 0, isWalk: false)
+        #expect(customColor == "#FF5500")
+
+        // Contrast calculation: bright colors get black text, dark colors get white text
+        #expect(MOTLegStyleResolver.resolveTextColor(forBackgroundColor: "#FFFFFF") == "#000000")
+        #expect(MOTLegStyleResolver.resolveTextColor(forBackgroundColor: "#FFFF00") == "#000000")
+        #expect(MOTLegStyleResolver.resolveTextColor(forBackgroundColor: "#007AFF") == "#FFFFFF")
+        #expect(MOTLegStyleResolver.resolveTextColor(forBackgroundColor: "#2E7D32") == "#FFFFFF")
+        #expect(MOTLegStyleResolver.resolveTextColor(forBackgroundColor: "#000000") == "#FFFFFF")
+    }
+
+    #if canImport(OTPKit)
+    @Test
+    func testItineraryMapperIntermediateStopsAndColors() throws {
+        let fixtureData = try MOTTestFixtures.loadFixture(named: "ministry_getroutes_live.json")
+        let responseDTO = try JSONDecoder().decode(RouteResponseDTOListServiceResponse.self, from: fixtureData)
+        guard let routeDTO = responseDTO.data?.first else {
+            Issue.record("Expected route DTO in fixture")
+            return
+        }
+
+        let itinerary = MOTItineraryMapper.mapItinerary(
+            from: routeDTO,
+            fallbackOrigin: CLLocationCoordinate2D(latitude: 31.815, longitude: 35.203),
+            fallbackDest: CLLocationCoordinate2D(latitude: 31.789, longitude: 35.204)
+        )
+
+        guard let itinerary = itinerary else {
+            Issue.record("Expected mapped itinerary")
+            return
+        }
+
+        #expect(!itinerary.legs.isEmpty)
+        let transitLegs = itinerary.legs.filter { $0.transitLeg == true }
+        #expect(!transitLegs.isEmpty)
+
+        // Consecutive transit legs must have distinct colors
+        if transitLegs.count >= 2 {
+            #expect(transitLegs[0].routeColor != transitLegs[1].routeColor)
+        }
+
+        // Sections with intermediateStops in fixture must be mapped to Place objects
+        let legWithIntermediateStops = itinerary.legs.first { ($0.intermediateStops?.count ?? 0) > 0 }
+        #expect(legWithIntermediateStops != nil)
+        if let stops = legWithIntermediateStops?.intermediateStops {
+            #expect(!stops.isEmpty)
+            for stop in stops {
+                #expect(!stop.name.isEmpty)
+                #expect(stop.lat >= 29.0 && stop.lat <= 34.0)
+                #expect(stop.lon >= 34.0 && stop.lon <= 36.5)
+                #expect(stop.vertexType == "STOP")
+            }
+        }
+    }
+    #endif
 }

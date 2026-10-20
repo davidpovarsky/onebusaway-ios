@@ -17,7 +17,14 @@ nonisolated public enum MOTRouteMapper {
         let routeDesc = routeDTO.routeDesc.map { MOTRouteDesc(rawValue: $0) }
         let agencyID = MOTAgencyID(rawValue: routeDTO.agencyId)
 
-        let stops: [TransitStop] = (stopsDTO?.stops ?? []).compactMap { s in
+        let stopsSource: [StopOnRouteDTO] = {
+            if let directStops = routeDTO.stops, !directStops.isEmpty {
+                return directStops
+            }
+            return stopsDTO?.stops ?? []
+        }()
+
+        let stops: [TransitStop] = stopsSource.compactMap { s in
             let code = MOTStopCode(rawValue: s.stopcode)
             let internalID = MOTStopInternalID(rawValue: s.stopid)
             let name = TransitMultiLanguageName(he: s.name?.he, en: s.name?.en, ar: s.name?.ar)
@@ -28,6 +35,7 @@ nonisolated public enum MOTRouteMapper {
                 name: name,
                 cityName: routeDTO.cityName,
                 location: loc,
+                platformNumber: s.platformNumber,
                 routes: []
             )
         }
