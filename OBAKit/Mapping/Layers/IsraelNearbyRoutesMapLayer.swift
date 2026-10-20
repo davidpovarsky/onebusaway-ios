@@ -59,6 +59,7 @@ final class IsraelNearbyVehicleAnnotation: VehicleAnnotation {
 final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
 
     static let layerID = "israelNearbyRoutes"
+    static let routeCap: Int = 6
 
     var id: String { Self.layerID }
     var title: String {

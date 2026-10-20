@@ -83,9 +83,9 @@ extension MapViewController {
     /// nearby routes and authentic live vehicle positions at pedestrian zoom.
     private func configureIsraelNearbyRoutesLayer() {
         mapRegionManager.removeMapLayer(id: IsraelNearbyRoutesMapLayer.layerID)
-        guard application.currentRegion?.regionIdentifier == 972 else { return }
+        guard application.currentRegion?.regionIdentifier == 972,
+              let apiService = application.apiService else { return }
 
-        let apiService = application.apiService
         let shapeCache = ShapeCache { [weak apiService] shapeID in
             guard let apiService else { throw CancellationError() }
             return try await apiService.getShape(id: shapeID).entry.points
