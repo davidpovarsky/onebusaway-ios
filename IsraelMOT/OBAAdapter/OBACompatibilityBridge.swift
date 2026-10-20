@@ -716,16 +716,21 @@ nonisolated public enum OBACompatibilityBridge {
             tripIds.append(trip.tripID)
 
             var stopTimes: [[String: Any]] = []
-            if let firstStopId = stopIds.first {
+            for (stopIdx, stopId) in stopIds.enumerated() {
+                let offsetSec = stopIdx * 90
+                let arrivalSec = min(86399, trip.startSeconds + offsetSec)
+                let departureSec = arrivalSec
+
                 let stopTimeDict: [String: Any] = [
-                    "stopId": firstStopId,
+                    "stopId": stopId,
                     "tripId": trip.tripID,
-                    "arrivalTime": trip.startSeconds,
-                    "departureTime": trip.startSeconds,
+                    "arrivalTime": arrivalSec,
+                    "departureTime": departureSec,
                     "arrivalEnabled": true,
                     "departureEnabled": true,
                     "serviceId": "mot:service:regular",
-                    "stopHeadsign": headsign
+                    "stopHeadsign": headsign,
+                    "stopSequence": stopIdx
                 ]
                 stopTimes.append(stopTimeDict)
             }

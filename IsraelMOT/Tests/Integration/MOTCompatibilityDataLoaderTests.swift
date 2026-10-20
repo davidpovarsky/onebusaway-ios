@@ -782,7 +782,7 @@ struct MOTCompatibilityDataLoaderTests {
         #expect(response.code == 200)
 
         let arrDep = response.entry
-        #expect(arrDep.stopID == "mot:stop:5997")
+        #expect(arrDep.stopID == "mot:stop:5997_11622")
         #expect(arrDep.tripID == "mot:trip:33285_12345")
         #expect(arrDep.routeID == "mot:route:33285")
         #expect(arrDep.routeShortName == "31")

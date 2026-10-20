@@ -138,7 +138,14 @@ struct IsraelStopCatalogTests {
             stops: [stop1, stop2]
         )
 
-        let envelope = OBACompatibilityBridge.scheduleForRouteResponse(route: route)
+        let departure = DailyCalendarDepartureDTO(
+            tripId: "mot:trip:33287_1",
+            stopid: 11622,
+            stopcode: 5997,
+            departureTime: "08:00:00",
+            departureTimeString: "08:00"
+        )
+        let envelope = OBACompatibilityBridge.scheduleForRouteResponse(route: route, departures: [departure])
         let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
 
         let decoder = JSONDecoder()
