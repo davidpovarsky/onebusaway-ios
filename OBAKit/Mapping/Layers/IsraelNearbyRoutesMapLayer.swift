@@ -115,6 +115,15 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
         self.application = application
         self.mapRegionManager = mapRegionManager
         super.init()
+
+        mapView.register(
+            PolylineArrowAnnotationView.self,
+            forAnnotationViewWithReuseIdentifier: PolylineArrowAnnotationView.reuseIdentifier
+        )
+        mapView.register(
+            PulsingVehicleAnnotationView.self,
+            forAnnotationViewWithReuseIdentifier: MKMapView.reuseIdentifier(for: PulsingVehicleAnnotationView.self)
+        )
     }
 
     // MARK: - MapLayer Protocol
@@ -258,8 +267,8 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
                                let loc = status.lastKnownLocation?.coordinate,
                                loc.latitude >= 29.4 && loc.latitude <= 33.5 &&
                                loc.longitude >= 34.1 && loc.longitude <= 35.9 {
-                                let color = dep.route?.color ?? MOTAgencyColorResolver.color(forAgencyID: dep.route?.agencyId)
-                                liveVehicles.append((id: dep.id, routeID: dep.routeId, color: color, status: status))
+                                let color = dep.route?.color ?? ThemeColors.shared.brand
+                                liveVehicles.append((id: dep.id, routeID: dep.routeID, color: color, status: status))
                             }
                         }
                     } catch {
@@ -278,15 +287,8 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
 
             for route in selectedRoutes {
                 guard !Task.isCancelled, currentGen == self.generation else { return }
-                let routeColor = route.color ?? MOTAgencyColorResolver.color(forAgencyID: route.agencyId)
-
-                var coords: [CLLocationCoordinate2D]?
-                coords = try? await self.shapeCache.shape(id: route.id)
-                if coords == nil || coords?.isEmpty == true {
-                    if let shapeID = route.shapeId, !shapeID.isEmpty {
-                        coords = try? await self.shapeCache.shape(id: shapeID)
-                    }
-                }
+                let routeColor = route.color ?? ThemeColors.shared.brand
+                let coords = try? await self.shapeCache.coordinates(forShapeID: route.id)
 
                 if let validCoords = coords, !validCoords.isEmpty {
                     let casing = IsraelNearbyRouteOverlay.make(coordinates: validCoords, routeID: route.id, isCasing: true, color: .white)
