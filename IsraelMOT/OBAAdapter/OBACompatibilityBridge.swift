@@ -271,17 +271,26 @@ nonisolated public enum OBACompatibilityBridge {
                 "scheduledDepartureTime": schedMs,
                 "predicted": arr.isRealTime,
                 "lastUpdateTime": Int(currentTime.timeIntervalSince1970 * 1000),
-                "vehicleId": "", // OBA decoder requires the key; MOT often has no vehicle ID.
+                "vehicleId": arr.staticTripId ?? "",
                 "serviceDate": serviceDateMs,
-                "distanceFromStop": 0.0,
-                "numberOfStopsAway": 0,
+                "distanceFromStop": -1.0,
+                "numberOfStopsAway": -1,
                 "status": arr.isRealTime ? "default" : "scheduled",
                 "arrivalEnabled": true,
                 "departureEnabled": true,
-                "totalStopsInTrip": 20,
                 "blockTripSequence": 1,
                 "situationIds": []
             ]
+
+            if let tripStatus = serializeTripStatus(
+                arrival: arr,
+                tripId: tripId,
+                stopId: stopDict["id"] as! String,
+                serviceDateMs: serviceDateMs,
+                currentTime: currentTime
+            ) {
+                arrivalDict["tripStatus"] = tripStatus
+            }
 
             if let predMs = predMs {
                 arrivalDict["predictedArrivalTime"] = predMs
@@ -465,7 +474,8 @@ nonisolated public enum OBACompatibilityBridge {
     public static func tripDetailsResponse(
         tripID: String,
         route: TransitRoute,
-        stopTimes: [(stop: TransitStop, arrivalSec: Int, departureSec: Int)],
+        stopTimes: [(stop: TransitStop, arrivalSec: Int?, departureSec: Int?)],
+        vehicleLocation: CLLocationCoordinate2D? = nil,
         serviceDate: Date = Date(),
         currentTime: Date = Date()
     ) -> [String: Any] {
@@ -510,11 +520,15 @@ nonisolated public enum OBACompatibilityBridge {
         var obaStopTimes: [[String: Any]] = []
         for item in stopTimes {
             let sId = serializeStop(item.stop)["id"] as! String
-            let stDict: [String: Any] = [
-                "stopId": sId,
-                "arrivalTime": item.arrivalSec,
-                "departureTime": item.departureSec
+            var stDict: [String: Any] = [
+                "stopId": sId
             ]
+            if let arr = item.arrivalSec {
+                stDict["arrivalTime"] = arr
+            }
+            if let dep = item.departureSec {
+                stDict["departureTime"] = dep
+            }
             obaStopTimes.append(stDict)
         }
 
@@ -523,12 +537,43 @@ nonisolated public enum OBACompatibilityBridge {
             "stopTimes": obaStopTimes
         ]
 
-        let entry: [String: Any] = [
+        var entry: [String: Any] = [
             "tripId": tripID,
             "serviceDate": serviceDateMs,
             "schedule": schedule,
             "situationIds": []
         ]
+
+        if let loc = vehicleLocation, loc.latitude.isFinite, loc.longitude.isFinite,
+           !(abs(loc.latitude) < 0.001 && abs(loc.longitude) < 0.001),
+           loc.latitude >= 29.0, loc.latitude <= 33.5, loc.longitude >= 34.0, loc.longitude <= 36.0 {
+            let nowMs = Int(currentTime.timeIntervalSince1970 * 1000)
+            let closestStopId = obaStopTimes.first?["stopId"] as? String ?? ""
+            entry["status"] = [
+                "activeTripId": tripID,
+                "blockTripSequence": 1,
+                "closestStop": closestStopId,
+                "closestStopTimeOffset": 0,
+                "distanceAlongTrip": 0.0,
+                "lastLocationUpdateTime": Int64(nowMs),
+                "lastUpdateTime": nowMs,
+                "nextStopTimeOffset": 0,
+                "orientation": 0.0,
+                "phase": "in_progress",
+                "position": [
+                    "lat": loc.latitude,
+                    "lon": loc.longitude
+                ],
+                "predicted": true,
+                "scheduleDeviation": 0,
+                "scheduledDistanceAlongTrip": 0.0,
+                "serviceDate": serviceDateMs,
+                "situationIds": [] as [String],
+                "status": "default",
+                "totalDistanceAlongTrip": 0.0,
+                "vehicleId": ""
+            ]
+        }
 
         let references: [String: Any] = [
             "agencies": [agencyDict],
@@ -621,17 +666,26 @@ nonisolated public enum OBACompatibilityBridge {
             "scheduledDepartureTime": schedMs,
             "predicted": arrival.isRealTime,
             "lastUpdateTime": Int(currentTime.timeIntervalSince1970 * 1000),
-            "vehicleId": "",
+            "vehicleId": arrival.staticTripId ?? "",
             "serviceDate": serviceDateMs,
-            "distanceFromStop": 0.0,
-            "numberOfStopsAway": 0,
+            "distanceFromStop": -1.0,
+            "numberOfStopsAway": -1,
             "status": arrival.isRealTime ? "default" : "scheduled",
             "arrivalEnabled": true,
             "departureEnabled": true,
-            "totalStopsInTrip": 20,
             "blockTripSequence": 1,
             "situationIds": []
         ]
+
+        if let tripStatus = serializeTripStatus(
+            arrival: arrival,
+            tripId: tripId,
+            stopId: stopDict["id"] as! String,
+            serviceDateMs: serviceDateMs,
+            currentTime: currentTime
+        ) {
+            entry["tripStatus"] = tripStatus
+        }
 
         if let predMs = predMs {
             entry["predictedArrivalTime"] = predMs
@@ -717,21 +771,24 @@ nonisolated public enum OBACompatibilityBridge {
 
             var stopTimes: [[String: Any]] = []
             for (stopIdx, stopId) in stopIds.enumerated() {
-                let offsetSec = stopIdx * 90
-                let arrivalSec = min(86399, trip.startSeconds + offsetSec)
-                let departureSec = arrivalSec
-
-                let stopTimeDict: [String: Any] = [
+                var stopTimeDict: [String: Any] = [
                     "stopId": stopId,
                     "tripId": trip.tripID,
-                    "arrivalTime": arrivalSec,
-                    "departureTime": departureSec,
                     "arrivalEnabled": true,
                     "departureEnabled": true,
                     "serviceId": "mot:service:regular",
                     "stopHeadsign": headsign,
                     "stopSequence": stopIdx
                 ]
+                // Truth-first policy: only the initial departure has an authoritative departure time from DailyCalendar.
+                // Do NOT synthesize artificial 90-second delays or clamp overnight trips to 86399.
+                if stopIdx == 0 {
+                    stopTimeDict["arrivalTime"] = trip.startSeconds
+                    stopTimeDict["departureTime"] = trip.startSeconds
+                } else {
+                    stopTimeDict["arrivalTime"] = -1
+                    stopTimeDict["departureTime"] = -1
+                }
                 stopTimes.append(stopTimeDict)
             }
 
@@ -821,6 +878,7 @@ nonisolated public enum OBACompatibilityBridge {
     private static func serializeRouteSummary(_ route: TransitRouteSummary) -> [String: Any] {
         let scopedId = MOTIdentityFormatter.scopedRouteID(id: route.routeID)
         let agencyId = route.agencyID != nil ? MOTIdentityFormatter.scopedAgencyID(id: route.agencyID!) : "mot:agency:1"
+        let colors = MOTAgencyColorResolver.resolve(agencyID: route.agencyID, customColor: nil)
         return [
             "id": scopedId,
             "agencyId": agencyId,
@@ -828,6 +886,8 @@ nonisolated public enum OBACompatibilityBridge {
             "longName": route.destinationName ?? route.lineName,
             "description": route.destinationName ?? "",
             "type": 3, // Bus
+            "color": colors.colorHex,
+            "textColor": colors.textColorHex,
             "url": ""
         ]
     }
@@ -835,6 +895,7 @@ nonisolated public enum OBACompatibilityBridge {
     private static func serializeRoute(_ route: TransitRoute) -> [String: Any] {
         let scopedId = MOTIdentityFormatter.scopedRouteID(id: route.routeID)
         let agencyId = MOTIdentityFormatter.scopedAgencyID(id: route.agencyID)
+        let colors = MOTAgencyColorResolver.resolve(agencyID: route.agencyID, customColor: nil)
         return [
             "id": scopedId,
             "agencyId": agencyId,
@@ -842,7 +903,51 @@ nonisolated public enum OBACompatibilityBridge {
             "longName": route.longName ?? route.lineName,
             "description": route.longName ?? "",
             "type": 3, // Bus
+            "color": colors.colorHex,
+            "textColor": colors.textColorHex,
             "url": ""
+        ]
+    }
+
+    public static func serializeTripStatus(
+        arrival: TransitArrival,
+        tripId: String,
+        stopId: String,
+        serviceDateMs: Int,
+        currentTime: Date = Date()
+    ) -> [String: Any]? {
+        guard arrival.isRealTime, let loc = arrival.vehicleLocation else { return nil }
+        guard loc.latitude.isFinite, loc.longitude.isFinite else { return nil }
+        guard !(abs(loc.latitude) < 0.001 && abs(loc.longitude) < 0.001) else { return nil }
+        // Service boundary for State of Israel
+        guard loc.latitude >= 29.0 && loc.latitude <= 33.5 && loc.longitude >= 34.0 && loc.longitude <= 36.0 else {
+            return nil
+        }
+
+        let nowMs = Int(currentTime.timeIntervalSince1970 * 1000)
+        return [
+            "activeTripId": tripId,
+            "blockTripSequence": 1,
+            "closestStop": stopId,
+            "closestStopTimeOffset": 0,
+            "distanceAlongTrip": 0.0,
+            "lastLocationUpdateTime": Int64(nowMs),
+            "lastUpdateTime": nowMs,
+            "nextStopTimeOffset": 0,
+            "orientation": 0.0,
+            "phase": "in_progress",
+            "position": [
+                "lat": loc.latitude,
+                "lon": loc.longitude
+            ],
+            "predicted": true,
+            "scheduleDeviation": 0,
+            "scheduledDistanceAlongTrip": 0.0,
+            "serviceDate": serviceDateMs,
+            "situationIds": [] as [String],
+            "status": "default",
+            "totalDistanceAlongTrip": 0.0,
+            "vehicleId": arrival.staticTripId ?? ""
         ]
     }
 

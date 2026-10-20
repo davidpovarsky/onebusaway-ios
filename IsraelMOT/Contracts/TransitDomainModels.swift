@@ -111,9 +111,46 @@ nonisolated public struct TransitRoute: Identifiable, Hashable, Codable, Sendabl
     public let polyline: String?
     public let stops: [TransitStop]
 
-    /// Preferred destination display name, falling back to longName
+    /// Preferred destination display name, extracted truthfully from verified stop sequence or parsed headsign.
     public var destinationName: String? {
-        return longName
+        if stops.count >= 2, let lastStop = stops.last {
+            return lastStop.name.userFacingName
+        }
+        if let long = longName {
+            return Self.parseDestination(from: long)
+        }
+        return nil
+    }
+
+    /// Verified origin display name if available.
+    public var originName: String? {
+        if stops.count >= 2, let firstStop = stops.first {
+            return firstStop.name.userFacingName
+        }
+        if let long = longName {
+            return Self.parseOrigin(from: long)
+        }
+        return nil
+    }
+
+    public static func parseDestination(from text: String) -> String {
+        let normalized = text.replacingOccurrences(of: "<->", with: "↔")
+            .replacingOccurrences(of: "< - >", with: "↔")
+        let parts = normalized.split(separator: "↔").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        if parts.count >= 2 {
+            return parts[1]
+        }
+        return text
+    }
+
+    public static func parseOrigin(from text: String) -> String? {
+        let normalized = text.replacingOccurrences(of: "<->", with: "↔")
+            .replacingOccurrences(of: "< - >", with: "↔")
+        let parts = normalized.split(separator: "↔").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        if parts.count >= 2 {
+            return parts[0]
+        }
+        return nil
     }
 
     public init(

@@ -98,7 +98,10 @@ struct SearchSheetView: View {
                 // Matches UIKit, where the search bar's search button is unhandled:
                 // Return just dismisses the keyboard; the quick-search rows are the
                 // way to run a search.
-                .onSubmit { isFieldFocused = false }
+                .onSubmit {
+                    isFieldFocused = false
+                    viewModel.submitCurrentQuery()
+                }
 
                 if !viewModel.query.isEmpty {
                     Button {

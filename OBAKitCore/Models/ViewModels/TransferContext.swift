@@ -48,8 +48,9 @@ public struct TransferContext: Equatable, Hashable {
     }
 
     /// Convenience factory that extracts route info from an `ArrivalDeparture`.
-    public static func from(arrivalDeparture: ArrivalDeparture, arrivalDate: Date) -> TransferContext {
-        TransferContext(
+    public static func from(arrivalDeparture: ArrivalDeparture, arrivalDate: Date?) -> TransferContext? {
+        guard let arrivalDate = arrivalDate else { return nil }
+        return TransferContext(
             arrivalTime: arrivalDate,
             fromRouteShortName: arrivalDeparture.routeShortName,
             fromTripHeadsign: arrivalDeparture.tripHeadsign ?? "",

@@ -29,6 +29,7 @@ extension MapViewController {
         mapLayerRegistrar?.configure()
 
         configureStopRouteFocusLayer()
+        configureIsraelNearbyRoutesLayer()
         updateMapLayerBadge()
     }
 
@@ -76,6 +77,27 @@ extension MapViewController {
         mapRegionManager.registerMapLayer(TripFocusMapLayer(mapView: mapRegionManager.mapView))
 
         stopRouteFocusLayerRegionIdentifier = currentRegionIdentifier
+    }
+
+    /// Registers `IsraelNearbyRoutesMapLayer` for Region 972 to provide ambient
+    /// nearby routes and authentic live vehicle positions at pedestrian zoom.
+    private func configureIsraelNearbyRoutesLayer() {
+        mapRegionManager.removeMapLayer(id: IsraelNearbyRoutesMapLayer.layerID)
+        guard application.currentRegion?.regionIdentifier == 972 else { return }
+
+        let apiService = application.apiService
+        let shapeCache = ShapeCache { [weak apiService] shapeID in
+            guard let apiService else { throw CancellationError() }
+            return try await apiService.getShape(id: shapeID).entry.points
+        }
+        let layer = IsraelNearbyRoutesMapLayer(
+            mapView: mapRegionManager.mapView,
+            shapeCache: shapeCache,
+            apiService: apiService,
+            application: application,
+            mapRegionManager: mapRegionManager
+        )
+        mapRegionManager.registerMapLayer(layer)
     }
 
     /// Re-points everything hanging off the freshly-built rental layers: the
@@ -263,6 +285,7 @@ extension MapViewController: RegionsServiceDelegate {
         dismissStopSheetForReplacement()
 
         configureStopRouteFocusLayer()
+        configureIsraelNearbyRoutesLayer()
 
         // A first launch has no region when the map appears; the region picker
         // supplies one here. `apiService` was rebuilt in `willUpdateToRegion`.
@@ -273,6 +296,7 @@ extension MapViewController: RegionsServiceDelegate {
         // A regions-list refresh can flip the current region's bikeshare fields in
         // place without changing the region identity; re-evaluate the layers.
         configureStopRouteFocusLayer()
+        configureIsraelNearbyRoutesLayer()
     }
 }
 

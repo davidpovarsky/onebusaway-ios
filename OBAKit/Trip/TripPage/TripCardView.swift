@@ -156,10 +156,22 @@ struct TripCardView: View {
         )
     }
 
+    private var resolvedLabels: RouteDirectionLabelResolver {
+        RouteDirectionLabelResolver(headsign: headsign)
+    }
+
     private var headsignText: some View {
-        Text(headsign)
-            .font(.title3.weight(.bold))
-            .fixedSize(horizontal: false, vertical: true)
+        VStack(alignment: .leading, spacing: 2) {
+            Text(resolvedLabels.destination)
+                .font(.title3.weight(.bold))
+                .fixedSize(horizontal: false, vertical: true)
+            if let origin = resolvedLabels.origin {
+                Text(String(format: OBALoc("trip_card.origin_fmt", value: "מוצא: %@", comment: "Subdued origin line under destination"), origin))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 
     @ViewBuilder

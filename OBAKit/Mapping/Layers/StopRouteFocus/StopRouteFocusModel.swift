@@ -83,7 +83,11 @@ struct StopRouteFocusModel {
     /// - Parameter routeCap: Maximum routes to draw. A downtown stop can serve
     ///   20+ routes over the arrival window; drawing all of them is both a
     ///   performance problem and an unreadable map.
-    static func make<D: MapDepartureEntry>(departures: [D], routeCap: Int) -> StopRouteFocusModel {
+    static func make<D: MapDepartureEntry>(
+        departures: [D],
+        routeCap: Int,
+        focusedRouteID: RouteID? = nil
+    ) -> StopRouteFocusModel {
         // The caller's list is NOT sorted — `filteredDepartures` sorts nowhere,
         // and sorting happens downstream in StopPageListBuilder. Sort here.
         let upcoming = departures
@@ -97,7 +101,16 @@ struct StopRouteFocusModel {
             soonestByRoute[departure.routeID] = departure
             routeOrder.append(departure.routeID)
         }
-        let drawnRouteIDs = Array(routeOrder.prefix(routeCap))
+        var drawnRouteIDs: [RouteID]
+        if let focused = focusedRouteID, routeOrder.contains(focused) {
+            var selected = [focused]
+            for r in routeOrder where r != focused && selected.count < routeCap {
+                selected.append(r)
+            }
+            drawnRouteIDs = selected
+        } else {
+            drawnRouteIDs = Array(routeOrder.prefix(routeCap))
+        }
         let drawnRouteIDSet = Set(drawnRouteIDs)
 
         var vehicles: [DrawnVehicle] = []

@@ -153,12 +153,31 @@ public class SearchManager: NSObject {
     }
 
     private func fetchRoute(request: SearchRequest) async throws -> SearchResponse? {
-        guard
-            let apiService = application.apiService,
-            let mapRect = application.mapRegionManager.lastVisibleMapRect
-        else { return nil }
+        guard let apiService = application.apiService else {
+            Logger.warn("[RouteSearch] Missing apiService")
+            return nil
+        }
 
-        let response = try await apiService.getRoute(query: request.query, region: CLCircularRegion(mapRect: mapRect))
+        // Fall back to the current region's service rect or coordinate if the visible map rect is not yet recorded.
+        let circularRegion: CLCircularRegion
+        if let mapRect = application.mapRegionManager.lastVisibleMapRect {
+            circularRegion = CLCircularRegion(mapRect: mapRect)
+        } else if let serviceRect = application.regionsService.currentRegion?.serviceRect {
+            circularRegion = CLCircularRegion(mapRect: serviceRect)
+        } else if let currentRegion = application.regionsService.currentRegion {
+            circularRegion = CLCircularRegion(
+                center: CLLocationCoordinate2D(latitude: currentRegion.latitude, longitude: currentRegion.longitude),
+                radius: 40000.0,
+                identifier: "DefaultRegionalRadius"
+            )
+        } else {
+            Logger.warn("[RouteSearch] Missing map rect and current region")
+            return nil
+        }
+
+        Logger.info("[RouteSearch] Dispatching query length \(request.query.count) to routes-for-location")
+        let response = try await apiService.getRoute(query: request.query, region: circularRegion)
+        Logger.info("[RouteSearch] Decoded \(response.list.count) route results (limitExceeded=\(response.limitExceeded ?? false))")
         return SearchResponse(request: request, results: response.list, boundingRegion: nil, error: nil)
     }
 

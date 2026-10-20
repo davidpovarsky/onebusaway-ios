@@ -85,7 +85,26 @@ jobs:
             -only-testing:OBAKitTests/MOTLocationWeatherTests \
             -only-testing:OBAKitTests/MOTRegionBootstrapTests \
             -only-testing:OBAKitTests/IsraelStopCatalogTests \
-            -only-testing:OBAKitTests/TransitProviderRegistryTests
+            -only-testing:OBAKitTests/TransitProviderRegistryTests \
+            -only-testing:OBAKitTests/IsraelRouteSearchEndToEndTests \
+            -only-testing:OBAKitTests/IsraelTripIdentityAndTimesTests \
+            -only-testing:OBAKitTests/IsraelRouteScheduleTruthTests \
+            -only-testing:OBAKitTests/IsraelLiveVehicleMappingTests \
+            -only-testing:OBAKitTests/IsraelOperatorColorsTests \
+            -only-testing:OBAKitTests/IsraelArrivalLoadAndCacheTests \
+            -only-testing:OBAKitTests/IsraelViewportRoutesLayerTests \
+            -only-testing:OBAKitTests/IsraelDirectionLabelTests
+
+      - name: Run Focused Israel UI Tests
+        run: |
+          set -euo pipefail
+          xcodebuild test \
+            -project OBAKit.xcodeproj \
+            -scheme 'App' \
+            -destination "platform=iOS Simulator,id=${SIMULATOR_UDID}" \
+            -derivedDataPath DerivedData \
+            -parallel-testing-enabled NO \
+            -only-testing:OBAKitUITests/IsraelTransitRepairUITests
 
       - name: Build and Archive iOS App (Unsigned)
         run: |

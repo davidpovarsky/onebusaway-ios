@@ -24,7 +24,7 @@ nonisolated struct PolylineArrowPlacement: Equatable {
 }
 
 nonisolated enum PolylineDirectionArrows {
-    private static let maximumPlacementCount = 24
+    private static let maximumPlacementCount = 6
 
     private struct Segment {
         let start: MKMapPoint
@@ -47,7 +47,7 @@ nonisolated enum PolylineDirectionArrows {
     /// full spacing from the first vertex.
     static func placements(
         along coordinates: [CLLocationCoordinate2D],
-        spacing: CLLocationDistance = 500
+        spacing: CLLocationDistance = 1200
     ) -> [PolylineArrowPlacement] {
         guard coordinates.count >= 2, spacing.isFinite, spacing > 0 else { return [] }
 

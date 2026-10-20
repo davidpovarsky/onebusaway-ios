@@ -12,14 +12,16 @@ import Foundation
 public class TripStopTime: NSObject, Decodable, HasReferences {
 
     /// Time, in seconds since the start of the service date, when the trip arrives at the specified stop.
-    private let arrival: TimeInterval
+    /// Nil or negative indicates an unknown / unreported stop time.
+    private let arrival: TimeInterval?
 
-    public private(set) var arrivalDate: Date!
+    public private(set) var arrivalDate: Date?
 
-    /// Time, in seconds since the start of the service date, when the trip arrives at the specified stop
-    private let departure: TimeInterval
+    /// Time, in seconds since the start of the service date, when the trip departs the specified stop.
+    /// Nil or negative indicates an unknown / unreported stop time.
+    private let departure: TimeInterval?
 
-    public private(set) var departureDate: Date!
+    public private(set) var departureDate: Date?
 
     /// The stop id of the stop visited during the trip
     public let stopID: StopID
@@ -29,8 +31,21 @@ public class TripStopTime: NSObject, Decodable, HasReferences {
 
     var serviceDate: Date! {
         didSet {
-            arrivalDate = Calendar.current.date(byAdding: .second, value: Int(arrival), to: serviceDate)
-            departureDate = Calendar.current.date(byAdding: .second, value: Int(departure), to: serviceDate)
+            guard let serviceDate = serviceDate else {
+                arrivalDate = nil
+                departureDate = nil
+                return
+            }
+            if let arr = arrival, arr >= 0 {
+                arrivalDate = Calendar.current.date(byAdding: .second, value: Int(arr), to: serviceDate)
+            } else {
+                arrivalDate = nil
+            }
+            if let dep = departure, dep >= 0 {
+                departureDate = Calendar.current.date(byAdding: .second, value: Int(dep), to: serviceDate)
+            } else {
+                departureDate = nil
+            }
         }
     }
 
@@ -45,8 +60,8 @@ public class TripStopTime: NSObject, Decodable, HasReferences {
     public required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        arrival = try container.decode(TimeInterval.self, forKey: .arrival)
-        departure = try container.decode(TimeInterval.self, forKey: .departure)
+        arrival = try container.decodeIfPresent(TimeInterval.self, forKey: .arrival)
+        departure = try container.decodeIfPresent(TimeInterval.self, forKey: .departure)
         stopID = try container.decode(String.self, forKey: .stopID)
     }
 

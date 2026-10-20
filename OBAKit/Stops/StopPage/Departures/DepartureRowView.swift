@@ -143,9 +143,18 @@ struct DepartureRowView: View {
     /// choice): capping row height keeps more departures visible, and tapping
     /// the row opens the trip panel with the full name.
     private var headsignText: some View {
-        Text(departure.tripHeadsign ?? departure.routeShortName)
-            .font(.system(.body, weight: .bold))
-            .lineLimit(2)
+        let resolved = RouteDirectionLabelResolver(headsign: departure.tripHeadsign ?? departure.routeShortName)
+        return VStack(alignment: .leading, spacing: 1) {
+            Text(resolved.destination)
+                .font(.system(.body, weight: .bold))
+                .lineLimit(2)
+            if let origin = resolved.origin {
+                Text(String(format: OBALoc("departure_row.origin_fmt", value: "מוצא: %@", comment: "Subdued origin line under destination"), origin))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+        }
     }
 
     private var statusText: some View {

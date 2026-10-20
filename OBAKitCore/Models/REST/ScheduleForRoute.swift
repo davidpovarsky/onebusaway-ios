@@ -144,11 +144,14 @@ public class ScheduleForRoute: NSObject, Identifiable, Decodable, HasReferences 
         /// The trip ID
         public let tripID: String
 
-        /// Arrival time in seconds from midnight
+        /// Arrival time in seconds from midnight. Negative indicates unknown/unreported time.
         public let arrivalTime: Int
 
-        /// Departure time in seconds from midnight
+        /// Departure time in seconds from midnight. Negative indicates unknown/unreported time.
         public let departureTime: Int
+
+        public var hasValidArrivalTime: Bool { arrivalTime >= 0 }
+        public var hasValidDepartureTime: Bool { departureTime >= 0 }
 
         /// Whether arrival tracking is enabled
         public let arrivalEnabled: Bool
@@ -179,10 +182,11 @@ public class ScheduleForRoute: NSObject, Identifiable, Decodable, HasReferences 
             stopID = try container.decode(String.self, forKey: .stopID)
             tripID = try container.decode(String.self, forKey: .tripID)
             // Seconds since midnight, not an epoch value — fits a 32-bit Int.
+            // Negative indicates unknown/absent time in truth-first policy.
             // swiftlint:disable:next epoch_decoded_as_int
-            arrivalTime = try container.decode(Int.self, forKey: .arrivalTime)
+            arrivalTime = (try? container.decodeIfPresent(Int.self, forKey: .arrivalTime)) ?? -1
             // swiftlint:disable:next epoch_decoded_as_int
-            departureTime = try container.decode(Int.self, forKey: .departureTime)
+            departureTime = (try? container.decodeIfPresent(Int.self, forKey: .departureTime)) ?? -1
             arrivalEnabled = try container.decode(Bool.self, forKey: .arrivalEnabled)
             departureEnabled = try container.decode(Bool.self, forKey: .departureEnabled)
             serviceID = try container.decodeIfPresent(String.self, forKey: .serviceID) ?? ""

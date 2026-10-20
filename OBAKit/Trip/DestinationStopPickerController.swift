@@ -292,7 +292,7 @@ class DestinationStopPickerController: UIViewController, AppContext, OBAListView
         }
 
         let items: [AnyOBAListViewItem] = stopTimes.map { stopTime in
-            let timeString = application.formatters.timeFormatter.string(from: stopTime.arrivalDate)
+            let timeString = stopTime.arrivalDate.flatMap { application.formatters.timeFormatter.string(from: $0) } ?? "—" 
 
             let action: OBAListViewAction<OBAListRowView.ValueViewModel> = { [weak self] _ in
                 guard let self else { return }

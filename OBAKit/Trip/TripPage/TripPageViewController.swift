@@ -172,7 +172,7 @@ final class TripPageViewController: UIHostingController<TripPageRootView>,
         details: TripDetails?,
         shape: [CLLocationCoordinate2D]?
     ) {
-        let status = convertible.tripStatus
+        let status = convertible.tripStatus ?? details?.status
         let departure = convertible.arrivalDeparture
 
         let stops = TripStopListModel.make(

@@ -116,7 +116,14 @@ class TripViewModel: ObservableObject {
                 async let polylineTask = fetchMapPolylineSilently()
                 async let convertibleTask = fetchTripConvertibleSilently()
 
-                let newDetails = try await detailsTask
+                // Publish essential trip details as soon as available, without waiting for optional requests
+                if let newDetails = try await detailsTask {
+                    guard !Task.isCancelled else { return }
+                    tripDetails = newDetails
+                    operationError = nil
+                    await loadDestinationArrival()
+                }
+
                 let newPolyline = await polylineTask
                 let newConvertible = await convertibleTask
 
@@ -125,14 +132,9 @@ class TripViewModel: ObservableObject {
                 // them could overwrite the newer load's trip.
                 guard !Task.isCancelled else { return }
 
-                if let newDetails { tripDetails = newDetails }
                 if let newPolyline { routePolylineCoordinates = newPolyline }
                 if let newConvertible { tripConvertible = newConvertible }
                 operationError = nil
-
-                // After the details are applied, because the destination's row
-                // is read from them.
-                await loadDestinationArrival()
             } catch {
                 // A cancelled load (e.g. dismissing a context menu preview)
                 // should never surface an error to the user. It leaves

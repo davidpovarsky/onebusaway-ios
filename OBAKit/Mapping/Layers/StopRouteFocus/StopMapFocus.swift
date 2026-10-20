@@ -32,11 +32,10 @@ final class StopMapFocus: ObservableObject {
     func apply(routes: [StopRouteFocusModel.DrawnRoute]) {
         self.routes = routes
 
-        // Don't let focus dangle on a route that has left the arrival set, or
-        // that has lost its last live vehicle — there would be nothing on the
-        // map to point at, and the chip that could clear it may be gone too.
+        // Don't let focus dangle on a route that has left the arrival set.
+        // Route shapes remain focusable even when a live vehicle is not reported.
         if let focusedRouteID,
-           !routes.contains(where: { $0.routeID == focusedRouteID && $0.hasLiveVehicle }) {
+           !routes.contains(where: { $0.routeID == focusedRouteID }) {
             self.focusedRouteID = nil
         }
     }
@@ -64,8 +63,9 @@ final class StopMapFocus: ObservableObject {
     }
 
     /// Whether a chip for `routeID` should render as interactive.
+    /// Allows focusing any presented route even if real-time vehicle GPS is unavailable.
     func isFocusable(routeID: RouteID) -> Bool {
-        routes.contains { $0.routeID == routeID && $0.hasLiveVehicle }
+        routes.contains { $0.routeID == routeID }
     }
 
     /// Decoration for a chip, or nil when the map isn't drawing this route.

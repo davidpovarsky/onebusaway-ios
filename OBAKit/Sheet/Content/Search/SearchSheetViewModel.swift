@@ -193,6 +193,24 @@ final class SearchSheetViewModel: NSObject, ObservableObject, SearchDelegate {
         searchInteractor.searchModeObjects(text: text)
     }
 
+    func submitCurrentQuery() {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let type: SearchType
+        if trimmed.hasPrefix("קו") || trimmed.localizedCaseInsensitiveContains("line ") || trimmed.localizedCaseInsensitiveContains("route ") {
+            type = .route
+        } else if let num = Int(trimmed), num > 0 {
+            if trimmed.count <= 3 {
+                type = .route
+            } else {
+                type = .stopNumber
+            }
+        } else {
+            type = .address
+        }
+        performSearch(request: SearchRequest(query: trimmed, type: type))
+    }
+
     // MARK: - SearchDelegate
 
     func performSearch(request: SearchRequest) {

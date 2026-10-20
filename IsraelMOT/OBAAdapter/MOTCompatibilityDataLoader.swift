@@ -23,14 +23,17 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
     private let client: MOTHTTPClient
     private let endpoints: MOTEndpoints
     private let fallbackLoader: URLDataLoader
+    private let cache: MOTCache
 
     public init(
         client: MOTHTTPClient = MOTHTTPClient(),
-        fallbackLoader: URLDataLoader = URLSession.shared
+        fallbackLoader: URLDataLoader = URLSession.shared,
+        cache: MOTCache = MOTCache()
     ) {
         self.client = client
         self.endpoints = MOTEndpoints()
         self.fallbackLoader = fallbackLoader
+        self.cache = cache
         super.init()
     }
 
@@ -323,13 +326,10 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
         }
     }
 
-    private func handleArrivalsAndDepartures(url: URL) async throws -> (Data, URLResponse) {
-        let requestedStopID = url.deletingPathExtension().lastPathComponent
-        guard let stopCode = extractStopCode(from: url) else {
-            return try await notFoundResponse(for: url)
-        }
-        let stopInternalID = extractStopInternalID(from: url)
-
+    private func fetchStopAndArrivals(
+        stopCode: MOTStopCode,
+        stopInternalID: MOTStopInternalID?
+    ) async throws -> (domainStop: TransitStop, arrivals: [TransitArrival], siblingPlatforms: [TransitStop]) {
         let catalog = IsraelStopCatalogRepository.shared
         let localStop: TransitStop?
         if let internalID = stopInternalID {
@@ -342,59 +342,91 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             $0.internalID != (localStop?.internalID ?? stopInternalID)
         }
 
+        if let cachedArrivals = await cache.getArrivals(stopCode: stopCode),
+           let cachedStop = await cache.getStop(code: stopCode) {
+            return (cachedStop, cachedArrivals, siblingPlatforms)
+        }
+
         let targetURL = endpoints.stopFullDataURL(stopCode: stopCode)
-        do {
-            let res: StopFullDataResponseDTOServiceResponse = try await client.get(targetURL)
-            guard let dto = res.data else {
-                return try await notFoundResponse(for: url)
-            }
-            let remoteStop = MOTStopMapper.map(from: dto)
-            let domainStop: TransitStop
-            if let local = localStop {
-                domainStop = TransitStop(
-                    code: local.code,
-                    internalID: local.internalID,
-                    name: local.name,
-                    cityName: local.cityName ?? remoteStop.cityName,
-                    streetName: local.streetName ?? remoteStop.streetName,
-                    location: local.location,
-                    platformNumber: local.platformNumber ?? remoteStop.platformNumber,
-                    isAccessible: local.isAccessible ?? remoteStop.isAccessible,
-                    routes: remoteStop.routes
-                )
-            } else {
-                domainStop = remoteStop
-            }
-            let routesInStop = dto.routesInStop ?? []
+        let res: StopFullDataResponseDTOServiceResponse = try await client.get(targetURL)
+        guard let dto = res.data else {
+            throw MOTHTTPError.httpError(statusCode: 404, responseBody: "Stop not found")
+        }
 
-            var stopTimesByRouteDesc: [String: [NextStopTimeDTO]] = [:]
-            let nextStopURL = endpoints.nextStopTimesAndLocationURL()
+        let remoteStop = MOTStopMapper.map(from: dto)
+        let domainStop: TransitStop
+        if let local = localStop {
+            domainStop = TransitStop(
+                code: local.code,
+                internalID: local.internalID,
+                name: local.name,
+                cityName: local.cityName ?? remoteStop.cityName,
+                streetName: local.streetName ?? remoteStop.streetName,
+                location: local.location,
+                platformNumber: local.platformNumber ?? remoteStop.platformNumber,
+                isAccessible: local.isAccessible ?? remoteStop.isAccessible,
+                routes: remoteStop.routes
+            )
+        } else {
+            domainStop = remoteStop
+        }
+        await cache.setStop(domainStop, code: stopCode, ttl: 180)
 
-            let uniqueRouteDescs = Array(Set(routesInStop.compactMap { $0.routeDesc }.filter { !$0.isEmpty })).prefix(8)
+        let routesInStop = dto.routesInStop ?? []
+        var stopTimesByRouteDesc: [String: [NextStopTimeDTO]] = [:]
+        let nextStopURL = endpoints.nextStopTimesAndLocationURL()
 
-            let client = self.client
+        // Deterministic deduplication of route descriptors
+        var seenDescs = Set<String>()
+        let uniqueRouteDescs = routesInStop.compactMap { $0.routeDesc }.filter {
+            !$0.isEmpty && seenDescs.insert($0).inserted
+        }.sorted()
+
+        // Bounded concurrency: process in batches of 4 to honor maxConcurrentRequests policy
+        let client = self.client
+        let batchSize = 4
+        let chunkedDescs = stride(from: 0, to: uniqueRouteDescs.count, by: batchSize).map {
+            Array(uniqueRouteDescs[$0 ..< min($0 + batchSize, uniqueRouteDescs.count)])
+        }
+
+        for chunk in chunkedDescs {
             await withTaskGroup(of: (String, [NextStopTimeDTO]).self) { group in
-                for routeDesc in uniqueRouteDescs {
+                for routeDesc in chunk {
                     group.addTask {
                         let reqBody = GetNextStopDataRequestDTO(routeDesc: routeDesc, stopCodes: [stopCode.rawValue])
-                        let responseDTO: GetNextStopDataResponseDTOServiceResponse? = try? await client.post(nextStopURL, body: reqBody, decodeAs: GetNextStopDataResponseDTOServiceResponse.self)
+                        let responseDTO: GetNextStopDataResponseDTOServiceResponse? = try? await client.post(
+                            nextStopURL, body: reqBody, decodeAs: GetNextStopDataResponseDTOServiceResponse.self
+                        )
                         let stopKey = String(stopCode.rawValue)
                         let times: [NextStopTimeDTO] = responseDTO?.data?[stopKey]??.stopTimes ?? []
                         return (routeDesc, times)
                     }
                 }
-
                 for await (routeDesc, times) in group {
                     stopTimesByRouteDesc[routeDesc] = times
                 }
             }
+        }
 
-            let arrivals = MOTArrivalsMapper.map(routesInStop: routesInStop, stopTimesByRouteDesc: stopTimesByRouteDesc)
+        let arrivals = MOTArrivalsMapper.map(routesInStop: routesInStop, stopTimesByRouteDesc: stopTimesByRouteDesc)
+        await cache.setArrivals(arrivals, stopCode: stopCode, ttl: 20)
+        return (domainStop, arrivals, siblingPlatforms)
+    }
+
+    private func handleArrivalsAndDepartures(url: URL) async throws -> (Data, URLResponse) {
+        let requestedStopID = url.deletingPathExtension().lastPathComponent
+        guard let stopCode = extractStopCode(from: url) else {
+            return try await notFoundResponse(for: url)
+        }
+        let stopInternalID = extractStopInternalID(from: url)
+
+        do {
+            let result = try await fetchStopAndArrivals(stopCode: stopCode, stopInternalID: stopInternalID)
             let envelope = OBACompatibilityBridge.stopArrivalsResponse(
-                stop: domainStop,
-                arrivals: arrivals,
+                stop: result.domainStop,
+                arrivals: result.arrivals,
                 requestedStopID: requestedStopID,
-                nearbyStops: siblingPlatforms
+                nearbyStops: result.siblingPlatforms
             )
             let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
@@ -420,84 +452,37 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
               let routeID = MOTIdentityFormatter.parseRouteIDFromTripID(tripIdParam) else {
             return try await notFoundResponse(for: url)
         }
-
-        let serviceDateMs = components?.queryItems?.first(where: { $0.name == "serviceDate" })?.value.flatMap(Double.init)
         let stopSeqParam = components?.queryItems?.first(where: { $0.name == "stopSequence" })?.value.flatMap(Int.init)
-        let targetServiceDate = serviceDateMs.map { Date(timeIntervalSince1970: $0 / 1000.0) } ?? Date()
-
         let stopInternalID = extractStopInternalID(from: url)
-        let catalog = IsraelStopCatalogRepository.shared
-        let localStop = stopInternalID.flatMap { catalog.stop(forInternalID: $0) } ?? catalog.stop(forCode: stopCode)
 
-        let targetURL = endpoints.stopFullDataURL(stopCode: stopCode)
         do {
-            let res: StopFullDataResponseDTOServiceResponse = try await client.get(targetURL)
-            guard let dto = res.data else {
-                if let local = localStop {
-                    let arrival = TransitArrival(
-                        routeID: routeID,
-                        lineName: "",
-                        destination: "",
-                        scheduledTime: targetServiceDate,
-                        stopSequence: stopSeqParam
-                    )
-                    let envelope = OBACompatibilityBridge.arrivalAndDepartureForStopResponse(
-                        stop: local,
-                        arrival: arrival,
-                        requestedStopID: requestedStopID
-                    )
-                    let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
-                    let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
-                    return (data, response)
-                }
+            let result = try await fetchStopAndArrivals(stopCode: stopCode, stopInternalID: stopInternalID)
+            let matchingArrival = result.arrivals.first(where: {
+                $0.id == tripIdParam ||
+                $0.staticTripId == tripIdParam ||
+                ($0.routeID == routeID && ($0.stopSequence == stopSeqParam || stopSeqParam == nil))
+            })
+
+            guard let arrival = matchingArrival else {
+                // Truth-first: do NOT invent a midnight arrival from service date when the trip cannot be matched
                 return try await notFoundResponse(for: url)
             }
 
-            let remoteStop = MOTStopMapper.map(from: dto)
-            let domainStop: TransitStop
-            if let local = localStop {
-                domainStop = TransitStop(
-                    code: local.code,
-                    internalID: local.internalID,
-                    name: local.name,
-                    cityName: local.cityName ?? remoteStop.cityName,
-                    streetName: local.streetName ?? remoteStop.streetName,
-                    location: local.location,
-                    platformNumber: local.platformNumber ?? remoteStop.platformNumber,
-                    isAccessible: local.isAccessible ?? remoteStop.isAccessible,
-                    routes: remoteStop.routes
-                )
-            } else {
-                domainStop = remoteStop
-            }
-
-            let matchingRoute = dto.routesInStop?.first(where: { $0.routeId == routeID.rawValue })
-            let lineName = matchingRoute?.routeName ?? ""
-            let dest = matchingRoute?.destinationName ?? matchingRoute?.routeLongName ?? ""
-            let agencyID = matchingRoute?.agencyId.map { MOTAgencyID(rawValue: $0) }
-
-            let arrival = TransitArrival(
-                routeID: routeID,
-                lineName: lineName,
-                destination: dest,
-                scheduledTime: targetServiceDate,
-                isRealTime: false,
-                staticTripId: tripIdParam,
-                stopSequence: stopSeqParam,
-                agencyID: agencyID,
-                agencyName: matchingRoute?.agencyName
-            )
-
             let envelope = OBACompatibilityBridge.arrivalAndDepartureForStopResponse(
-                stop: domainStop,
+                stop: result.domainStop,
                 arrival: arrival,
                 requestedStopID: requestedStopID
             )
             let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
             return (data, response)
+        } catch let error as MOTHTTPError {
+            if case .httpError(statusCode: 404, responseBody: _) = error {
+                return try await notFoundResponse(for: url)
+            }
+            throw error
         } catch {
-            return try await notFoundResponse(for: url)
+            throw error
         }
     }
 
@@ -507,11 +492,32 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             $0.name.lowercased() == "query"
         }?.value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
+        let latParam = components?.queryItems?.first { $0.name.lowercased() == "lat" }?.value.flatMap(Double.init)
+        let lonParam = components?.queryItems?.first { $0.name.lowercased() == "lon" }?.value.flatMap(Double.init)
+
+        // Preferred city detection based on search coordinates; defaults to Jerusalem for Region 972
+        let preferredCity: String
+        if let lat = latParam, let lon = lonParam {
+            let jerusalemDist = hypot(lat - 31.78, lon - 35.21)
+            let telAvivDist = hypot(lat - 32.08, lon - 34.78)
+            let haifaDist = hypot(lat - 32.80, lon - 34.98)
+            if telAvivDist < jerusalemDist && telAvivDist < haifaDist {
+                preferredCity = "תל אביב"
+            } else if haifaDist < jerusalemDist {
+                preferredCity = "חיפה"
+            } else {
+                preferredCity = "ירושלים"
+            }
+        } else {
+            preferredCity = "ירושלים"
+        }
+
         let query = rawQuery.replacingOccurrences(
             of: "^קו\\s*",
             with: "",
             options: [.regularExpression, .caseInsensitive]
-        )
+        ).trimmingCharacters(in: .whitespacesAndNewlines)
+
         let routeSummaries: [TransitRouteSummary]
         if query.isEmpty {
             routeSummaries = []
@@ -521,14 +527,24 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             let textTokens = tokens.filter { Int($0) == nil }
 
             let apiSearchQuery = lineToken ?? query
-            let response: MOTSearchLinesServiceResponse = try await client.get(
-                endpoints.searchLinesURL(query: apiSearchQuery)
-            )
+            let searchURL = endpoints.searchLinesURL(query: apiSearchQuery)
+            let startTime = Date()
+            let response: MOTSearchLinesServiceResponse = try await client.get(searchURL)
+            let elapsed = Date().timeIntervalSince(startTime)
+
             guard response.success else {
+                #if canImport(OBAKitCore)
+                Logger.error("[RouteSearch] SearchLines failed: \(response.message ?? \"unknown error\")")
+                #endif
                 throw MOTHTTPError.serviceError(message: response.message ?? "SearchLines failed")
             }
 
-            let matching = (response.data ?? []).filter { line in
+            let rawList = response.data ?? []
+            #if canImport(OBAKitCore)
+            Logger.info("[RouteSearch] SearchLines query='\(apiSearchQuery)' returned \(rawList.count) rows in \(String(format: \"%.2f\", elapsed))s")
+            #endif
+
+            let matching = rawList.filter { line in
                 if let lt = lineToken {
                     guard line.routeName.localizedCaseInsensitiveContains(lt) else { return false }
                 }
@@ -548,7 +564,16 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
                 let firstExact = first.routeName.compare(targetNum, options: .caseInsensitive) == .orderedSame
                 let secondExact = second.routeName.compare(targetNum, options: .caseInsensitive) == .orderedSame
                 if firstExact != secondExact { return firstExact }
-                return (first.cityName ?? "") < (second.cityName ?? "")
+
+                let firstPrefCity = first.cityName?.localizedCaseInsensitiveContains(preferredCity) == true
+                let secondPrefCity = second.cityName?.localizedCaseInsensitiveContains(preferredCity) == true
+                if firstPrefCity != secondPrefCity { return firstPrefCity }
+
+                let firstCity = first.cityName ?? ""
+                let secondCity = second.cityName ?? ""
+                if firstCity != secondCity { return firstCity < secondCity }
+
+                return first.routeId < second.routeId
             }
 
             var seen = Set<Int>()
@@ -557,6 +582,10 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
                 return line.toTransitRouteSummary()
             }
         }
+
+        #if canImport(OBAKitCore)
+        Logger.info("[RouteSearch] Returning \(routeSummaries.count) filtered routes for query='\(query)'")
+        #endif
 
         let envelope = OBACompatibilityBridge.routesForLocationResponse(routes: routeSummaries)
         let data = try JSONSerialization.data(withJSONObject: envelope)
@@ -738,30 +767,48 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             }
             let serviceDateStart = calendar.startOfDay(for: targetServiceDate)
 
-            var stopTimesData: [(stop: TransitStop, arrivalSec: Int, departureSec: Int)] = []
+            var stopTimesData: [(stop: TransitStop, arrivalSec: Int?, departureSec: Int?)] = []
+            var liveVehicleLoc: CLLocationCoordinate2D? = nil
+
+            let rawTripParts = tripID.split(separator: "_")
+            let matchTripToken: String? = rawTripParts.count >= 2 ? String(rawTripParts[1]) : nil
+
             for stop in domainRoute.stops {
                 var arrivalSec: Int? = nil
                 if let dtoStop = routeDTO.stops?.first(where: { $0.stopid == stop.internalID?.rawValue || $0.stopcode == stop.code.rawValue }),
-                   let firstTime = dtoStop.nextStopsTimes?.first {
-                    if let arrivalStr = firstTime.arrivalTimeString ?? firstTime.arrivalTime {
-                        if let parsed = MOTDateParser.parse(arrivalStr) {
-                            arrivalSec = max(0, Int(parsed.timeIntervalSince(serviceDateStart)))
-                        } else {
-                            let parts = arrivalStr.split(separator: ":").compactMap { Int($0) }
-                            if parts.count >= 2 {
-                                arrivalSec = parts[0] * 3600 + parts[1] * 60 + (parts.count >= 3 ? parts[2] : 0)
+                   let nextTimes = dtoStop.nextStopsTimes {
+                    let matchedTime: NextStopTimeDTO?
+                    if let token = matchTripToken {
+                        matchedTime = nextTimes.first(where: { $0.staticTripId == token || ($0.tripIdToDate != nil && String($0.tripIdToDate!) == token) })
+                    } else {
+                        matchedTime = nil
+                    }
+
+                    if let timeObj = matchedTime {
+                        if let loc = timeObj.routeLocation {
+                            liveVehicleLoc = CLLocationCoordinate2D(latitude: loc.lat, longitude: loc.lng)
+                        }
+                        if let arrivalStr = timeObj.arrivalTimeString ?? timeObj.arrivalTime {
+                            if let parsed = MOTDateParser.parse(arrivalStr) {
+                                arrivalSec = Int(parsed.timeIntervalSince(serviceDateStart))
+                            } else {
+                                let parts = arrivalStr.split(separator: ":").compactMap { Int($0) }
+                                if parts.count >= 2 {
+                                    arrivalSec = parts[0] * 3600 + parts[1] * 60 + (parts.count >= 3 ? parts[2] : 0)
+                                }
                             }
                         }
                     }
                 }
-                let sec = arrivalSec ?? 0
-                stopTimesData.append((stop: stop, arrivalSec: sec, departureSec: sec))
+                // NO fake 00:00! Absent time remains nil.
+                stopTimesData.append((stop: stop, arrivalSec: arrivalSec, departureSec: arrivalSec))
             }
 
             let envelope = OBACompatibilityBridge.tripDetailsResponse(
                 tripID: tripID,
                 route: domainRoute,
                 stopTimes: stopTimesData,
+                vehicleLocation: liveVehicleLoc,
                 serviceDate: targetServiceDate
             )
             let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
@@ -776,8 +823,6 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             throw error
         }
     }
-
-    // MARK: - Helpers
 
     private func extractStopCode(from url: URL) -> MOTStopCode? {
         let lastComponent = url.deletingPathExtension().lastPathComponent

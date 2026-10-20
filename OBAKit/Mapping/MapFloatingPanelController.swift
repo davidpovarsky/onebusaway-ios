@@ -317,6 +317,27 @@ class MapFloatingPanelController: VisualEffectViewController,
         searchBar.showsCancelButton = true
     }
 
+    public func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
+        guard let rawText = searchBar.text?.trimmingCharacters(in: .whitespacesAndNewlines), !rawText.isEmpty else { return }
+        let type: SearchType
+        if rawText.hasPrefix("קו") || rawText.localizedCaseInsensitiveContains("line ") || rawText.localizedCaseInsensitiveContains("route ") {
+            type = .route
+        } else if let num = Int(rawText), num > 0 {
+            // In Israel, route numbers are typically 1-3 digits (e.g. 31, 64, 86, 110),
+            // while stop codes are usually 4-5 digits (e.g. 5130, 4170, 11622).
+            if rawText.count <= 3 {
+                type = .route
+            } else {
+                type = .stopNumber
+            }
+        } else {
+            type = .address
+        }
+        let request = SearchRequest(query: rawText, type: type)
+        performSearch(request: request)
+    }
+
     public func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         exitSearchMode()
     }

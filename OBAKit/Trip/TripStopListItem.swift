@@ -88,8 +88,8 @@ nonisolated struct TripStopViewModel: OBAListViewItem {
     /// The title of this item. e.g., "15th Ave E & E Galer St"
     let title: String
 
-    /// The `Date` at which the vehicle will arrive/depart this trip stop.
-    let date: Date
+    /// The `Date` at which the vehicle will arrive/depart this trip stop, or nil if unknown.
+    let date: Date?
 
     /// The route type which will be used to determine the image to display.
     let routeType: Route.RouteType
@@ -266,7 +266,11 @@ final class TripStopCell: OBAListViewCell {
         let viewModel = config.viewModel
 
         titleLabel.text = viewModel.title
-        timeLabel.text = config.formatters?.timeFormatter.string(from: viewModel.date) ?? ""
+        if let date = viewModel.date {
+            timeLabel.text = config.formatters?.timeFormatter.string(from: date) ?? ""
+        } else {
+            timeLabel.text = "—"
+        }
         tripSegmentView.routeType = viewModel.routeType
         tripSegmentView.temporalState = viewModel.temporalState
         tripSegmentView.isOutsideRide = viewModel.isOutsideRide
@@ -275,7 +279,8 @@ final class TripStopCell: OBAListViewCell {
 
         applyTemporalStateStyling(viewModel)
 
-        let labels = [viewModel.title, config.formatters?.timeFormatter.string(from: viewModel.date)]
+        let timeFormatted = viewModel.date.flatMap { config.formatters?.timeFormatter.string(from: $0) }
+        let labels = [viewModel.title, timeFormatted ?? OBALoc("trip_stop.no_time", value: "No time available", comment: "No scheduled time")]
         accessibilityLabel = labels.compactMap { $0 }.joined(separator: "; ")
 
         var accessibilityValueFlags: [String] = []

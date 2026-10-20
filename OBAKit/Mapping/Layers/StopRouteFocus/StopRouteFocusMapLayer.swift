@@ -186,7 +186,7 @@ final class StopRouteFocusMapLayer: NSObject, MapLayer {
             isListFiltered: isListFiltered,
             preferences: preferences
         )
-        update(model: StopRouteFocusModel.make(departures: visible, routeCap: Self.routeCap))
+        update(model: StopRouteFocusModel.make(departures: visible, routeCap: Self.routeCap, focusedRouteID: focus?.focusedRouteID))
     }
 
     /// Called on every arrivals refresh. Guarded on `focus`: a disabled layer's
