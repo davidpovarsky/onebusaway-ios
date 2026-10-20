@@ -534,14 +534,16 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
 
             guard response.success else {
                 #if canImport(OBAKitCore)
-                Logger.error("[RouteSearch] SearchLines failed: \(response.message ?? \"unknown error\")")
+                let errMsg = response.message ?? "unknown error"
+                Logger.error("[RouteSearch] SearchLines failed: \(errMsg)")
                 #endif
                 throw MOTHTTPError.serviceError(message: response.message ?? "SearchLines failed")
             }
 
             let rawList = response.data ?? []
             #if canImport(OBAKitCore)
-            Logger.info("[RouteSearch] SearchLines query='\(apiSearchQuery)' returned \(rawList.count) rows in \(String(format: \"%.2f\", elapsed))s")
+            let elapsedStr = String(format: "%.2f", elapsed)
+            Logger.info("[RouteSearch] SearchLines query='\(apiSearchQuery)' returned \(rawList.count) rows in \(elapsedStr)s")
             #endif
 
             let matching = rawList.filter { line in
