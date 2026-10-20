@@ -6,8 +6,10 @@
 import Foundation
 import Testing
 import UIKit
+import CoreLocation
 @testable import OBAKit
 @testable import OBAKitCore
+@testable import IsraelMOT
 
 @Suite(.serialized)
 struct IsraelOperatorColorsTests {
@@ -44,12 +46,13 @@ struct IsraelOperatorColorsTests {
     }
 
     @Test
+    @MainActor
     func testStopMapFocusIsFocusableWithoutLiveVehicle() {
-        let route = StopMapFocus.Route(
+        let route = StopRouteFocusModel.DrawnRoute(
             routeID: "mot:route:31",
             shortName: "31",
             color: .blue,
-            textColor: .white,
+            shapeID: "shape:31",
             hasLiveVehicle: false // NO live bus!
         )
 

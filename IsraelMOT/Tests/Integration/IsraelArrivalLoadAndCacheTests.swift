@@ -5,30 +5,53 @@
 
 import Foundation
 import Testing
+import CoreLocation
 @testable import OBAKit
 @testable import OBAKitCore
+@testable import IsraelMOT
 
 @Suite(.serialized)
 struct IsraelArrivalLoadAndCacheTests {
 
     @Test
-    func testMOTCacheStoresAndRetrievesBeforeExpiration() {
-        let cache = MOTCache.shared
-        let key = "test_key_\(UUID().uuidString)"
+    func testMOTCacheStoresAndRetrievesBeforeExpiration() async {
+        let cache = MOTCache()
+        let stop = TransitStop(
+            code: MOTStopCode(5130),
+            internalID: MOTStopInternalID(1001),
+            name: TransitMultiLanguageName(he: "צומת רמות", en: "Ramot", ar: nil),
+            cityName: "ירושלים",
+            streetName: "גולדה מאיר",
+            location: CLLocationCoordinate2D(latitude: 31.815, longitude: 35.201),
+            platformNumber: nil,
+            isAccessible: true,
+            routes: []
+        )
 
-        cache.set("cached_stop_data", forKey: key, ttl: 10.0)
-        let retrieved: String? = cache.get(forKey: key)
+        await cache.setStop(stop, code: MOTStopCode(5130), ttl: 10.0)
+        let retrieved = await cache.getStop(code: MOTStopCode(5130))
 
-        #expect(retrieved == "cached_stop_data")
+        #expect(retrieved?.code.rawValue == 5130)
+        #expect(retrieved?.name.he == "צומת רמות")
     }
 
     @Test
-    func testMOTCacheReturnsNilForExpiredItem() {
-        let cache = MOTCache.shared
-        let key = "test_expired_key_\(UUID().uuidString)"
+    func testMOTCacheReturnsNilForExpiredItem() async {
+        let cache = MOTCache()
+        let stop = TransitStop(
+            code: MOTStopCode(5130),
+            internalID: MOTStopInternalID(1001),
+            name: TransitMultiLanguageName(he: "צומת רמות", en: "Ramot", ar: nil),
+            cityName: "ירושלים",
+            streetName: "גולדה מאיר",
+            location: CLLocationCoordinate2D(latitude: 31.815, longitude: 35.201),
+            platformNumber: nil,
+            isAccessible: true,
+            routes: []
+        )
 
-        cache.set("expired_data", forKey: key, ttl: -1.0) // Already expired
-        let retrieved: String? = cache.get(forKey: key)
+        await cache.setStop(stop, code: MOTStopCode(5130), ttl: -1.0) // Already expired
+        let retrieved = await cache.getStop(code: MOTStopCode(5130))
 
         #expect(retrieved == nil)
     }

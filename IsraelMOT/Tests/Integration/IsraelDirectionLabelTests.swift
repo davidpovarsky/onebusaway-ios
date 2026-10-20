@@ -60,7 +60,7 @@ struct IsraelDirectionLabelTests {
         )
 
         let route = TransitRoute(
-            id: MOTRouteID(31),
+            routeID: MOTRouteID(31),
             lineName: "31",
             routeDesc: MOTRouteDesc("10031-1-0"),
             agencyID: MOTAgencyID(16),
