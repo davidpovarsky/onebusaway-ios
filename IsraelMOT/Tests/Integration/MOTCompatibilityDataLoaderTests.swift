@@ -14,7 +14,9 @@ import CoreLocation
 @testable import OTPKit
 #endif
 
-private nonisolated final class TestMockDataLoader: NSObject, URLDataLoader, @unchecked Sendable {
+private typealias URLDataLoader = OBAKitCore.URLDataLoader
+
+private nonisolated final class TestMockDataLoader: NSObject, OBAKitCore.URLDataLoader, @unchecked Sendable {
     var handledRequests: [URLRequest] = []
     var responseData: Data = "{\"code\": 200, \"text\": \"OK\"}".data(using: .utf8)!
 
