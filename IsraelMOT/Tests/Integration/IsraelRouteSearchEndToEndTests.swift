@@ -35,19 +35,11 @@ struct IsraelRouteSearchEndToEndTests {
         let data = try JSONSerialization.data(withJSONObject: fakeMOTJson)
 
         let decoded = try JSONDecoder().decode(MOTSearchLinesServiceResponse.self, from: data)
-        #expect(decoded.data.count == 100)
+        let dtoList = try #require(decoded.data)
+        #expect(dtoList.count == 100)
 
         // Map to OBA routes response
-        let routes = decoded.data.map { dto in
-            TransitRouteSummary(
-                routeID: MOTRouteID(dto.routeId),
-                lineName: dto.routeName,
-                routeDesc: MOTRouteDesc(dto.routeDesc ?? ""),
-                destinationName: TransitRoute.parseDestination(from: dto.routeLongName ?? ""),
-                agencyID: MOTAgencyID(dto.agencyId),
-                agencyName: dto.agencyName
-            )
-        }
+        let routes = dtoList.map { $0.toTransitRouteSummary() }
 
         let envelope = OBACompatibilityBridge.routesForLocationResponse(routes: routes)
         #expect(envelope["code"] as? Int == 200)
@@ -74,9 +66,9 @@ struct IsraelRouteSearchEndToEndTests {
     @Test
     func testQueryNormalizationAndJerusalemRanking() {
         let items: [MOTSearchLineDTO] = [
-            MOTSearchLineDTO(routeId: 101, agencyId: 3, agencyName: "אגד", routeName: "31", routeLongName: "חיפה<->קריות", cityName: "חיפה", routeDesc: nil),
-            MOTSearchLineDTO(routeId: 102, agencyId: 16, agencyName: "סופרבוס", routeName: "31", routeLongName: "גילה<->רמות", cityName: "ירושלים", routeDesc: nil),
-            MOTSearchLineDTO(routeId: 103, agencyId: 5, agencyName: "דן", routeName: "31", routeLongName: "תל אביב<->רמת גן", cityName: "תל אביב", routeDesc: nil)
+            MOTSearchLineDTO(routeId: 101, agencyId: 3, agencyName: "אגד", routeName: "31", routeLongName: "חיפה<->קריות", cityName: "חיפה"),
+            MOTSearchLineDTO(routeId: 102, agencyId: 16, agencyName: "סופרבוס", routeName: "31", routeLongName: "גילה<->רמות", cityName: "ירושלים"),
+            MOTSearchLineDTO(routeId: 103, agencyId: 5, agencyName: "דן", routeName: "31", routeLongName: "תל אביב<->רמת גן", cityName: "תל אביב")
         ]
 
         // Jerusalem priority sorting

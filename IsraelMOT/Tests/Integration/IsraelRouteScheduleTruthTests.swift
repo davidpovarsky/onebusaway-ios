@@ -13,38 +13,56 @@ struct IsraelRouteScheduleTruthTests {
 
     @Test
     func testScheduleForRouteDoesNotInvent90SecondsIntervals() {
-        // Given 5 stops without observed per-stop timetable
-        let stopIDs = ["101", "102", "103", "104", "105"]
-        let departures = [28800] // Single trip departing at 08:00
+        // Given 3 stops without observed per-stop timetable
+        let stops = (1...3).map { i in
+            TransitStop(
+                code: MOTStopCode(100 + i),
+                internalID: MOTStopInternalID(1000 + i),
+                name: TransitMultiLanguageName(he: "תחנה \(i)", en: "Stop \(i)", ar: nil),
+                location: .init(latitude: 31.8, longitude: 35.2)
+            )
+        }
+        let route = TransitRoute(
+            routeID: MOTRouteID(33287),
+            lineName: "31",
+            longName: "מוצא <-> יעד",
+            routeDesc: MOTRouteDesc("10031-1-0"),
+            agencyID: MOTAgencyID(16),
+            agencyName: "סופרבוס",
+            stops: stops
+        )
+        let departure = DailyCalendarDepartureDTO(
+            tripId: "mot:trip:33287_1",
+            departureTime: "08:00:00",
+            departureTimeString: "08:00"
+        )
 
         let response = OBACompatibilityBridge.scheduleForRouteResponse(
-            routeID: "mot:route:33287",
-            stopIDs: stopIDs,
-            departures: departures
+            route: route,
+            departures: [departure]
         )
 
         guard let data = response["data"] as? [String: Any],
               let entry = data["entry"] as? [String: Any],
-              let stops = entry["stops"] as? [[String: Any]] else {
+              let groupings = entry["stopTripGroupings"] as? [[String: Any]],
+              let firstGrouping = groupings.first,
+              let trips = firstGrouping["tripsWithStopTimes"] as? [[String: Any]],
+              let firstTrip = trips.first,
+              let stopTimes = firstTrip["stopTimes"] as? [[String: Any]] else {
             Issue.record("Malformed scheduleForRoute response")
             return
         }
 
-        #expect(stops.count == 5)
+        #expect(stopTimes.count == 3)
 
-        // First stop should have the genuine departure time
-        let firstStop = stops[0]
-        let firstTrips = (firstStop["scheduleStopTimes"] as? [[String: Any]]) ?? []
-        #expect(firstTrips.first?["departureTime"] as? Int == 28800)
+        // First stop should have the genuine departure time (08:00:00 = 28800)
+        #expect(stopTimes[0]["departureTime"] as? Int == 28800)
 
-        // Intermediate stops without timetable must NOT have 28800 + idx * 90
-        for i in 1..<stops.count {
-            let stop = stops[i]
-            let trips = (stop["scheduleStopTimes"] as? [[String: Any]]) ?? []
-            if let depTime = trips.first?["departureTime"] as? Int {
-                // Must be -1 (unknown) rather than synthetic 28800 + i * 90
-                #expect(depTime == -1 || depTime != 28800 + (i * 90))
-            }
+        // Intermediate stops without timetable must NOT have 28800 + idx * 90; they must be -1
+        for i in 1..<stopTimes.count {
+            let depTime = stopTimes[i]["departureTime"] as? Int
+            #expect(depTime == -1)
+            #expect(depTime != 28800 + (i * 90))
         }
     }
 
@@ -81,8 +99,7 @@ struct IsraelRouteScheduleTruthTests {
 
         let response = OBACompatibilityBridge.stopArrivalsResponse(
             stop: stop,
-            arrivals: [arrival],
-            serviceDate: "20261020"
+            arrivals: [arrival]
         )
 
         guard let data = response["data"] as? [String: Any],
@@ -105,22 +122,41 @@ struct IsraelRouteScheduleTruthTests {
 
     @Test
     func testOvernightDepartureDoesNotClampTo86399() {
+        let stop = TransitStop(
+            code: MOTStopCode(101),
+            internalID: MOTStopInternalID(1001),
+            name: TransitMultiLanguageName(he: "תחנה", en: "Stop", ar: nil),
+            location: .init(latitude: 31.8, longitude: 35.2)
+        )
+        let route = TransitRoute(
+            routeID: MOTRouteID(9999),
+            lineName: "לילה",
+            longName: "מוצא <-> יעד",
+            routeDesc: MOTRouteDesc("10999-1-0"),
+            agencyID: MOTAgencyID(16),
+            agencyName: "סופרבוס",
+            stops: [stop]
+        )
         // 25:30:00 = 91800 seconds past midnight
-        let overnightSec = 91800
-        let departures = [overnightSec]
+        let departure = DailyCalendarDepartureDTO(
+            tripId: "mot:trip:night_1",
+            departureTime: "25:30:00",
+            departureTimeString: "25:30"
+        )
 
         let response = OBACompatibilityBridge.scheduleForRouteResponse(
-            routeID: "mot:route:night_line",
-            stopIDs: ["101"],
-            departures: departures
+            route: route,
+            departures: [departure]
         )
 
         guard let data = response["data"] as? [String: Any],
               let entry = data["entry"] as? [String: Any],
-              let stops = entry["stops"] as? [[String: Any]],
-              let firstStop = stops.first,
-              let trips = firstStop["scheduleStopTimes"] as? [[String: Any]],
-              let depTime = trips.first?["departureTime"] as? Int else {
+              let groupings = entry["stopTripGroupings"] as? [[String: Any]],
+              let firstGrouping = groupings.first,
+              let trips = firstGrouping["tripsWithStopTimes"] as? [[String: Any]],
+              let firstTrip = trips.first,
+              let stopTimes = firstTrip["stopTimes"] as? [[String: Any]],
+              let depTime = stopTimes.first?["departureTime"] as? Int else {
             Issue.record("Malformed overnight schedule")
             return
         }

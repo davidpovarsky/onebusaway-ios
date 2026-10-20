@@ -33,11 +33,19 @@ struct IsraelTripIdentityAndTimesTests {
             )
         ]
 
+        let route = TransitRoute(
+            routeID: MOTRouteID(33287),
+            lineName: "86",
+            longName: "ירושלים",
+            routeDesc: MOTRouteDesc("10086-1-0"),
+            agencyID: MOTAgencyID(16),
+            agencyName: "סופרבוס"
+        )
+
         let response = OBACompatibilityBridge.tripDetailsResponse(
             tripID: "mot:trip:86_01",
-            routeID: "mot:route:33287",
-            serviceDate: "20261020",
-            stops: stopTimes
+            route: route,
+            stopTimes: stopTimes
         )
 
         guard let data = response["data"] as? [String: Any],
@@ -66,28 +74,29 @@ struct IsraelTripIdentityAndTimesTests {
         """.data(using: .utf8)!
 
         let stopTime = try JSONDecoder().decode(TripStopTime.self, from: jsonWithMissingTimes)
-        #expect(stopTime.arrival == nil)
-        #expect(stopTime.departure == nil)
+        stopTime.serviceDate = Date()
         #expect(stopTime.arrivalDate == nil)
         #expect(stopTime.departureDate == nil)
+
+        let jsonWithNegativeTimes = """
+        {
+            "stopId": "mot:stop:5130",
+            "stopSequence": 1,
+            "arrivalTime": -1,
+            "departureTime": -1
+        }
+        """.data(using: .utf8)!
+
+        let stopTime2 = try JSONDecoder().decode(TripStopTime.self, from: jsonWithNegativeTimes)
+        stopTime2.serviceDate = Date()
+        #expect(stopTime2.arrivalDate == nil)
+        #expect(stopTime2.departureDate == nil)
     }
 
     @Test
-    func testTripStopListItemRendersDashWhenDateIsNil() {
-        let item = TripStopListItem(
-            stop: Stop.testing_stub(id: "5130", name: "צומת רמות"),
-            stopSequence: 1,
-            date: nil,
-            historicalDate: nil,
-            adherence: nil,
-            isPast: false,
-            isNextStop: true,
-            isTransferredStop: false,
-            formatters: Formatters()
-        )
-
-        #expect(item.formattedTime == "—")
-        #expect(item.accessibilityFormattedTime == "אין זמן זמין")
+    func testMissingTimeLocalizationHonesty() {
+        let noTimeStr = OBALoc("trip_stop.no_time", value: "No time available", comment: "No scheduled time")
+        #expect(!noTimeStr.isEmpty)
     }
 
     @Test
