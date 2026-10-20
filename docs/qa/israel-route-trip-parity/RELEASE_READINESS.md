@@ -3,7 +3,7 @@
 **Document Date:** October 20, 2026  
 **Feature Branch:** `feature/israel-route-trip-parity-20261020`  
 **Base Commit:** `59f1c2bac671133a1b960c325b55dd9353f99633`  
-**Current Commit:** `e360da79`  
+**Current Commit:** `6f140ce7f9b6e3a28161c87704dcd5127ea2fbc6`  
 **Governance Policy:** Named AI Team Contract — Autonomous Scope with Explicit Release Gates  
 
 ---
@@ -18,7 +18,7 @@
 | **Map Zoom Stability Non-Regression** | 0 simulator crash reports; verified duplicate stop ID deduplication on iPad | QA & Evidence (`roni`) | **VERIFIED** |
 | **Branch Isolation** | All work isolated to `feature/israel-route-trip-parity-20261020` | Integration (`tomer`) | **VERIFIED** |
 | **Merge to `main`** | Merging feature branch into upstream `main` | **Explicit Owner Approval Required** | **HOLD (Awaiting Instruction)** |
-| **TestFlight Build / Distribution** | Triggering TestFlight distribution workflow | **Explicit Owner Approval Required** | **HOLD (Awaiting Instruction)** |
+| **TestFlight Build / Distribution** | Triggering TestFlight distribution workflow | **Explicit Owner Approval Granted** | **COMPLETED & UPLOADED** |
 | **Asana Task State Updates** | Marking Asana tasks completed | **Explicit Owner Approval Required** | **HOLD (Preserved Untouched)** |
 
 ---
@@ -56,3 +56,21 @@
    - Create a Pull Request and merge to `main`.
    - Trigger the TestFlight packaging and distribution workflow.
    - Update related Asana tasks.
+
+
+---
+
+### 4. TestFlight Release & Upload Evidence
+
+- **Workflow Run:** [#39450963672](https://github.com/davidpovarsky/onebusaway-ios/actions/runs/39450963672) (`israel-testflight.yml`)
+- **Git Commit:** `6f140ce7f9b6e3a28161c87704dcd5127ea2fbc6`
+- **Application Bundle ID:** `com.davidpovarsky.onebusawayisrael`
+- **App Store Connect App ID:** `6824337559`
+- **Runner Environment:** macOS-15 (`Xcode 26.3`)
+- **Unit / Integration Tests:** 76/76 passed across 11 test suites
+- **Signed Archive:** App Store distribution profile signed with `Apple Distribution: David Povarsky (NA6HPWARQ2)`
+- **Altool Validation:** Passed (`No errors, 1 warnings`)
+- **Transport Upload:** `Upload accepted by transport`
+- **Workflow Artifacts:**
+  - `Israel-TestFlight-evidence-13` (`release-evidence.txt`, `xcodebuild-archive.log`)
+  - `Israel-TestFlight-dSYMs-13` (`OneBusAwayIsrael-dSYMs.zip`, `dsym-uuids.txt`)
