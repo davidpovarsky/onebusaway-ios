@@ -49,6 +49,9 @@ struct SearchResultsSheetView: View {
             guard let result = response?.results.first else { return }
             Task { await select(result) }
         }
+        .onAppear {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        }
     }
 
     @ViewBuilder

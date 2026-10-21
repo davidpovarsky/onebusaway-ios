@@ -114,7 +114,11 @@ final class IsraelTransitRepairUITests: XCTestCase {
             targetElement = route31Row
         }
 
-        targetElement.tap()
+        if targetElement.isHittable {
+            targetElement.tap()
+        } else {
+            targetElement.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        }
         Thread.sleep(forTimeInterval: 1.0)
 
         let selectedScreenshot = XCTAttachment(screenshot: app.screenshot())
@@ -188,7 +192,11 @@ final class IsraelTransitRepairUITests: XCTestCase {
             targetElement = route31Row
         }
 
-        targetElement.tap()
+        if targetElement.isHittable {
+            targetElement.tap()
+        } else {
+            targetElement.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        }
         Thread.sleep(forTimeInterval: 1.0)
 
         let routeSelectedScreenshot = XCTAttachment(screenshot: app.screenshot())
