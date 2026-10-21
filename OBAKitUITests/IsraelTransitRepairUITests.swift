@@ -67,33 +67,27 @@ final class IsraelTransitRepairUITests: XCTestCase {
             return
         }
         search.tap()
-        Thread.sleep(forTimeInterval: 0.8)
+        Thread.sleep(forTimeInterval: 1.0)
 
-        let targetField: XCUIElement
-        if search.elementType == .searchField || search.elementType == .textField {
-            targetField = search
-        } else {
-            let activeFields = [
-                app.searchFields["oba.search_field"],
-                app.textFields["oba.search_field"],
-                app.searchFields["oba.search_bar"],
-                app.searchFields.firstMatch,
-                app.textFields.firstMatch
-            ]
-            var foundField: XCUIElement?
-            for field in activeFields {
-                if field.waitForExistence(timeout: 3.0) {
-                    foundField = field
-                    break
-                }
+        let activeFields = [
+            app.searchFields["oba.search_field"],
+            app.textFields["oba.search_field"],
+            app.searchFields["oba.search_bar"],
+            app.searchFields.firstMatch,
+            app.textFields.firstMatch
+        ]
+        var foundField: XCUIElement?
+        for field in activeFields {
+            if field.waitForExistence(timeout: 5.0) {
+                foundField = field
+                break
             }
-            guard let field = foundField else {
-                XCTFail("Active search field must exist after tapping search")
-                return
-            }
-            field.tap()
-            targetField = field
         }
+        guard let targetField = foundField else {
+            XCTFail("Active search field must exist after tapping search")
+            return
+        }
+        targetField.tap()
 
         _ = app.keyboards.firstMatch.waitForExistence(timeout: 3.0)
         targetField.typeText("31\n")
@@ -106,7 +100,7 @@ final class IsraelTransitRepairUITests: XCTestCase {
         searchScreenshot.lifetime = .keepAlways
         add(searchScreenshot)
 
-        let route31Row = app.staticTexts["31"]
+        let route31Row = app.staticTexts["31"].firstMatch
         let routeCell = app.cells.containing(.staticText, identifier: "31").firstMatch
         let routeElement = route31Row.exists ? route31Row : routeCell
         XCTAssertTrue(routeElement.waitForExistence(timeout: 10.0), "Route 31 result must exist and appear in search results")
@@ -171,7 +165,7 @@ final class IsraelTransitRepairUITests: XCTestCase {
         add(screenshot)
 
         // Positive assertion for Route 31 results
-        let route31Row = app.staticTexts["31"]
+        let route31Row = app.staticTexts["31"].firstMatch
         let routeCell = app.cells.containing(.staticText, identifier: "31").firstMatch
         let routeElement = route31Row.exists ? route31Row : routeCell
         XCTAssertTrue(routeElement.waitForExistence(timeout: 10.0), "Route 31 result must exist and appear in SwiftUI search results")
