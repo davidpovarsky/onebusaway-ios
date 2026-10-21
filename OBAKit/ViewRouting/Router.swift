@@ -312,10 +312,14 @@ public class ViewRouter: NSObject, UINavigationControllerDelegate {
 
 extension ViewRouter: RoutePickerDelegate {
     func routePicker(_ picker: RoutePickerViewController, didSelectRoute route: Route) {
-        guard let navigation = picker.navigationController else { return }
-
-        let currentTripController = CurrentTripViewController(application: application, route: route)
-        navigation.pushViewController(currentTripController, animated: true)
+        if picker.presentingViewController != nil {
+            picker.dismiss(animated: true) { [weak self] in
+                guard let self = self else { return }
+                self.mapViewController?.showRouteOnMap(route)
+            }
+        } else {
+            self.mapViewController?.showRouteOnMap(route)
+        }
     }
 }
 

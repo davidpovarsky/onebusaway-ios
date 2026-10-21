@@ -54,6 +54,12 @@ public final class IsraelTripBackgroundTrackingCoordinator: NSObject, CLLocation
         self.liveActivityCoordinator = liveActivityCoordinator
         super.init()
         self.locationManager.delegate = self
+        self.liveActivityCoordinator?.onAllActivitiesEnded = { [weak self] in
+            self?.stopActiveTripSession()
+        }
+        self.liveActivityCoordinator?.onActivityTracked = { [weak self] ctx in
+            self?.startActiveTripSession(tripID: ctx.tripID, stopID: ctx.stopID)
+        }
     }
 
     public func startActiveTripSession(

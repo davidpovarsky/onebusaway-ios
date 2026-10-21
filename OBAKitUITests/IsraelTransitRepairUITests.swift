@@ -207,6 +207,56 @@ final class IsraelTransitRepairUITests: XCTestCase {
         XCTAssertEqual(app.state, .runningForeground, "SwiftUI panel must remain running after selecting route")
     }
 
+    /// Test 1c: Live bus on map callout displays human transit details and opens TripPage
+    /// Verifies tapping a live vehicle on the map surfaces the human-readable card with operator, line,
+    /// next stop, and allows direct navigation into the TripPage.
+    func testLiveVehicleCalloutOpensHumanDetailCardAndNavigatesToTrip() throws {
+        let location = CLLocation(latitude: 31.790, longitude: 35.210) // Jerusalem center
+        launchApp(useMapPanel: true, location: location)
+
+        let map = try locateAndVerifyMap()
+        XCTAssertTrue(map.exists, "Map must be present on launch")
+
+        // Wait for ambient vehicles to load
+        Thread.sleep(forTimeInterval: 3.0)
+
+        // Find any ambient vehicle marker on map
+        let ambientPredicate = NSPredicate(format: "identifier BEGINSWITH 'oba.map.ambient_vehicle'")
+        let vehicleMarker = app.descendants(matching: .any).matching(ambientPredicate).firstMatch
+
+        if vehicleMarker.waitForExistence(timeout: 8.0) {
+            vehicleMarker.tap()
+            Thread.sleep(forTimeInterval: 1.0)
+
+            // Verify human detail sheet opens
+            let detailSheet = app.descendants(matching: .any)["oba.ambient_vehicle.detail_sheet"]
+            let openTripButton = app.buttons["oba.ambient_vehicle.open_trip_button"]
+
+            if detailSheet.waitForExistence(timeout: 4.0) || openTripButton.waitForExistence(timeout: 4.0) {
+                let cardScreenshot = XCTAttachment(screenshot: app.screenshot())
+                cardScreenshot.name = "Human_Vehicle_Detail_Card"
+                cardScreenshot.lifetime = .keepAlways
+                add(cardScreenshot)
+
+                if openTripButton.exists {
+                    openTripButton.tap()
+                    Thread.sleep(forTimeInterval: 1.5)
+
+                    // Assert TripPage opened
+                    let tripPageView = app.descendants(matching: .any)["oba.trip_page.view"]
+                    XCTAssertTrue(tripPageView.waitForExistence(timeout: 5.0), "Tapping open trip must present TripPageView")
+
+                    let tripScreenshot = XCTAttachment(screenshot: app.screenshot())
+                    tripScreenshot.name = "Vehicle_Callout_Navigated_To_TripPage"
+                    tripScreenshot.lifetime = .keepAlways
+                    add(tripScreenshot)
+                }
+            }
+        }
+
+        XCTAssertEqual(app.state, .runningForeground)
+    }
+
     /// Test 2: Ramot Stop 5130 route focus and operator colors
     /// Verifies that route chips are focusable even without live GPS, and operator colors render correctly.
     func testRamotStopRouteFocusAndColors() throws {

@@ -174,5 +174,27 @@ struct IsraelTripIdentityAndTimesTests {
         }
         #expect(lastKnown["lat"] as? Double == 31.816)
         #expect(lastKnown["lon"] as? Double == 35.202)
+
+        let totalDist = status["totalDistanceAlongTrip"] as? Double ?? 0
+        let distAlong = status["distanceAlongTrip"] as? Double ?? 0
+        #expect(totalDist > 0, "totalDistanceAlongTrip must be positive geometric length")
+        #expect(distAlong >= 0 && distAlong <= totalDist, "distanceAlongTrip must be bounded by totalDistanceAlongTrip")
+        #expect(status["closestStop"] as? String == "mot:stop:5130_1001", "closestStop must be stop 5130")
+        #expect((status["vehicleId"] as? String)?.isEmpty == false, "vehicleId must not be empty")
+    }
+
+    @Test
+    func testRoutePickerQueryNormalization() {
+        let arabicIndicQuery = "٣١"
+        let normalized = RoutePickerViewModel.normalizeQuery(arabicIndicQuery)
+        #expect(normalized == "31")
+
+        let hebrewPrefixQuery = "קו 31"
+        let normalizedHebrew = RoutePickerViewModel.normalizeQuery(hebrewPrefixQuery)
+        #expect(normalizedHebrew == "31")
+
+        let arabicPrefixQuery = "خط 31"
+        let normalizedArabic = RoutePickerViewModel.normalizeQuery(arabicPrefixQuery)
+        #expect(normalizedArabic == "31")
     }
 }

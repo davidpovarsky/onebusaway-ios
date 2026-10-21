@@ -112,8 +112,9 @@ struct TripNearbyVehicleMarker: View {
                 .frame(width: Self.diameter / 2, height: Self.diameter / 2)
                 .foregroundStyle(.white)
         }
-        .accessibilityHidden(true)
-        .allowsHitTesting(false)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(vehicle.accessibilityDescription)
+        .accessibilityIdentifier("oba.map.ambient_vehicle.\(vehicle.id)")
     }
 }
 

@@ -65,6 +65,7 @@ struct TripPageRootView: View {
         )
         .defaultAppStorage(userDefaults)
         .environment(\.obaFormatters, formatters)
+        .accessibilityIdentifier("oba.trip_page.view")
     }
 }
 

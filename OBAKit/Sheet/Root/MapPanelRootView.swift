@@ -68,6 +68,9 @@ enum MapPinSelection: Hashable {
     /// A pin OTPKit drew for a planned trip, keyed by OTPKit's own opaque
     /// identifier. Passed back verbatim — the panel never interprets it.
     case tripPlannerAnnotation(String)
+
+    /// An ambient real-time transit vehicle annotation.
+    case vehicle(String)
 }
 
 // MARK: - MapPanelRootView
@@ -94,6 +97,9 @@ struct MapPanelRootView: View {
     /// The pin the user tapped, if any. Bound to the `Map`'s `selection`;
     /// cleared after pushing so re-tapping the same pin pushes again.
     @State private var mapSelection: MapPinSelection?
+
+    /// Currently selected ambient vehicle for detailed human transit card.
+    @State private var selectedVehicle: AmbientLiveVehicle?
 
     /// Whether the map is zoomed in far enough to load and show stops. Mirrors the
     /// UIKit path's `requiredHeightToShowStops` gate so both surfaces suppress
@@ -256,6 +262,21 @@ struct MapPanelRootView: View {
             }
             .floatingSheet(coordinator: coordinator) { route in
                 buildSheetContent(for: route)
+            }
+            .sheet(item: $selectedVehicle) { vehicle in
+                AmbientVehicleDetailCard(
+                    vehicle: vehicle,
+                    onOpenTrip: {
+                        selectedVehicle = nil
+                        if let convertible = vehicle.tripConvertible {
+                            coordinator.push(.tripDetails(convertible))
+                        }
+                    },
+                    onClose: {
+                        selectedVehicle = nil
+                    }
+                )
+                .presentationDetents([.medium, .fraction(0.4)])
             }
             .onAppear {
                 mapViewModel.start()
@@ -549,6 +570,10 @@ struct MapPanelRootView: View {
             // its own route means. No route is pushed: the planner sheet is
             // already on the stack and reacts to this itself.
             tripPlannerDisplay.handleAnnotationSelection(identifier: identifier)
+        case .vehicle(let vehicleID):
+            if let vehicle = layersModel.ambientVehicles.first(where: { $0.id == vehicleID }) {
+                selectedVehicle = vehicle
+            }
         }
         mapSelection = nil
     }
@@ -697,12 +722,13 @@ struct MapPanelRootView: View {
                     }
                 }
             }
+        }
 
-            ForEach(layersModel.ambientVehicles) { vehicle in
-                Annotation("", coordinate: vehicle.coordinate, anchor: .center) {
-                    TripNearbyVehicleMarker(vehicle: vehicle)
-                }
+        ForEach(layersModel.ambientVehicles) { vehicle in
+            Annotation(vehicle.routeShortName, coordinate: vehicle.coordinate, anchor: .center) {
+                TripNearbyVehicleMarker(vehicle: vehicle)
             }
+            .tag(MapPinSelection.vehicle(vehicle.id))
         }
     }
 

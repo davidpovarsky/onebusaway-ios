@@ -1390,6 +1390,17 @@ class MapViewController: UIViewController,
     }
 
     func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
+        if let vehicleAnnotation = view.annotation as? IsraelNearbyVehicleAnnotation {
+            if let convertible = vehicleAnnotation.tripConvertible {
+                let tripPage = TripPageViewController(application: application, tripConvertible: convertible)
+                application.viewRouter.navigate(to: tripPage, from: self)
+            } else if let arrDep = vehicleAnnotation.arrivalDeparture {
+                let tripPage = TripPageViewController(application: application, arrivalDeparture: arrDep)
+                application.viewRouter.navigate(to: tripPage, from: self)
+            }
+            return
+        }
+
         guard let stop = selectableStop(for: view.annotation) else { return }
         application.analytics?.reportEvent(pageURL: "app://localhost/map", label: AnalyticsLabels.mapStopAnnotationTapped, value: nil)
         show(stop: stop, deselecting: view.annotation)

@@ -228,7 +228,13 @@ final class AppSheetViewFactory {
     }
 
     func routePickerView() -> RoutePickerView {
-        RoutePickerView(viewModel: RoutePickerViewModel(application: self.application))
+        RoutePickerView(
+            viewModel: RoutePickerViewModel(application: self.application),
+            onSelectRoute: { [weak self] route in
+                guard let self else { return }
+                Task { await self.showRouteOnMap(route) }
+            }
+        )
     }
 
     /// The SwiftUI trip page as a stacked sheet over the panel's map.

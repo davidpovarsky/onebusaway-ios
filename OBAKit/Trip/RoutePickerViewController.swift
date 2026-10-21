@@ -83,6 +83,8 @@ class RoutePickerViewController: UIViewController,
         navigationItem.hidesSearchBarWhenScrolling = false
         definesPresentationContext = true
 
+        searchController.searchBar.accessibilityIdentifier = "oba.route_picker.search_field"
+        listView.accessibilityIdentifier = "oba.route_picker.list"
         listView.obaDataSource = self
         view.addSubview(listView)
         listView.pinToSuperview(.edges)
@@ -130,7 +132,8 @@ class RoutePickerViewController: UIViewController,
         if viewModel.loadError != nil { return [] }
 
         let rows: [AnyOBAListViewItem] = viewModel.filteredRoutes.map { route in
-            let subtitle = route.longName ?? route.agency.name
+            let subtitleParts = [route.agency.name, route.longName].compactMap { $0 }.filter { !$0.isEmpty }
+            let subtitle = subtitleParts.isEmpty ? (route.longName ?? route.agency.name) : subtitleParts.joined(separator: " • ")
             return OBAListRowView.SubtitleViewModel(
                 title: route.shortName,
                 subtitle: subtitle,

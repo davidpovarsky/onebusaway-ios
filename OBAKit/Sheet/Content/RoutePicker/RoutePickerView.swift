@@ -11,17 +11,22 @@ import SwiftUI
 import OBAKitCore
 
 /// SwiftUI route picker surfaced by `AppSheetRoute.routePicker`. Drives the
-/// already-merged `RoutePickerViewModel`; on selection, pushes
-/// `.currentTrip(route:)` onto the sheet stack.
+/// merged `RoutePickerViewModel`; on selection, opens route details with stops and map.
 struct RoutePickerView: View {
     @StateObject private var viewModel: RoutePickerViewModel
     @EnvironmentObject var coordinator: SheetCoordinator<AppSheetRoute>
 
+    var onSelectRoute: ((Route) -> Void)?
+
     @State private var searchText: String = ""
     @State private var loadTask: Task<Void, Never>?
 
-    init(viewModel: @autoclosure @escaping () -> RoutePickerViewModel) {
+    init(
+        viewModel: @autoclosure @escaping () -> RoutePickerViewModel,
+        onSelectRoute: ((Route) -> Void)? = nil
+    ) {
         _viewModel = StateObject(wrappedValue: viewModel())
+        self.onSelectRoute = onSelectRoute
     }
 
     var body: some View {
@@ -34,12 +39,19 @@ struct RoutePickerView: View {
                     placement: .navigationBarDrawer(displayMode: .always),
                     prompt: Text(Strings.routePickerSearchPlaceholder)
                 )
+                .accessibilityIdentifier("oba.route_picker.search_field")
                 .onChange(of: searchText) { _, newValue in
                     viewModel.updateSearch(newValue)
                 }
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
                         Button(Strings.close) { coordinator.pop() }
+                    }
+                    if viewModel.isSearching {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
                     }
                 }
         }
@@ -64,12 +76,18 @@ struct RoutePickerView: View {
 
     @ViewBuilder
     private var content: some View {
-        if !viewModel.didFinishLoading {
+        if !viewModel.didFinishLoading && viewModel.allRoutes.isEmpty {
             EmptyStateView(title: Strings.routePickerLoading, systemImage: AppSymbol.loading)
-        } else if let error = viewModel.loadError {
+        } else if let error = viewModel.loadError, viewModel.filteredRoutes.isEmpty {
             EmptyStateView(title: error.localizedDescription, systemImage: AppSymbol.error) { retryButton }
-        } else if viewModel.allRoutes.isEmpty {
+        } else if viewModel.allRoutes.isEmpty && !viewModel.isSearching {
             EmptyStateView(title: Strings.routePickerNoRoutes, systemImage: AppSymbol.search)
+        } else if viewModel.filteredRoutes.isEmpty && !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if viewModel.isSearching {
+                EmptyStateView(title: Strings.routePickerLoading, systemImage: AppSymbol.loading)
+            } else {
+                EmptyStateView(title: Strings.routePickerNoRoutes, systemImage: AppSymbol.search)
+            }
         } else {
             routesList
         }
@@ -77,8 +95,6 @@ struct RoutePickerView: View {
 
     private var retryButton: some View {
         Button {
-            // A completed load leaves `loadTask` non-nil; drop it first so
-            // `startLoad()` doesn't guard-return.
             loadTask?.cancel()
             loadTask = nil
             startLoad()
@@ -93,21 +109,41 @@ struct RoutePickerView: View {
             routeRow(route)
         }
         .listStyle(.insetGrouped)
+        .accessibilityIdentifier("oba.route_picker.list")
     }
 
     private func routeRow(_ route: Route) -> some View {
         Button {
-            coordinator.push(.currentTrip(route: route))
-        } label: {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(route.shortName)
-                    .font(.body)
-                    .foregroundStyle(Color(ThemeColors.shared.label))
-                Text(route.longName ?? route.agency.name)
-                    .font(.subheadline)
-                    .foregroundStyle(Color(ThemeColors.shared.secondaryLabel))
+            if let onSelectRoute {
+                onSelectRoute(route)
+            } else {
+                coordinator.push(.currentTrip(route: route))
             }
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .center, spacing: 8) {
+                    Text(route.shortName)
+                        .font(.headline.weight(.bold))
+                        .foregroundStyle(Color(ThemeColors.shared.label))
+                    if let agency = route.agency.name, !agency.isEmpty {
+                        Text(agency)
+                            .font(.caption.weight(.semibold))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color(uiColor: .tertiarySystemFill), in: Capsule())
+                            .foregroundStyle(Color(ThemeColors.shared.secondaryLabel))
+                    }
+                }
+                if let longName = route.longName, !longName.isEmpty {
+                    Text(longName)
+                        .font(.subheadline)
+                        .foregroundStyle(Color(ThemeColors.shared.secondaryLabel))
+                        .lineLimit(2)
+                }
+            }
+            .padding(.vertical, 2)
         }
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("oba.route_picker.row.\(route.shortName)")
     }
 }

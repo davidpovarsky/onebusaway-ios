@@ -87,7 +87,12 @@ public struct TripLiveActivityCardView: View {
             }
         }
         // Same ", " joiner as `TripActivityPresenter.spokenString`, which the tests pin.
-        guard let first = pieces.first else { return Text(verbatim: "") }
+        guard let first = pieces.first else {
+            if staticData.regionID == 972 {
+                return Text("קו \(staticData.routeShortName), \(staticData.routeHeadsign), זמן הגעה לא זמין כעת")
+            }
+            return Text(verbatim: "")
+        }
         return pieces.dropFirst().reduce(first) { $0 + Text(verbatim: ", ") + $1 }
     }
 
@@ -106,7 +111,13 @@ public struct TripLiveActivityCardView: View {
                 if let primary {
                     timeStatusLine(for: primary, now: now)
                 } else {
-                    Text(OBALoc("live_activity.no_upcoming_departures", value: "No upcoming departures", comment: "No upcoming departures"))
+                    let fallbackText: String = {
+                        if staticData.regionID == 972 {
+                            return "זמן הגעה לא זמין כעת"
+                        }
+                        return OBALoc("live_activity.no_upcoming_departures", value: "No upcoming departures", comment: "No upcoming departures")
+                    }()
+                    Text(fallbackText)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }

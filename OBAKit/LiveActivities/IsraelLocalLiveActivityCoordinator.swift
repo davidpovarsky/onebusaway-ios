@@ -54,6 +54,12 @@ public final class IsraelLocalLiveActivityCoordinator {
     private var isForeground = true
     private var consecutiveErrors = 0
 
+    /// Callback fired whenever a new Israel Live Activity is registered/tracked.
+    public var onActivityTracked: ((IsraelTrackedActivityContext) -> Void)?
+
+    /// Callback fired when all tracked activities have ended or dismissed.
+    public var onAllActivitiesEnded: (() -> Void)?
+
     public init(
         apiServiceProvider: @escaping APIServiceProvider,
         userDefaults: UserDefaults = .standard
@@ -158,6 +164,7 @@ public final class IsraelLocalLiveActivityCoordinator {
 
         persistContexts()
         checkPollingState()
+        onActivityTracked?(context)
     }
 
     public func refreshTrackedActivities() async {
@@ -216,7 +223,21 @@ public final class IsraelLocalLiveActivityCoordinator {
         }
 
         let sorted = matchingArrivals.sorted { $0.arrivalDepartureDate < $1.arrivalDepartureDate }
-        let newContentState = BookmarkActions.contentState(from: sorted)
+        let newContentState: TripAttributes.ContentState
+        if sorted.isEmpty {
+            if let lastDep = context.lastDepartureTime {
+                let fallbackArrival = TripAttributes.ContentState.ArrivalInfo(
+                    departureTime: lastDep,
+                    scheduleStatus: .scheduled,
+                    scheduledDepartureTime: lastDep
+                )
+                newContentState = TripAttributes.ContentState(arrivals: [fallbackArrival])
+            } else {
+                newContentState = TripAttributes.ContentState(arrivals: [])
+            }
+        } else {
+            newContentState = BookmarkActions.contentState(from: sorted)
+        }
 
         let now = Date()
         let staleDate: Date
@@ -275,6 +296,9 @@ public final class IsraelLocalLiveActivityCoordinator {
         lifecycleTasks.removeValue(forKey: activityID)
         persistContexts()
         checkPollingState()
+        if trackedContexts.isEmpty {
+            onAllActivitiesEnded?()
+        }
     }
 
     private func checkPollingState() {

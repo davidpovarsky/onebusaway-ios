@@ -476,6 +476,9 @@ nonisolated public enum OBACompatibilityBridge {
         route: TransitRoute,
         stopTimes: [(stop: TransitStop, arrivalSec: Int?, departureSec: Int?)],
         vehicleLocation: CLLocationCoordinate2D? = nil,
+        vehicleID: String? = nil,
+        orientation: Double? = nil,
+        lastUpdateTime: Date? = nil,
         serviceDate: Date = Date(),
         currentTime: Date = Date()
     ) -> [String: Any] {
@@ -544,21 +547,145 @@ nonisolated public enum OBACompatibilityBridge {
             "situationIds": []
         ]
 
+        // Calculate geometric polyline and progress
+        let routeCoords: [CLLocationCoordinate2D] = {
+            if let poly = route.polyline, let decoded = try? MOTRouteGeometryPipeline.decode(source: poly), decoded.count >= 2 {
+                return decoded
+            }
+            let stopCoords = route.stops.map { CLLocationCoordinate2D(latitude: $0.location.latitude, longitude: $0.location.longitude) }
+            if stopCoords.count >= 2 {
+                return stopCoords
+            }
+            return stopTimes.map { CLLocationCoordinate2D(latitude: $0.stop.coordinate.latitude, longitude: $0.stop.coordinate.longitude) }
+        }()
+
+        var totalDistanceAlongTrip: Double = 0.0
+        var distanceAlongTrip: Double = 0.0
+        var calculatedHeading: Double = orientation ?? 0.0
+
+        if routeCoords.count >= 2 {
+            var segmentLengths: [Double] = []
+            segmentLengths.reserveCapacity(routeCoords.count - 1)
+            for i in 0..<(routeCoords.count - 1) {
+                let loc1 = CLLocation(latitude: routeCoords[i].latitude, longitude: routeCoords[i].longitude)
+                let loc2 = CLLocation(latitude: routeCoords[i + 1].latitude, longitude: routeCoords[i + 1].longitude)
+                let len = loc1.distance(from: loc2)
+                segmentLengths.append(len)
+                totalDistanceAlongTrip += len
+            }
+
+            if let loc = vehicleLocation {
+                var minPerpDist: Double = .greatestFiniteMagnitude
+                var bestSegmentIndex = 0
+                var bestT: Double = 0.0
+
+                let vLat = loc.latitude
+                let vLon = loc.longitude
+
+                for i in 0..<(routeCoords.count - 1) {
+                    let a = routeCoords[i]
+                    let b = routeCoords[i + 1]
+                    let latRad = ((a.latitude + b.latitude) / 2.0) * .pi / 180.0
+                    let cosLat = cos(latRad)
+
+                    let dx = (b.longitude - a.longitude) * cosLat
+                    let dy = b.latitude - a.latitude
+                    let segLenSq = dx * dx + dy * dy
+
+                    let t: Double
+                    if segLenSq > 1e-12 {
+                        let vx = (vLon - a.longitude) * cosLat
+                        let vy = vLat - a.latitude
+                        t = max(0.0, min(1.0, (vx * dx + vy * dy) / segLenSq))
+                    } else {
+                        t = 0.0
+                    }
+
+                    let projLat = a.latitude + t * (b.latitude - a.latitude)
+                    let projLon = a.longitude + t * (b.longitude - a.longitude)
+
+                    let locVeh = CLLocation(latitude: vLat, longitude: vLon)
+                    let locProj = CLLocation(latitude: projLat, longitude: projLon)
+                    let dist = locVeh.distance(from: locProj)
+
+                    if dist < minPerpDist {
+                        minPerpDist = dist
+                        bestSegmentIndex = i
+                        bestT = t
+                    }
+                }
+
+                var distUpToBest: Double = 0.0
+                for i in 0..<bestSegmentIndex {
+                    distUpToBest += segmentLengths[i]
+                }
+                distUpToBest += bestT * segmentLengths[bestSegmentIndex]
+                distanceAlongTrip = max(0.0, min(totalDistanceAlongTrip, distUpToBest))
+
+                if orientation == nil && bestSegmentIndex < routeCoords.count - 1 {
+                    let a = routeCoords[bestSegmentIndex]
+                    let b = routeCoords[bestSegmentIndex + 1]
+                    let dLon = (b.longitude - a.longitude) * .pi / 180.0
+                    let lat1 = a.latitude * .pi / 180.0
+                    let lat2 = b.latitude * .pi / 180.0
+                    let y = sin(dLon) * cos(lat2)
+                    let x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon)
+                    let rad = atan2(y, x)
+                    let deg = (rad * 180.0 / .pi + 360.0).truncatingRemainder(dividingBy: 360.0)
+                    calculatedHeading = deg
+                }
+            }
+        }
+
         if let loc = vehicleLocation, loc.latitude.isFinite, loc.longitude.isFinite,
            !(abs(loc.latitude) < 0.001 && abs(loc.longitude) < 0.001),
            loc.latitude >= 29.0, loc.latitude <= 33.5, loc.longitude >= 34.0, loc.longitude <= 36.0 {
             let nowMs = Int(currentTime.timeIntervalSince1970 * 1000)
-            let closestStopId = obaStopTimes.first?["stopId"] as? String ?? ""
+            let updateTimeMs = Int((lastUpdateTime ?? currentTime).timeIntervalSince1970 * 1000)
+
+            var closestStopId = obaStopTimes.first?["stopId"] as? String ?? ""
+            var closestStopTimeOffset: Int = 0
+            let locVeh = CLLocation(latitude: loc.latitude, longitude: loc.longitude)
+            var minStopDist: Double = .greatestFiniteMagnitude
+            var bestStopTime: (stop: TransitStop, arrivalSec: Int?, departureSec: Int?)? = nil
+            for item in stopTimes {
+                let sLoc = CLLocation(latitude: item.stop.coordinate.latitude, longitude: item.stop.coordinate.longitude)
+                let d = locVeh.distance(from: sLoc)
+                if d < minStopDist {
+                    minStopDist = d
+                    bestStopTime = item
+                }
+            }
+            if let best = bestStopTime {
+                closestStopId = serializeStop(best.stop)["id"] as! String
+                if let arrSec = best.arrivalSec ?? best.departureSec {
+                    let nowJerusalemSeconds: Int = {
+                        var cal = Calendar(identifier: .gregorian)
+                        if let tz = TimeZone(identifier: "Asia/Jerusalem") { cal.timeZone = tz }
+                        let comps = cal.dateComponents([.hour, .minute, .second], from: currentTime)
+                        return (comps.hour ?? 0) * 3600 + (comps.minute ?? 0) * 60 + (comps.second ?? 0)
+                    }()
+                    closestStopTimeOffset = arrSec - nowJerusalemSeconds
+                }
+            }
+
+            let effectiveVehicleId: String = {
+                if let vid = vehicleID, !vid.isEmpty { return vid }
+                let parts = tripID.split(separator: "_")
+                if parts.count >= 2 { return "mot:vehicle:\(parts[1])" }
+                return "mot:vehicle:\(tripID)"
+            }()
+
             entry["status"] = [
                 "activeTripId": tripID,
                 "blockTripSequence": 1,
                 "closestStop": closestStopId,
-                "closestStopTimeOffset": 0,
-                "distanceAlongTrip": 0.0,
-                "lastLocationUpdateTime": Int64(nowMs),
-                "lastUpdateTime": nowMs,
-                "nextStopTimeOffset": 0,
-                "orientation": 0.0,
+                "closestStopTimeOffset": closestStopTimeOffset,
+                "distanceAlongTrip": distanceAlongTrip,
+                "lastLocationUpdateTime": Int64(updateTimeMs),
+                "lastUpdateTime": updateTimeMs,
+                "nextStopTimeOffset": closestStopTimeOffset,
+                "orientation": calculatedHeading,
                 "phase": "in_progress",
                 "position": [
                     "lat": loc.latitude,
@@ -570,12 +697,12 @@ nonisolated public enum OBACompatibilityBridge {
                 ],
                 "predicted": true,
                 "scheduleDeviation": 0,
-                "scheduledDistanceAlongTrip": 0.0,
+                "scheduledDistanceAlongTrip": distanceAlongTrip,
                 "serviceDate": serviceDateMs,
                 "situationIds": [] as [String],
                 "status": "default",
-                "totalDistanceAlongTrip": 0.0,
-                "vehicleId": ""
+                "totalDistanceAlongTrip": totalDistanceAlongTrip,
+                "vehicleId": effectiveVehicleId
             ]
         }
 

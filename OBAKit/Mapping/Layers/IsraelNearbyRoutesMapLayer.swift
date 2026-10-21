@@ -15,13 +15,13 @@ import SwiftUI
 import UIKit
 
 /// Ambient polyline and chevrons for SwiftUI and tests.
-struct AmbientRoutePolyline: Identifiable {
-    let id: String
-    let coordinates: [CLLocationCoordinate2D]
-    let color: Color
-    let arrows: [PolylineArrowPlacement]
+public struct AmbientRoutePolyline: Identifiable, Sendable {
+    public let id: String
+    public let coordinates: [CLLocationCoordinate2D]
+    public let color: Color
+    public let arrows: [PolylineArrowPlacement]
 
-    init(id: String, coordinates: [CLLocationCoordinate2D], color: Color, arrows: [PolylineArrowPlacement]) {
+    public init(id: String, coordinates: [CLLocationCoordinate2D], color: Color, arrows: [PolylineArrowPlacement]) {
         self.id = id
         self.coordinates = coordinates
         self.color = color
@@ -29,20 +29,70 @@ struct AmbientRoutePolyline: Identifiable {
     }
 }
 
-/// Ambient real-time vehicle for SwiftUI and tests.
-struct AmbientLiveVehicle: Identifiable {
-    let id: String
-    let coordinate: CLLocationCoordinate2D
-    let routeColor: Color
-    let orientation: CLLocationDirection?
-    let routeType: Route.RouteType
+/// Ambient real-time vehicle for SwiftUI and tests, carrying human-readable transit details.
+public struct AmbientLiveVehicle: Identifiable, Sendable {
+    public let id: String
+    public let coordinate: CLLocationCoordinate2D
+    public let routeColor: Color
+    public let orientation: CLLocationDirection?
+    public let routeType: Route.RouteType
+    public let routeShortName: String
+    public let headsign: String
+    public let agencyName: String
+    public let nextStopName: String?
+    public let etaDate: Date?
+    public let lastUpdateTime: Date?
+    public let tripID: String
+    public let routeID: RouteID
+    public let serviceDate: Date
+    public let vehicleID: String?
+    public let tripConvertible: TripConvertible?
+    public let arrivalDeparture: ArrivalDeparture?
 
-    init(id: String, coordinate: CLLocationCoordinate2D, routeColor: Color, orientation: CLLocationDirection?, routeType: Route.RouteType) {
+    public var accessibilityDescription: String {
+        let line = routeShortName.isEmpty ? "" : "קו \(routeShortName)"
+        let dest = headsign.isEmpty ? "" : "אל \(headsign)"
+        let op = agencyName.isEmpty ? "" : agencyName
+        let parts = [line, dest, op].filter { !$0.isEmpty }
+        return parts.joined(separator: ", ")
+    }
+
+    public init(
+        id: String,
+        coordinate: CLLocationCoordinate2D,
+        routeColor: Color,
+        orientation: CLLocationDirection?,
+        routeType: Route.RouteType,
+        routeShortName: String = "",
+        headsign: String = "",
+        agencyName: String = "",
+        nextStopName: String? = nil,
+        etaDate: Date? = nil,
+        lastUpdateTime: Date? = nil,
+        tripID: String = "",
+        routeID: RouteID = "",
+        serviceDate: Date = Date(),
+        vehicleID: String? = nil,
+        tripConvertible: TripConvertible? = nil,
+        arrivalDeparture: ArrivalDeparture? = nil
+    ) {
         self.id = id
         self.coordinate = coordinate
         self.routeColor = routeColor
         self.orientation = orientation
         self.routeType = routeType
+        self.routeShortName = routeShortName
+        self.headsign = headsign
+        self.agencyName = agencyName
+        self.nextStopName = nextStopName
+        self.etaDate = etaDate
+        self.lastUpdateTime = lastUpdateTime
+        self.tripID = tripID
+        self.routeID = routeID
+        self.serviceDate = serviceDate
+        self.vehicleID = vehicleID
+        self.tripConvertible = tripConvertible
+        self.arrivalDeparture = arrivalDeparture
     }
 }
 
@@ -67,22 +117,97 @@ final class IsraelNearbyRouteOverlay: MKPolyline {
 }
 
 /// Live vehicle annotation on the ambient nearby routes map layer.
-/// Guaranteed to represent a genuine, verified real-time vehicle with valid coordinates.
+/// Guaranteed to represent a genuine, verified real-time vehicle with valid coordinates and human details.
 final class IsraelNearbyVehicleAnnotation: VehicleAnnotation {
     let id: String
     let routeID: RouteID
     var routeColor: UIColor
+    let routeShortName: String
+    let headsign: String
+    let agencyName: String
+    let nextStopName: String?
+    let etaDate: Date?
+    let lastUpdateTime: Date?
+    let tripID: String
+    let arrivalDeparture: ArrivalDeparture?
+    let tripConvertible: TripConvertible?
 
     nonisolated override init() {
-        fatalError("Use init(id:routeID:routeColor:tripStatus:)")
+        fatalError("Use init(id:routeID:routeColor:tripStatus:...)")
     }
 
-    init(id: String, routeID: RouteID, routeColor: UIColor, tripStatus: TripStatus) {
+    init(
+        id: String,
+        routeID: RouteID,
+        routeColor: UIColor,
+        tripStatus: TripStatus,
+        routeShortName: String = "",
+        headsign: String = "",
+        agencyName: String = "",
+        nextStopName: String? = nil,
+        etaDate: Date? = nil,
+        lastUpdateTime: Date? = nil,
+        tripID: String = "",
+        arrivalDeparture: ArrivalDeparture? = nil,
+        tripConvertible: TripConvertible? = nil
+    ) {
         self.id = id
         self.routeID = routeID
         self.routeColor = routeColor
+        self.routeShortName = routeShortName
+        self.headsign = headsign
+        self.agencyName = agencyName
+        self.nextStopName = nextStopName
+        self.etaDate = etaDate
+        self.lastUpdateTime = lastUpdateTime
+        self.tripID = tripID
+        self.arrivalDeparture = arrivalDeparture
+        self.tripConvertible = tripConvertible
         super.init(tripStatus: tripStatus)
+        updateTitles()
     }
+
+    private func updateTitles() {
+        if !headsign.isEmpty && !routeShortName.isEmpty {
+            self.title = "קו \(routeShortName) אל \(headsign)"
+        } else if !routeShortName.isEmpty {
+            self.title = "קו \(routeShortName)"
+        } else {
+            self.title = "אוטובוס"
+        }
+
+        var parts: [String] = []
+        if !agencyName.isEmpty {
+            parts.append(agencyName)
+        }
+        if let nextStop = nextStopName, !nextStop.isEmpty {
+            parts.append("לתחנה: \(nextStop)")
+        }
+        if let eta = etaDate {
+            let df = DateFormatter()
+            df.timeStyle = .short
+            df.locale = Locale(identifier: "he_IL")
+            parts.append("הגעה: \(df.string(from: eta))")
+        }
+        if let update = lastUpdateTime {
+            let rel = RelativeDateTimeFormatter()
+            rel.locale = Locale(identifier: "he_IL")
+            parts.append("עודכן: \(rel.localizedString(for: update, relativeTo: Date()))")
+        }
+        self.subtitle = parts.joined(separator: " • ")
+    }
+}
+
+/// Performance instrumentation for the ambient Israel routes and live buses layer.
+public struct IsraelMapMetrics: Sendable {
+    public let viewportChangeAt: Date
+    public var firstStopAt: Date?
+    public var firstVehicleAt: Date?
+    public var firstRouteAt: Date?
+    public var allCompleteAt: Date?
+    public var requestCount: Int = 0
+    public var cacheHits: Int = 0
+    public var failureCount: Int = 0
 }
 
 /// A bounded, viewport-aware ambient route and live bus layer for Region 972 (Israel).
@@ -134,6 +259,7 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
     private(set) var ambientPolylines: [AmbientRoutePolyline] = []
     private(set) var ambientVehicles: [AmbientLiveVehicle] = []
     private(set) var viewportRoutes: [Route] = []
+    public private(set) var lastMetrics: IsraelMapMetrics?
     var onContentDidChange: (() -> Void)?
 
     private var debounceTask: Task<Void, Never>?
@@ -189,7 +315,7 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
         }
 
         debounceTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 400_000_000) // 400ms settle debounce
+            try? await Task.sleep(nanoseconds: 300_000_000) // 300ms settle debounce
             guard !Task.isCancelled, let self = self else { return }
             self.refreshNearbyRoutes(for: mapRect)
         }
@@ -209,7 +335,47 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
     }
 
     func detailViewController(for annotation: MKAnnotation) -> UIViewController? {
-        return nil
+        guard let vehicleAnnotation = annotation as? IsraelNearbyVehicleAnnotation else { return nil }
+        let ambient = AmbientLiveVehicle(
+            id: vehicleAnnotation.id,
+            coordinate: vehicleAnnotation.coordinate,
+            routeColor: Color(uiColor: vehicleAnnotation.routeColor),
+            orientation: vehicleAnnotation.tripStatus?.orientation,
+            routeType: .bus,
+            routeShortName: vehicleAnnotation.routeShortName,
+            headsign: vehicleAnnotation.headsign,
+            agencyName: vehicleAnnotation.agencyName,
+            nextStopName: vehicleAnnotation.nextStopName,
+            etaDate: vehicleAnnotation.etaDate,
+            lastUpdateTime: vehicleAnnotation.lastUpdateTime,
+            tripID: vehicleAnnotation.tripID,
+            routeID: vehicleAnnotation.routeID,
+            vehicleID: vehicleAnnotation.tripStatus?.vehicleID
+        )
+
+        let hosting = UIHostingController(
+            rootView: AmbientVehicleDetailCard(
+                vehicle: ambient,
+                onOpenTrip: { [weak self] in
+                    guard let self = self else { return }
+                    self.openTripDetails(for: vehicleAnnotation)
+                },
+                onClose: { [weak self] in
+                    self?.mapView.deselectAnnotation(annotation, animated: true)
+                }
+            )
+        )
+        return hosting
+    }
+
+    private func openTripDetails(for vehicleAnnotation: IsraelNearbyVehicleAnnotation) {
+        if let convertible = vehicleAnnotation.tripConvertible {
+            let tripPage = TripPageViewController(application: application, tripConvertible: convertible)
+            application.viewRouter.navigate(to: tripPage, from: application.viewRouter.currentViewController)
+        } else if let arrDep = vehicleAnnotation.arrivalDeparture {
+            let tripPage = TripPageViewController(application: application, arrivalDeparture: arrDep)
+            application.viewRouter.navigate(to: tripPage, from: application.viewRouter.currentViewController)
+        }
     }
 
     func annotationView(for annotation: MKAnnotation, in mapView: MKMapView) -> MKAnnotationView? {
@@ -228,6 +394,11 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
         view?.realTimeAnnotationColor = vehicleAnnotation.routeColor
         view?.isSelectable = true
         view?.canShowCallout = true
+
+        let disclosureBtn = UIButton(type: .detailDisclosure)
+        disclosureBtn.accessibilityLabel = "פתח פרטי נסיעה"
+        view?.rightCalloutAccessoryView = disclosureBtn
+
         return view
     }
 
@@ -251,6 +422,8 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
         generation += 1
         let currentGen = generation
 
+        var metrics = IsraelMapMetrics(viewportChangeAt: Date())
+
         fetchTask = Task { @MainActor [weak self] in
             guard let self = self else { return }
 
@@ -260,6 +433,7 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
                 self.removeAllContent()
                 return
             }
+            metrics.firstStopAt = Date()
 
             let centerCoord = MKMapPoint(x: mapRect.midX, y: mapRect.midY).coordinate
             let centerLoc = CLLocation(latitude: centerCoord.latitude, longitude: centerCoord.longitude)
@@ -282,19 +456,47 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
                 }
             }
 
-            var liveVehicles: [(id: String, routeID: RouteID, color: UIColor, status: TripStatus, routeType: Route.RouteType)] = []
+            // PHASE 1: Fetch live arrivals across the target stops concurrently
+            metrics.requestCount += targetStops.count
+            var liveVehicles: [(
+                id: String,
+                routeID: RouteID,
+                color: UIColor,
+                status: TripStatus,
+                routeType: Route.RouteType,
+                routeShortName: String,
+                headsign: String,
+                agencyName: String,
+                nextStopName: String?,
+                etaDate: Date?,
+                lastUpdateTime: Date?,
+                tripID: String,
+                serviceDate: Date,
+                arrivalDeparture: ArrivalDeparture
+            )] = []
 
-            // Query arrivals for the nearest stops to discover live vehicles (and additional routes if needed)
-            // DECOUPLED: Query up to 3 nearest stops regardless of candidateRoutes.count
-            for stop in targetStops.prefix(3) {
-                guard !Task.isCancelled, currentGen == self.generation else { return }
-                do {
-                    let arrivalsResponse = try await self.apiService.getArrivalsAndDeparturesForStop(
-                        id: stop.id,
-                        minutesBefore: 0,
-                        minutesAfter: 60
-                    ).entry
-                    for dep in arrivalsResponse.arrivalsAndDepartures {
+            await withTaskGroup(of: [ArrivalDeparture]?.self) { group in
+                for stop in targetStops {
+                    group.addTask { [apiService = self.apiService] in
+                        do {
+                            let resp = try await apiService.getArrivalsAndDeparturesForStop(
+                                id: stop.id,
+                                minutesBefore: 0,
+                                minutesAfter: 60
+                            ).entry
+                            return resp.arrivalsAndDepartures
+                        } catch {
+                            return nil
+                        }
+                    }
+                }
+
+                for await result in group {
+                    guard let arrivals = result else {
+                        metrics.failureCount += 1
+                        continue
+                    }
+                    for dep in arrivals {
                         if let route = dep.route, seenRouteIDs.insert(route.id).inserted {
                             candidateRoutes.append(route)
                         }
@@ -304,25 +506,101 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
                            loc.latitude >= 29.0 && loc.latitude <= 33.5 &&
                            loc.longitude >= 34.0 && loc.longitude <= 36.0 {
                             let lastUpdate = status.lastUpdate ?? Date()
-                            // Freshness check: update within last 5 minutes (300 seconds)
                             if abs(Date().timeIntervalSince(lastUpdate)) <= 300 {
                                 let color = dep.route?.color ?? ThemeColors.shared.brand
                                 let routeType = dep.route?.routeType ?? .bus
-                                liveVehicles.append((id: dep.id, routeID: dep.routeID, color: color, status: status, routeType: routeType))
+                                let shortName = dep.route?.shortName ?? dep.routeShortName
+                                let headsign = dep.tripHeadsign ?? ""
+                                let agency = dep.route?.agency.name ?? ""
+                                let nextStop = status.nextStop?.name ?? status.closestStop?.name
+                                let eta = dep.predictedArrivalTime ?? dep.scheduledArrivalTime
+                                let tripID = dep.tripID
+                                let sDate = dep.serviceDate
+                                liveVehicles.append((
+                                    id: dep.id,
+                                    routeID: dep.routeID,
+                                    color: color,
+                                    status: status,
+                                    routeType: routeType,
+                                    routeShortName: shortName,
+                                    headsign: headsign,
+                                    agencyName: agency,
+                                    nextStopName: nextStop,
+                                    etaDate: eta,
+                                    lastUpdateTime: lastUpdate,
+                                    tripID: tripID,
+                                    serviceDate: sDate,
+                                    arrivalDeparture: dep
+                                ))
                             }
                         }
                     }
-                } catch {
-                    // Ambient layer failure is non-fatal
                 }
             }
 
             guard !Task.isCancelled, currentGen == self.generation else { return }
 
+            // PROGRESSIVE STEP 1: Publish live vehicles IMMEDIATELY!
+            var newVehicles: [IsraelNearbyVehicleAnnotation] = []
+            var newAmbientVehicles: [AmbientLiveVehicle] = []
+            var seenVehicleIDs = Set<String>()
+            for v in liveVehicles.prefix(8) {
+                if seenVehicleIDs.insert(v.id).inserted {
+                    let convertible = TripConvertible(arrivalDeparture: v.arrivalDeparture)
+                    newVehicles.append(
+                        IsraelNearbyVehicleAnnotation(
+                            id: v.id,
+                            routeID: v.routeID,
+                            routeColor: v.color,
+                            tripStatus: v.status,
+                            routeShortName: v.routeShortName,
+                            headsign: v.headsign,
+                            agencyName: v.agencyName,
+                            nextStopName: v.nextStopName,
+                            etaDate: v.etaDate,
+                            lastUpdateTime: v.lastUpdateTime,
+                            tripID: v.tripID,
+                            arrivalDeparture: v.arrivalDeparture,
+                            tripConvertible: convertible
+                        )
+                    )
+                    if let coord = (v.status.lastKnownLocation?.coordinate ?? v.status.position?.coordinate) {
+                        newAmbientVehicles.append(
+                            AmbientLiveVehicle(
+                                id: v.id,
+                                coordinate: coord,
+                                routeColor: Color(uiColor: v.color),
+                                orientation: v.status.orientation,
+                                routeType: v.routeType,
+                                routeShortName: v.routeShortName,
+                                headsign: v.headsign,
+                                agencyName: v.agencyName,
+                                nextStopName: v.nextStopName,
+                                etaDate: v.etaDate,
+                                lastUpdateTime: v.lastUpdateTime,
+                                tripID: v.tripID,
+                                routeID: v.routeID,
+                                serviceDate: v.serviceDate,
+                                vehicleID: v.status.vehicleID,
+                                tripConvertible: convertible,
+                                arrivalDeparture: v.arrivalDeparture
+                            )
+                        )
+                    }
+                }
+            }
+
+            self.mapView.removeAnnotations(self.vehicleAnnotations)
+            self.vehicleAnnotations = newVehicles
+            self.mapView.addAnnotations(self.vehicleAnnotations)
+            self.ambientVehicles = newAmbientVehicles
+            metrics.firstVehicleAt = Date()
+            self.onContentDidChange?()
+
+            // PHASE 2: Fetch and render route polylines progressively
             self.viewportRoutes = candidateRoutes
             let selectedRoutes = Array(candidateRoutes.prefix(Self.routeCap))
 
-            // 3. Fetch polylines for selected routes
             var newOverlays: [IsraelNearbyRouteOverlay] = []
             var newArrows: [PolylineArrowAnnotation] = []
             var newAmbientPolylines: [AmbientRoutePolyline] = []
@@ -334,9 +612,11 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
                     .replacingOccurrences(of: "mot:route:", with: "")
                     .replacingOccurrences(of: "mot:shape:", with: "")
                 let shapeID = "mot:shape:\(rawID)"
+                metrics.requestCount += 1
                 let coords = try? await self.shapeCache.coordinates(forShapeID: shapeID)
 
                 if let validCoords = coords, !validCoords.isEmpty {
+                    metrics.cacheHits += 1
                     let casing = IsraelNearbyRouteOverlay.make(coordinates: validCoords, routeID: route.id, isCasing: true, color: .white)
                     let core = IsraelNearbyRouteOverlay.make(coordinates: validCoords, routeID: route.id, isCasing: false, color: routeColor)
                     newOverlays.append(contentsOf: [casing, core])
@@ -355,50 +635,32 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
                             arrows: placements
                         )
                     )
-                }
-            }
-
-            // 4. Create vehicle annotations ONLY with genuine live status
-            var newVehicles: [IsraelNearbyVehicleAnnotation] = []
-            var newAmbientVehicles: [AmbientLiveVehicle] = []
-            var seenVehicleIDs = Set<String>()
-            for v in liveVehicles.prefix(8) {
-                if seenVehicleIDs.insert(v.id).inserted {
-                    newVehicles.append(
-                        IsraelNearbyVehicleAnnotation(id: v.id, routeID: v.routeID, routeColor: v.color, tripStatus: v.status)
-                    )
-                    if let coord = (v.status.lastKnownLocation?.coordinate ?? v.status.position?.coordinate) {
-                        newAmbientVehicles.append(
-                            AmbientLiveVehicle(
-                                id: v.id,
-                                coordinate: coord,
-                                routeColor: Color(uiColor: v.color),
-                                orientation: v.status.orientation,
-                                routeType: v.routeType
-                            )
-                        )
+                    if metrics.firstRouteAt == nil {
+                        metrics.firstRouteAt = Date()
                     }
                 }
             }
 
             guard !Task.isCancelled, currentGen == self.generation else { return }
 
-            // 5. Update MapView cleanly
             self.mapView.removeOverlays(self.overlays)
             self.mapView.removeAnnotations(self.arrowAnnotations)
-            self.mapView.removeAnnotations(self.vehicleAnnotations)
 
             self.overlays = newOverlays
             self.arrowAnnotations = newArrows
-            self.vehicleAnnotations = newVehicles
 
             self.mapView.addOverlays(self.overlays, level: .aboveRoads)
             self.mapView.addAnnotations(self.arrowAnnotations)
-            self.mapView.addAnnotations(self.vehicleAnnotations)
 
             self.ambientPolylines = newAmbientPolylines
-            self.ambientVehicles = newAmbientVehicles
+            metrics.allCompleteAt = Date()
+            self.lastMetrics = metrics
             self.onContentDidChange?()
+
+            let totalElapsed = String(format: "%.3f", Date().timeIntervalSince(metrics.viewportChangeAt))
+            let firstVehElapsed = metrics.firstVehicleAt.map { String(format: "%.3f", $0.timeIntervalSince(metrics.viewportChangeAt)) } ?? "none"
+            let firstRouteElapsed = metrics.firstRouteAt.map { String(format: "%.3f", $0.timeIntervalSince(metrics.viewportChangeAt)) } ?? "none"
+            Logger.info("[IsraelMapMetrics] viewport-settle to vehicles=\(firstVehElapsed)s, routes=\(firstRouteElapsed)s, all=\(totalElapsed)s (reqs=\(metrics.requestCount), hits=\(metrics.cacheHits), fails=\(metrics.failureCount))")
         }
     }
 

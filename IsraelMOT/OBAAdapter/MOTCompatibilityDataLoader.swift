@@ -836,9 +836,17 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
 
             var stopTimesData: [(stop: TransitStop, arrivalSec: Int?, departureSec: Int?)] = []
             var liveVehicleLoc: CLLocationCoordinate2D? = nil
+            var matchedVehicleID: String? = nil
 
-            let rawTripParts = tripID.split(separator: "_")
-            let matchTripToken: String? = rawTripParts.count >= 2 ? String(rawTripParts[1]) : nil
+            let prefix = "mot:trip:\(routeID.rawValue)_"
+            let matchTripToken: String?
+            if tripID.hasPrefix(prefix) {
+                matchTripToken = String(tripID.dropFirst(prefix.count))
+            } else if let underscoreIdx = tripID.firstIndex(of: "_") {
+                matchTripToken = String(tripID[tripID.index(after: underscoreIdx)...])
+            } else {
+                matchTripToken = nil
+            }
 
             // Discover starting departure time and target matching criteria
             var targetDepartureSec: Int? = nil
@@ -848,19 +856,6 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
                 } else if let num = Double(token), num > 1_000_000_000 {
                     let d = Date(timeIntervalSince1970: num)
                     targetDepartureSec = Int(d.timeIntervalSince(serviceDateStart))
-                }
-            }
-
-            // Pre-pass: check if any stop has an exact staticTripId or tripIdToDate match
-            var hasExactIdMatch = false
-            if let token = matchTripToken {
-                for s in (routeDTO.stops ?? []) {
-                    if let times = s.nextStopsTimes, times.contains(where: {
-                        $0.staticTripId == token || ($0.tripIdToDate != nil && String($0.tripIdToDate!) == token)
-                    }) {
-                        hasExactIdMatch = true
-                        break
-                    }
                 }
             }
 
@@ -893,36 +888,29 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
                 if let dtoStop = routeDTO.stops?.first(where: { $0.stopid == stop.internalID?.rawValue || $0.stopcode == stop.code.rawValue }),
                    let nextTimes = dtoStop.nextStopsTimes, !nextTimes.isEmpty {
                     var matchedTime: NextStopTimeDTO? = nil
-                    if hasExactIdMatch, let token = matchTripToken {
+                    if let token = matchTripToken {
                         matchedTime = nextTimes.first(where: {
                             $0.staticTripId == token ||
                             ($0.tripIdToDate != nil && String($0.tripIdToDate!) == token)
                         })
-                    } else {
-                        // Chronological monotonic matching
-                        if let lastSec = lastArrivalSec {
-                            let candidates = nextTimes.compactMap { t -> (NextStopTimeDTO, Int)? in
-                                guard let str = t.arrivalTimeString ?? t.arrivalTime,
-                                      let sec = Self.parseSecondsFromTimeString(str) else { return nil }
-                                return (t, sec)
-                            }.filter { $0.1 >= lastSec && $0.1 <= lastSec + 900 }
-                            if let best = candidates.first {
-                                matchedTime = best.0
-                            }
-                        } else if idx == 0 {
-                            matchedTime = nextTimes.first
-                        }
                     }
 
                     if let timeObj = matchedTime {
                         if liveVehicleLoc == nil, let loc = timeObj.routeLocation {
                             liveVehicleLoc = CLLocationCoordinate2D(latitude: loc.lat, longitude: loc.lng)
                         }
+                        if matchedVehicleID == nil {
+                            if let tid = timeObj.tripIdToDate {
+                                matchedVehicleID = String(tid)
+                            } else if let sid = timeObj.staticTripId {
+                                matchedVehicleID = sid
+                            }
+                        }
                         if let arrivalStr = timeObj.arrivalTimeString ?? timeObj.arrivalTime {
-                            if let parsed = MOTDateParser.parse(arrivalStr) {
-                                arrivalSec = Int(parsed.timeIntervalSince(serviceDateStart))
-                            } else if let sec = Self.parseSecondsFromTimeString(arrivalStr) {
+                            if let sec = Self.parseSecondsFromTimeString(arrivalStr) {
                                 arrivalSec = sec
+                            } else if let parsed = MOTDateParser.parse(arrivalStr) {
+                                arrivalSec = Int(parsed.timeIntervalSince(serviceDateStart))
                             }
                         }
                         departureSec = arrivalSec
@@ -952,6 +940,7 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
                 route: domainRoute,
                 stopTimes: stopTimesData,
                 vehicleLocation: liveVehicleLoc,
+                vehicleID: matchedVehicleID ?? matchTripToken,
                 serviceDate: targetServiceDate
             )
             let data = try JSONSerialization.data(withJSONObject: envelope, options: [])

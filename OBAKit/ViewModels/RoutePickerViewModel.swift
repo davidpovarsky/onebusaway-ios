@@ -14,8 +14,8 @@ import OBAKitCore
 
 /// Shared ViewModel for `RoutePickerViewController`.
 ///
-/// Owns route loading (cache-first, API fallback), search filtering, and load-error
-/// surfacing. The VC keeps `UISearchController` and `OBAListView` presentation.
+/// Owns route loading (cache-first, API fallback), nationwide search filtering,
+/// and load-error surfacing. The VC keeps `UISearchController` and `OBAListView` presentation.
 @MainActor
 final class RoutePickerViewModel: ObservableObject {
 
@@ -52,6 +52,9 @@ final class RoutePickerViewModel: ObservableObject {
     /// `true` once `loadRoutes()` has resolved (success or failure).
     @Published private(set) var didFinishLoading: Bool = false
 
+    /// `true` while an asynchronous nationwide route search is in flight.
+    @Published private(set) var isSearching: Bool = false
+
     /// Error from the last `loadRoutes()` attempt, or `nil`. Kept as `Error` so a
     /// SwiftUI consumer can classify on type rather than parsing a flattened
     /// `String`. The VC reads `localizedDescription` for display.
@@ -67,6 +70,8 @@ final class RoutePickerViewModel: ObservableObject {
 
     private let application: Application
     private var searchQuery: String = ""
+    private var searchTask: Task<Void, Never>?
+    private var queryCache: [String: [Route]] = [:]
 
     // MARK: - Init
 
@@ -77,7 +82,6 @@ final class RoutePickerViewModel: ObservableObject {
     // MARK: - Load
 
     func loadRoutes() async {
-
         didFinishLoading = false
         loadError = nil
 
@@ -105,15 +109,6 @@ final class RoutePickerViewModel: ObservableObject {
             let stops = try await apiService.getStops(coordinate: location.coordinate).list
             applyRoutes(from: stops)
         } catch {
-            // Cancellation finalizes the load without surfacing an error so a
-            // re-observed VM doesn't get stuck on "Loading routes…". Match the
-            // three shapes a cancelled request can arrive as:
-            //   1. The parent Task itself was cancelled (most common path).
-            //   2. Swift Concurrency surfaced `CancellationError`.
-            //   3. URLSession returned `URLError(.cancelled)` — which the API
-            //      layer re-throws as an `NSError` in the `NSURLErrorDomain`,
-            //      so check `NSError.code` against `NSURLErrorCancelled` for
-            //      the safest cast.
             let nsError = error as NSError
             let isCancelled = Task.isCancelled
                 || error is CancellationError
@@ -130,9 +125,152 @@ final class RoutePickerViewModel: ObservableObject {
 
     // MARK: - Search
 
+    /// Updates the search filter. Performs immediate local filtering on `allRoutes`
+    /// for instant feedback, then triggers a debounced nationwide route search
+    /// against the transit API.
     func updateSearch(_ query: String) {
         searchQuery = query
-        recomputeFilteredRoutes()
+        recomputeLocalFilteredRoutes()
+
+        let normalized = Self.normalizeQuery(query)
+        if normalized.isEmpty {
+            searchTask?.cancel()
+            searchTask = nil
+            isSearching = false
+            return
+        }
+
+        searchTask?.cancel()
+        searchTask = Task { [weak self] in
+            // Debounce for 250ms
+            try? await Task.sleep(nanoseconds: 250_000_000)
+            guard !Task.isCancelled, let self = self else { return }
+            await self.performSearch(normalized)
+        }
+    }
+
+    /// Directly awaitable search method for testing and explicit submission.
+    func performSearchAndWait(_ query: String) async {
+        searchQuery = query
+        recomputeLocalFilteredRoutes()
+        let normalized = Self.normalizeQuery(query)
+        if normalized.isEmpty {
+            filteredRoutes = allRoutes
+            return
+        }
+        await performSearch(normalized)
+    }
+
+    private func performSearch(_ query: String) async {
+        if let cached = queryCache[query] {
+            applySearchResults(cached, for: query)
+            isSearching = false
+            return
+        }
+
+        guard let apiService = application.apiService else { return }
+
+        isSearching = true
+        defer {
+            if !Task.isCancelled {
+                isSearching = false
+            }
+        }
+
+        let circularRegion = resolveSearchRegion()
+
+        do {
+            let response = try await apiService.getRoute(query: query, region: circularRegion)
+            guard !Task.isCancelled else { return }
+            let results = response.list
+            queryCache[query] = results
+            applySearchResults(results, for: query)
+        } catch {
+            guard !Task.isCancelled else { return }
+            let nsError = error as NSError
+            let isCancelled = error is CancellationError
+                || (nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled)
+            if isCancelled { return }
+
+            Logger.error("RoutePickerViewModel: search error for '\(query)': \(error)")
+            if filteredRoutes.isEmpty {
+                loadError = error
+            }
+        }
+    }
+
+    private func resolveSearchRegion() -> CLCircularRegion {
+        if let mapRect = application.mapRegionManager.lastVisibleMapRect {
+            return CLCircularRegion(mapRect: mapRect)
+        } else if let serviceRect = application.regionsService.currentRegion?.serviceRect {
+            return CLCircularRegion(mapRect: serviceRect)
+        } else if let currentRegion = application.regionsService.currentRegion {
+            return CLCircularRegion(
+                center: currentRegion.centerCoordinate,
+                radius: 40000.0,
+                identifier: "DefaultRegionalRadius"
+            )
+        } else if let location = application.locationService.currentLocation {
+            return CLCircularRegion(
+                center: location.coordinate,
+                radius: 40000.0,
+                identifier: "DefaultLocationRadius"
+            )
+        } else {
+            return CLCircularRegion(
+                center: CLLocationCoordinate2D(latitude: 31.78, longitude: 35.21),
+                radius: 50000.0,
+                identifier: "FallbackIsraelRadius"
+            )
+        }
+    }
+
+    private func applySearchResults(_ results: [Route], for query: String) {
+        var seenIDs = Set<RouteID>()
+        var combined: [Route] = []
+
+        // Local matches that start with query or exact match
+        for r in filteredRoutes where seenIDs.insert(r.id).inserted {
+            combined.append(r)
+        }
+
+        // Add network results
+        for r in results where seenIDs.insert(r.id).inserted {
+            combined.append(r)
+        }
+
+        // Sort exact number matches first, then agency/longName
+        let target = query.lowercased()
+        filteredRoutes = combined.sorted { first, second in
+            let firstExact = first.shortName.lowercased() == target
+            let secondExact = second.shortName.lowercased() == target
+            if firstExact != secondExact { return firstExact }
+
+            let firstPrefix = first.shortName.lowercased().hasPrefix(target)
+            let secondPrefix = second.shortName.lowercased().hasPrefix(target)
+            if firstPrefix != secondPrefix { return firstPrefix }
+
+            return first.localizedCompare(second) == .orderedAscending
+        }
+        didFinishLoading = true
+    }
+
+    // MARK: - Normalization
+
+    static func normalizeQuery(_ raw: String) -> String {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+
+        let arabicIndicNumerals: [Character: Character] = [
+            "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4",
+            "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9"
+        ]
+        let ascii = String(trimmed.map { arabicIndicNumerals[$0] ?? $0 })
+        return ascii.replacingOccurrences(
+            of: "^(קו|خط|line|route|bus)\\s*",
+            with: "",
+            options: [.regularExpression, .caseInsensitive]
+        ).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     // MARK: - Private
@@ -150,18 +288,24 @@ final class RoutePickerViewModel: ObservableObject {
 
         allRoutes = uniqueRoutes.localizedCaseInsensitiveSort()
         didFinishLoading = true
-        recomputeFilteredRoutes()
+        recomputeLocalFilteredRoutes()
     }
 
-    private func recomputeFilteredRoutes() {
+    private func recomputeLocalFilteredRoutes() {
         if searchQuery.isEmpty {
             filteredRoutes = allRoutes
             return
         }
+        let normalized = Self.normalizeQuery(searchQuery).lowercased()
         let query = searchQuery.lowercased()
+
         filteredRoutes = allRoutes.filter { route in
-            route.shortName.lowercased().contains(query)
-                || (route.longName?.lowercased().contains(query) ?? false)
+            let short = route.shortName.lowercased()
+            let long = route.longName?.lowercased() ?? ""
+            let agency = route.agency.name.lowercased()
+            return short.contains(normalized) || short.contains(query)
+                || long.contains(normalized) || long.contains(query)
+                || agency.contains(normalized) || agency.contains(query)
         }
     }
 }
