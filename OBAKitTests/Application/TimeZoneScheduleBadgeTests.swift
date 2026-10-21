@@ -222,7 +222,7 @@ struct TimeZoneScheduleBadgeTests {
         formatters.timeZone = losAngeles
 
         let buggyClock = formatters.timeFormatter.string(from: buggyDate)
-        let fixedDate = stopTime.departureDate(for: scheduleDate, timeZone: losAngeles)
+        let fixedDate = try #require(stopTime.departureDate(for: scheduleDate, timeZone: losAngeles))
         let fixedClock = formatters.formattedClockTime(fixedDate, deviceTimeZone: taipei)
 
         #expect(fixedClock.hasPrefix("8:00") || fixedClock.hasPrefix("08:00"))
