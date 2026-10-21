@@ -117,9 +117,9 @@ public final class IsraelLocalLiveActivityCoordinator {
             for await state in activity.activityStateUpdates {
                 switch state {
                 case .dismissed, .ended:
-                    await self?.untrack(activityID: activityID)
+                    await self?.untrackOnMain(activityID: activityID)
                     return
-                case .active, .stale:
+                case .active, .stale, .pending:
                     break
                 @unknown default:
                     break
@@ -255,6 +255,10 @@ public final class IsraelLocalLiveActivityCoordinator {
         checkPollingState()
     }
 
+    private func untrackOnMain(activityID: String) async {
+        untrack(activityID: activityID)
+    }
+
     private func untrack(activityID: String) {
         trackedContexts.removeValue(forKey: activityID)
         lifecycleTasks[activityID]?.cancel()
@@ -298,10 +302,10 @@ public final class IsraelLocalLiveActivityCoordinator {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.isForeground = true
-            self?.consecutiveErrors = 0
-            self?.reconcileRunningActivities()
-            Task { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.isForeground = true
+                self?.consecutiveErrors = 0
+                self?.reconcileRunningActivities()
                 await self?.refreshTrackedActivities()
             }
         }
@@ -311,8 +315,10 @@ public final class IsraelLocalLiveActivityCoordinator {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.isForeground = false
-            self?.stopPolling()
+            Task { @MainActor [weak self] in
+                self?.isForeground = false
+                self?.stopPolling()
+            }
         }
     }
 
