@@ -98,7 +98,7 @@ struct TripLiveActivity: Widget {
                                     Circle()
                                         .fill(Color(presenter.primaryColor(for: context.state)))
                                         .frame(width: 6, height: 6)
-                                    Text(primary.map { presenter.statusText(for: $0) } ?? OBALoc("live_activity.no_upcoming_departures", value: "No upcoming departures", comment: "No upcoming departures"))
+                                    Text(primary.map { presenter.statusText(for: $0) } ?? NSLocalizedString("live_activity.no_upcoming_departures", value: "No upcoming departures", comment: "No upcoming departures"))
                                         .font(.caption)
                                         .fontWeight(.medium)
                                         .foregroundColor(Color(presenter.primaryColor(for: context.state)))
