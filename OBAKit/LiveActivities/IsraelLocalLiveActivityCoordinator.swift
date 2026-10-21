@@ -234,7 +234,7 @@ public final class IsraelLocalLiveActivityCoordinator {
             existing: existing
         )
 
-        await activity.update(updatedContent)
+        await Self.applyActivityUpdate(activityID: activityID, content: updatedContent)
         Logger.info("IsraelLocalLiveActivityCoordinator: updated activity \(activityID) with \(sorted.count) arrivals.")
 
         if var ctx = trackedContexts[activityID] {
@@ -257,6 +257,16 @@ public final class IsraelLocalLiveActivityCoordinator {
 
     private func untrackOnMain(activityID: String) async {
         untrack(activityID: activityID)
+    }
+
+    nonisolated private static func applyActivityUpdate(
+        activityID: String,
+        content: ActivityContent<TripAttributes.ContentState>
+    ) async {
+        guard let activity = Activity<TripAttributes>.activities.first(where: { $0.id == activityID }) else {
+            return
+        }
+        await activity.update(content)
     }
 
     private func untrack(activityID: String) {
