@@ -122,6 +122,15 @@ public class Application: CoreApplication, PushServiceDelegate {
 
     @objc lazy var userActivityBuilder = UserActivityBuilder(application: self)
 
+    public private(set) lazy var israelLiveActivityCoordinator = IsraelLocalLiveActivityCoordinator(
+        apiServiceProvider: { [weak self] in self?.apiService },
+        userDefaults: userDefaults
+    )
+
+    public private(set) lazy var israelTripBackgroundTrackingCoordinator = IsraelTripBackgroundTrackingCoordinator(
+        liveActivityCoordinator: israelLiveActivityCoordinator
+    )
+
     /// Handles all deep-linking into the app.
     @objc public private(set) lazy var appLinksRouter: AppLinksRouter? = makeAppLinksRouter()
 

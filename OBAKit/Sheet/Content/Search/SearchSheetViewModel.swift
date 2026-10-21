@@ -196,23 +196,30 @@ final class SearchSheetViewModel: NSObject, ObservableObject, SearchDelegate {
     func submitCurrentQuery() {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+
+        let arabicIndicNumerals: [Character: Character] = [
+            "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4",
+            "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9"
+        ]
+        let asciiTrimmed = String(trimmed.map { arabicIndicNumerals[$0] ?? $0 })
+
         let type: SearchType
-        let hasRoutePrefix = trimmed.hasPrefix("קו") ||
-            trimmed.hasPrefix("خط") ||
-            trimmed.localizedCaseInsensitiveContains("line ") ||
-            trimmed.localizedCaseInsensitiveContains("route ") ||
-            trimmed.localizedCaseInsensitiveContains("bus ")
+        let hasRoutePrefix = asciiTrimmed.hasPrefix("קו") ||
+            asciiTrimmed.hasPrefix("خط") ||
+            asciiTrimmed.localizedCaseInsensitiveContains("line ") ||
+            asciiTrimmed.localizedCaseInsensitiveContains("route ") ||
+            asciiTrimmed.localizedCaseInsensitiveContains("bus ")
         if hasRoutePrefix {
             type = .route
-        } else if let num = Int(trimmed), num > 0 {
-            if trimmed.count <= 3 {
+        } else if let num = Int(asciiTrimmed), num > 0 {
+            if asciiTrimmed.count <= 3 {
                 type = .route
             } else {
                 type = .stopNumber
             }
         } else {
             // Recognize route patterns like "31 ירושלים", "86 מרכז", or alphanumeric lines like "31א", "14ב"
-            let tokens = trimmed.split(separator: " ")
+            let tokens = asciiTrimmed.split(separator: " ")
             let firstToken = tokens.first ?? ""
             let isAlphaNumericRoute = firstToken.count <= 4 && firstToken.contains(where: \.isNumber)
             if isAlphaNumericRoute && application.currentRegion?.regionIdentifier == 972 {
@@ -321,9 +328,8 @@ final class SearchSheetViewModel: NSObject, ObservableObject, SearchDelegate {
             // explanation. It also left the stacked sheet layer empty across the call.
             guard let resolved = await router.resolveSingleResult(from: response) else {
                 guard !Task.isCancelled else { return }
-                if let error = router.lastError {
-                    message = SearchSheetMessage(kind: .error, text: error.localizedDescription)
-                }
+                let errorText = router.lastError?.localizedDescription ?? SearchResultsSelection.unresolvableText
+                message = SearchSheetMessage(kind: .error, text: errorText)
                 return
             }
             guard !Task.isCancelled else { return }

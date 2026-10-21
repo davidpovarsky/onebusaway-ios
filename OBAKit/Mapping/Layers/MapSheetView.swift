@@ -51,9 +51,17 @@ struct MapLayerTile: Identifiable, Equatable {
 
     private var cancellables = Set<AnyCancellable>()
 
-    init(mapRegionManager: MapRegionManager, mapViewModel: MapViewModel, onSelectRoute: @escaping (Route) -> Void) {
+    private let stopsProvider: (() -> [Stop])?
+
+    init(
+        mapRegionManager: MapRegionManager,
+        mapViewModel: MapViewModel,
+        stopsProvider: (() -> [Stop])? = nil,
+        onSelectRoute: @escaping (Route) -> Void
+    ) {
         self.mapRegionManager = mapRegionManager
         self.mapViewModel = mapViewModel
+        self.stopsProvider = stopsProvider
         self.onSelectRoute = onSelectRoute
         super.init()
 
@@ -189,7 +197,15 @@ struct MapLayerTile: Identifiable, Equatable {
     /// root never moves the manager's offscreen `mapView`, while both roots keep
     /// the view model's flag in step with their camera.
     var routeFilterContent: RouteFilterOptions.Content {
-        RouteFilterOptions.content(stops: mapRegionManager.stops, isZoomedOut: mapViewModel.showZoomWarning)
+        guard !mapViewModel.showZoomWarning else { return .zoomedOut }
+        let candidateStops = stopsProvider?() ?? mapRegionManager.stops
+        var routes = RouteFilterOptions.routes(from: candidateStops)
+        if routes.isEmpty,
+           let israelLayer = mapRegionManager.mapLayer(id: IsraelNearbyRoutesMapLayer.layerID) as? IsraelNearbyRoutesMapLayer,
+           !israelLayer.viewportRoutes.isEmpty {
+            routes = israelLayer.viewportRoutes
+        }
+        return routes.isEmpty ? .noRoutes : .routes(routes)
     }
 
     func selectRoute(_ route: Route) {

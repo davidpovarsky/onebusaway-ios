@@ -19,6 +19,19 @@ nonisolated public struct RouteDailyCalendarResponseDTOServiceResponse: Codable,
     }
 }
 
+nonisolated public struct TripCalendarResponseDTOServiceResponse: Codable, Sendable {
+    public let data: [String: [DailyCalendarDepartureDTO]]?
+    public let success: Bool
+    public let message: String?
+
+    public init(data: [String: [DailyCalendarDepartureDTO]]?, success: Bool, message: String? = nil) {
+        self.data = data
+        self.success = success
+        self.message = message
+    }
+}
+
+
 nonisolated public struct RouteDailyCalendarContainerDTO: Codable, Sendable {
     public let start: [DailyCalendarDepartureDTO]?
     public let end: [DailyCalendarDepartureDTO]?

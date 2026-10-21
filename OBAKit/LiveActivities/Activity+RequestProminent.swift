@@ -32,9 +32,16 @@ extension Activity where Attributes == TripAttributes {
     static func requestProminent(
         attributes: TripAttributes,
         state: TripAttributes.ContentState,
-        staleDate: Date? = nil
+        staleDate: Date? = nil,
+        pushType: PushType? = nil
     ) throws -> Activity<TripAttributes> {
         let prominence = TripLiveActivityRelevance.prominenceScore()
+        let resolvedPushType: PushType?
+        if attributes.staticData.regionID == 972 {
+            resolvedPushType = nil
+        } else {
+            resolvedPushType = pushType ?? .token
+        }
 
         let activity = try Activity.request(
             attributes: attributes,
@@ -43,7 +50,7 @@ extension Activity where Attributes == TripAttributes {
                 staleDate: staleDate,
                 relevanceScore: prominence
             ),
-            pushType: .token
+            pushType: resolvedPushType
         )
 
         // Hop with the id rather than the activity: `Activity` is not `Sendable`,

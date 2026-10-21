@@ -244,7 +244,14 @@ class BookmarksViewController: UIHostingController<BookmarksRootView>,
                 // Metadata must be the pinned arrival when `staticData.tripID` is set —
                 // `arrivalDepartures.first` is soonest-first and would re-POST the wrong
                 // vehicle to OBACloud after relaunch (#1334).
-                if !application.liveActivityTracker.isForwardingPushToken(activityID: activity.id) {
+                if activity.attributes.staticData.regionID == 972 {
+                    if !application.israelLiveActivityCoordinator.isTracking(activityID: activity.id) {
+                        application.israelLiveActivityCoordinator.track(
+                            activity: activity,
+                            arrivalDepartures: arrivalDepartures
+                        )
+                    }
+                } else if !application.liveActivityTracker.isForwardingPushToken(activityID: activity.id) {
                     application.liveActivityTracker.track(
                         activity: activity,
                         metadata: .init(primaryArrival)
@@ -259,6 +266,10 @@ class BookmarksViewController: UIHostingController<BookmarksRootView>,
                         activityID: activityID,
                         state: contentState
                     )
+                }
+            } else if activity.attributes.staticData.regionID == 972 {
+                if !application.israelLiveActivityCoordinator.isTracking(activityID: activity.id) {
+                    application.israelLiveActivityCoordinator.observeLifecycle(of: activity)
                 }
             } else if !application.liveActivityTracker.isTracking(activityID: activity.id) {
                 // No bookmark/arrival data to register push updates with, but the activity is

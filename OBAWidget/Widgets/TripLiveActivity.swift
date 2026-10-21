@@ -98,7 +98,7 @@ struct TripLiveActivity: Widget {
                                     Circle()
                                         .fill(Color(presenter.primaryColor(for: context.state)))
                                         .frame(width: 6, height: 6)
-                                    Text(primary.map { presenter.statusText(for: $0) } ?? "")
+                                    Text(primary.map { presenter.statusText(for: $0) } ?? OBALoc("live_activity.no_upcoming_departures", value: "No upcoming departures", comment: "No upcoming departures"))
                                         .font(.caption)
                                         .fontWeight(.medium)
                                         .foregroundColor(Color(presenter.primaryColor(for: context.state)))
@@ -158,6 +158,12 @@ struct TripLiveActivity: Widget {
                         opacity: staleOpacity
                     )
                     .frame(minWidth: 20)
+                } else {
+                    Text("—")
+                        .font(.system(.body, design: .rounded))
+                        .fontWeight(.bold)
+                        .foregroundColor(.secondary)
+                        .frame(minWidth: 20)
                 }
             } minimal: {
                 // Keep the countdown when stale — minimal has no room for both
@@ -177,6 +183,10 @@ struct TripLiveActivity: Widget {
                             ? "\(LiveActivityStaleChrome.warningText), \(minuteText)"
                             : nil
                     )
+                } else {
+                    Image(systemName: "bus.fill")
+                        .font(.system(.callout, design: .rounded, weight: .heavy))
+                        .foregroundColor(Color(presenter.primaryColor(for: context.state)))
                 }
             }
         }

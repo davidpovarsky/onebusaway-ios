@@ -133,6 +133,7 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
 
     private(set) var ambientPolylines: [AmbientRoutePolyline] = []
     private(set) var ambientVehicles: [AmbientLiveVehicle] = []
+    private(set) var viewportRoutes: [Route] = []
     var onContentDidChange: (() -> Void)?
 
     private var debounceTask: Task<Void, Never>?
@@ -277,10 +278,8 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
                 for route in (stop.routes ?? []) {
                     if seenRouteIDs.insert(route.id).inserted {
                         candidateRoutes.append(route)
-                        if candidateRoutes.count >= 6 { break }
                     }
                 }
-                if candidateRoutes.count >= 6 { break }
             }
 
             var liveVehicles: [(id: String, routeID: RouteID, color: UIColor, status: TripStatus, routeType: Route.RouteType)] = []
@@ -297,15 +296,13 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
                     ).entry
                     for dep in arrivalsResponse.arrivalsAndDepartures {
                         if let route = dep.route, seenRouteIDs.insert(route.id).inserted {
-                            if candidateRoutes.count < 6 {
-                                candidateRoutes.append(route)
-                            }
+                            candidateRoutes.append(route)
                         }
                         if let status = dep.tripStatus,
                            status.isRealTime,
-                           let loc = status.lastKnownLocation?.coordinate,
-                           loc.latitude >= 29.4 && loc.latitude <= 33.5 &&
-                           loc.longitude >= 34.1 && loc.longitude <= 35.9 {
+                           let loc = (status.lastKnownLocation?.coordinate ?? status.position?.coordinate),
+                           loc.latitude >= 29.0 && loc.latitude <= 33.5 &&
+                           loc.longitude >= 34.0 && loc.longitude <= 36.0 {
                             let lastUpdate = status.lastUpdate ?? Date()
                             // Freshness check: update within last 5 minutes (300 seconds)
                             if abs(Date().timeIntervalSince(lastUpdate)) <= 300 {
@@ -322,7 +319,8 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
 
             guard !Task.isCancelled, currentGen == self.generation else { return }
 
-            let selectedRoutes = Array(candidateRoutes.prefix(6))
+            self.viewportRoutes = candidateRoutes
+            let selectedRoutes = Array(candidateRoutes.prefix(Self.routeCap))
 
             // 3. Fetch polylines for selected routes
             var newOverlays: [IsraelNearbyRouteOverlay] = []
@@ -369,7 +367,7 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
                     newVehicles.append(
                         IsraelNearbyVehicleAnnotation(id: v.id, routeID: v.routeID, routeColor: v.color, tripStatus: v.status)
                     )
-                    if let coord = v.status.lastKnownLocation?.coordinate {
+                    if let coord = (v.status.lastKnownLocation?.coordinate ?? v.status.position?.coordinate) {
                         newAmbientVehicles.append(
                             AmbientLiveVehicle(
                                 id: v.id,
@@ -414,6 +412,7 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
         vehicleAnnotations.removeAll()
         ambientPolylines.removeAll()
         ambientVehicles.removeAll()
+        viewportRoutes.removeAll()
         onContentDidChange?()
     }
 }

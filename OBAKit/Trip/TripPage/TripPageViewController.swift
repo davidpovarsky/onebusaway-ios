@@ -128,9 +128,26 @@ final class TripPageViewController: UIHostingController<TripPageRootView>,
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        checkLiveActivityStatus()
         disableIdleTimer()
         viewModel.start()
         onMapFocusChanged?(mapFocus)
+    }
+
+    private func checkLiveActivityStatus() {
+        guard let departure else { return }
+        let staticData = TripAttributes.StaticData(
+            routeShortName: departure.routeShortName,
+            routeHeadsign: departure.tripHeadsign ?? "",
+            stopID: departure.stopID,
+            routeColorHex: departure.route.color?.toHex(),
+            regionID: application.currentRegion?.regionIdentifier ?? 0,
+            tripID: departure.tripID
+        )
+        if Activity<TripAttributes>.running(matching: staticData) != nil {
+            isTrackingLiveActivity = true
+            render()
+        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -527,6 +544,13 @@ final class TripPageViewController: UIHostingController<TripPageRootView>,
                     state: contentState
                 )
             }
+            if staticData.regionID == 972 {
+                application.israelLiveActivityCoordinator.track(activity: existing, departure: departure)
+                application.israelTripBackgroundTrackingCoordinator.startActiveTripSession(
+                    tripID: staticData.tripID,
+                    stopID: staticData.stopID
+                )
+            }
             isTrackingLiveActivity = true
             render()
             return
@@ -537,7 +561,15 @@ final class TripPageViewController: UIHostingController<TripPageRootView>,
                 attributes: TripAttributes(staticData: staticData),
                 state: contentState
             )
-            application.liveActivityTracker.track(activity: activity, metadata: .init(departure))
+            if staticData.regionID == 972 {
+                application.israelLiveActivityCoordinator.track(activity: activity, departure: departure)
+                application.israelTripBackgroundTrackingCoordinator.startActiveTripSession(
+                    tripID: staticData.tripID,
+                    stopID: staticData.stopID
+                )
+            } else {
+                application.liveActivityTracker.track(activity: activity, metadata: .init(departure))
+            }
             Logger.info("Started Live Activity with ID: \(activity.id)")
             isTrackingLiveActivity = true
             render()

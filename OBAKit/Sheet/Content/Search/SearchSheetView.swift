@@ -92,6 +92,7 @@ struct SearchSheetView: View {
                     get: { viewModel.query },
                     set: { viewModel.updateQuery($0) }
                 ))
+                .accessibilityIdentifier("oba.search_field")
                 .focused($isFieldFocused)
                 .submitLabel(.search)
                 .autocorrectionDisabled()

@@ -132,6 +132,19 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
     }
 
     // MARK: - Handlers
+    public static func parseSecondsFromTimeString(_ str: String) -> Int? {
+        var timeStr = str
+        if timeStr.contains("T") {
+            timeStr = timeStr.split(separator: "T").last.map(String.init) ?? timeStr
+        }
+        if timeStr.contains("+") {
+            timeStr = timeStr.split(separator: "+").first.map(String.init) ?? timeStr
+        }
+        let parts = timeStr.split(separator: ":").compactMap { Int($0) }
+        guard parts.count >= 2 else { return nil }
+        return parts[0] * 3600 + parts[1] * 60 + (parts.count >= 3 ? parts[2] : 0)
+    }
+
 
     private func handleStopsForLocation(url: URL) async throws -> (Data, URLResponse) {
         let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
@@ -689,6 +702,7 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             }()
 
             var dailyDepartures: [DailyCalendarDepartureDTO]? = nil
+            var stopOffsets: [String: Int] = [:]
             if let firstStop = domainRoute.stops.first?.internalID?.rawValue,
                let lastStop = domainRoute.stops.last?.internalID?.rawValue {
                 let calURL = endpoints.routeDailyCalendarURL(
@@ -701,11 +715,56 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
                    let startDeps = calRes.data?.start, !startDeps.isEmpty {
                     dailyDepartures = startDeps
                 }
+
+                // Query TripCalendar for authentic GTFS stop times along the entire route
+                let tripCalURL = endpoints.tripCalendarURL(
+                    routeID: routeID,
+                    stopID: firstStop,
+                    date: targetDateString
+                )
+                if let tripCalRes: TripCalendarResponseDTOServiceResponse = try? await client.get(tripCalURL),
+                   let stopDict = tripCalRes.data, !stopDict.isEmpty {
+                    let startStopKey = String(firstStop)
+                    let originDepStr = stopDict[startStopKey]?.first?.departureTimeString ?? stopDict[startStopKey]?.first?.departureTime
+                    if let originDep = originDepStr, let originSec = Self.parseSecondsFromTimeString(originDep) {
+                        for (stopKey, deps) in stopDict {
+                            if let depStr = deps.first?.departureTimeString ?? deps.first?.departureTime,
+                               let stopSec = Self.parseSecondsFromTimeString(depStr) {
+                                let offset = max(0, stopSec - originSec)
+                                stopOffsets[stopKey] = offset
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Fallback: if tripCalendar didn't provide offsets, derive from routeDTO.stops nextStopsTimes
+            if stopOffsets.isEmpty, let dtoStops = routeDTO.stops, !dtoStops.isEmpty {
+                if let firstDTOStop = dtoStops.first,
+                   let firstTimes = firstDTOStop.nextStopsTimes, !firstTimes.isEmpty,
+                   let originDepStr = firstTimes[0].arrivalTimeString ?? firstTimes[0].arrivalTime,
+                   let originSec = Self.parseSecondsFromTimeString(originDepStr) {
+                    for s in dtoStops {
+                        if let times = s.nextStopsTimes, !times.isEmpty {
+                            let validTimes = times.compactMap { t -> (String, Int)? in
+                                guard let str = t.arrivalTimeString ?? t.arrivalTime,
+                                      let sec = Self.parseSecondsFromTimeString(str) else { return nil }
+                                return (str, sec)
+                            }.filter { $0.1 >= originSec && $0.1 <= originSec + 7200 }
+                            if let best = validTimes.first {
+                                let offset = best.1 - originSec
+                                stopOffsets[String(s.stopid)] = offset
+                                stopOffsets[String(s.stopcode)] = offset
+                            }
+                        }
+                    }
+                }
             }
 
             let envelope = OBACompatibilityBridge.scheduleForRouteResponse(
                 route: domainRoute,
-                departures: dailyDepartures
+                departures: dailyDepartures,
+                stopOffsets: stopOffsets.isEmpty ? nil : stopOffsets
             )
             let data = try JSONSerialization.data(withJSONObject: envelope, options: [])
             let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json; charset=utf-8"])!
@@ -781,64 +840,78 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             let rawTripParts = tripID.split(separator: "_")
             let matchTripToken: String? = rawTripParts.count >= 2 ? String(rawTripParts[1]) : nil
 
-            // Pre-pass: discover the coherent trip series index and authentic live vehicle location
-            var matchedTripIndex: Int? = nil
+            // Discover starting departure time and target matching criteria
+            var targetDepartureSec: Int? = nil
+            if let token = matchTripToken {
+                if let parsedSec = Self.parseSecondsFromTimeString(token) {
+                    targetDepartureSec = parsedSec
+                } else if let num = Double(token), num > 1_000_000_000 {
+                    let d = Date(timeIntervalSince1970: num)
+                    targetDepartureSec = Int(d.timeIntervalSince(serviceDateStart))
+                }
+            }
+
+            // Pre-pass: check if any stop has an exact staticTripId or tripIdToDate match
+            var hasExactIdMatch = false
             if let token = matchTripToken {
                 for s in (routeDTO.stops ?? []) {
-                    if let times = s.nextStopsTimes {
-                        if let idx = times.firstIndex(where: {
-                            $0.staticTripId == token ||
-                            ($0.tripIdToDate != nil && String($0.tripIdToDate!) == token)
-                        }) {
-                            matchedTripIndex = idx
-                            if liveVehicleLoc == nil, let loc = times[idx].routeLocation {
-                                liveVehicleLoc = CLLocationCoordinate2D(latitude: loc.lat, longitude: loc.lng)
-                            }
-                            break
-                        }
+                    if let times = s.nextStopsTimes, times.contains(where: {
+                        $0.staticTripId == token || ($0.tripIdToDate != nil && String($0.tripIdToDate!) == token)
+                    }) {
+                        hasExactIdMatch = true
+                        break
                     }
                 }
-                // Fallback: match by arrival/departure time token if token is not a raw static trip ID
-                if matchedTripIndex == nil {
-                    for s in (routeDTO.stops ?? []) {
-                        if let times = s.nextStopsTimes {
-                            if let idx = times.firstIndex(where: { t in
-                                if let arrStr = t.arrivalTimeString ?? t.arrivalTime {
-                                    if arrStr == token || arrStr.replacingOccurrences(of: ":", with: "") == token {
-                                        return true
-                                    }
-                                    if let parsed = MOTDateParser.parse(arrStr),
-                                       abs(parsed.timeIntervalSince1970 - (Double(token) ?? 0)) < 120 {
-                                        return true
-                                    }
-                                }
-                                return false
-                            }) {
-                                matchedTripIndex = idx
-                                if liveVehicleLoc == nil, let loc = times[idx].routeLocation {
-                                    liveVehicleLoc = CLLocationCoordinate2D(latitude: loc.lat, longitude: loc.lng)
-                                }
-                                break
+            }
+
+            // Also build static stop offsets if available to provide complete timetable where real-time predictions haven't reached
+            var tripStopOffsets: [String: Int] = [:]
+            if let dtoStops = routeDTO.stops, let firstStopTimes = dtoStops.first?.nextStopsTimes, !firstStopTimes.isEmpty {
+                let originTimeStr = firstStopTimes[0].arrivalTimeString ?? firstStopTimes[0].arrivalTime
+                if let originTime = originTimeStr, let originSec = Self.parseSecondsFromTimeString(originTime) {
+                    for s in dtoStops {
+                        if let times = s.nextStopsTimes, !times.isEmpty {
+                            let match = times.compactMap { t -> Int? in
+                                guard let str = t.arrivalTimeString ?? t.arrivalTime,
+                                      let sec = Self.parseSecondsFromTimeString(str) else { return nil }
+                                return sec
+                            }.filter { $0 >= originSec && $0 <= originSec + 7200 }.first
+                            if let m = match {
+                                tripStopOffsets[String(s.stopid)] = m - originSec
+                                tripStopOffsets[String(s.stopcode)] = m - originSec
                             }
                         }
                     }
                 }
             }
-            let activeTripIndex = matchedTripIndex ?? 0
 
-            for stop in domainRoute.stops {
+            var lastArrivalSec: Int? = targetDepartureSec
+            for (idx, stop) in domainRoute.stops.enumerated() {
                 var arrivalSec: Int? = nil
+                var departureSec: Int? = nil
+
                 if let dtoStop = routeDTO.stops?.first(where: { $0.stopid == stop.internalID?.rawValue || $0.stopcode == stop.code.rawValue }),
                    let nextTimes = dtoStop.nextStopsTimes, !nextTimes.isEmpty {
                     var matchedTime: NextStopTimeDTO? = nil
-                    if let token = matchTripToken {
+                    if hasExactIdMatch, let token = matchTripToken {
                         matchedTime = nextTimes.first(where: {
                             $0.staticTripId == token ||
                             ($0.tripIdToDate != nil && String($0.tripIdToDate!) == token)
                         })
-                    }
-                    if matchedTime == nil, activeTripIndex < nextTimes.count {
-                        matchedTime = nextTimes[activeTripIndex]
+                    } else {
+                        // Chronological monotonic matching
+                        if let lastSec = lastArrivalSec {
+                            let candidates = nextTimes.compactMap { t -> (NextStopTimeDTO, Int)? in
+                                guard let str = t.arrivalTimeString ?? t.arrivalTime,
+                                      let sec = Self.parseSecondsFromTimeString(str) else { return nil }
+                                return (t, sec)
+                            }.filter { $0.1 >= lastSec && $0.1 <= lastSec + 900 }
+                            if let best = candidates.first {
+                                matchedTime = best.0
+                            }
+                        } else if idx == 0 {
+                            matchedTime = nextTimes.first
+                        }
                     }
 
                     if let timeObj = matchedTime {
@@ -848,17 +921,30 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
                         if let arrivalStr = timeObj.arrivalTimeString ?? timeObj.arrivalTime {
                             if let parsed = MOTDateParser.parse(arrivalStr) {
                                 arrivalSec = Int(parsed.timeIntervalSince(serviceDateStart))
-                            } else {
-                                let parts = arrivalStr.split(separator: ":").compactMap { Int($0) }
-                                if parts.count >= 2 {
-                                    arrivalSec = parts[0] * 3600 + parts[1] * 60 + (parts.count >= 3 ? parts[2] : 0)
-                                }
+                            } else if let sec = Self.parseSecondsFromTimeString(arrivalStr) {
+                                arrivalSec = sec
                             }
+                        }
+                        departureSec = arrivalSec
+                        if let validArrival = arrivalSec {
+                            lastArrivalSec = validArrival
                         }
                     }
                 }
-                // NO fake 00:00! Absent time remains nil.
-                stopTimesData.append((stop: stop, arrivalSec: arrivalSec, departureSec: arrivalSec))
+
+                // If real-time prediction hasn't reached this stop, use static scheduled offset if known and target departure is set
+                if arrivalSec == nil, let targetStart = targetDepartureSec {
+                    let internalKey = stop.internalID.map { String($0.rawValue) } ?? ""
+                    let codeKey = String(stop.code.rawValue)
+                    if let offset = tripStopOffsets[internalKey] ?? tripStopOffsets[codeKey] {
+                        let schedSec = targetStart + offset
+                        departureSec = schedSec
+                        arrivalSec = schedSec
+                        lastArrivalSec = schedSec
+                    }
+                }
+
+                stopTimesData.append((stop: stop, arrivalSec: arrivalSec, departureSec: departureSec))
             }
 
             let envelope = OBACompatibilityBridge.tripDetailsResponse(

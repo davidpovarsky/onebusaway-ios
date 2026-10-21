@@ -564,6 +564,10 @@ nonisolated public enum OBACompatibilityBridge {
                     "lat": loc.latitude,
                     "lon": loc.longitude
                 ],
+                "lastKnownLocation": [
+                    "lat": loc.latitude,
+                    "lon": loc.longitude
+                ],
                 "predicted": true,
                 "scheduleDeviation": 0,
                 "scheduledDistanceAlongTrip": 0.0,
@@ -715,6 +719,7 @@ nonisolated public enum OBACompatibilityBridge {
     public static func scheduleForRouteResponse(
         route: TransitRoute,
         departures: [DailyCalendarDepartureDTO]? = nil,
+        stopOffsets: [String: Int]? = nil,
         date: Date = Date(),
         currentTime: Date = Date()
     ) -> [String: Any] {
@@ -780,11 +785,25 @@ nonisolated public enum OBACompatibilityBridge {
                     "stopHeadsign": headsign,
                     "stopSequence": stopIdx
                 ]
-                // Truth-first policy: only the initial departure has an authoritative departure time from DailyCalendar.
-                // Do NOT synthesize artificial 90-second delays or clamp overnight trips to 86399.
-                if stopIdx == 0 {
-                    stopTimeDict["arrivalTime"] = trip.startSeconds
-                    stopTimeDict["departureTime"] = trip.startSeconds
+                // Authentic scheduled stop times based on authoritative GTFS / TripCalendar offsets.
+                let stopObj = stopIdx < route.stops.count ? route.stops[stopIdx] : nil
+                let internalKey = stopObj?.internalID.map { String($0.rawValue) } ?? ""
+                let codeKey = stopObj.map { String($0.code.rawValue) } ?? ""
+
+                let offset: Int? = {
+                    if stopIdx == 0 { return 0 }
+                    if let offsets = stopOffsets {
+                        if let o = offsets[stopId] { return o }
+                        if !internalKey.isEmpty, let o = offsets[internalKey] { return o }
+                        if !codeKey.isEmpty, let o = offsets[codeKey] { return o }
+                    }
+                    return nil
+                }()
+
+                if let validOffset = offset {
+                    let scheduledSec = trip.startSeconds + validOffset
+                    stopTimeDict["arrivalTime"] = scheduledSec
+                    stopTimeDict["departureTime"] = scheduledSec
                 } else {
                     stopTimeDict["arrivalTime"] = -1
                     stopTimeDict["departureTime"] = -1
@@ -937,6 +956,10 @@ nonisolated public enum OBACompatibilityBridge {
             "orientation": 0.0,
             "phase": "in_progress",
             "position": [
+                "lat": loc.latitude,
+                "lon": loc.longitude
+            ],
+            "lastKnownLocation": [
                 "lat": loc.latitude,
                 "lon": loc.longitude
             ],

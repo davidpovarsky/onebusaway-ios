@@ -93,7 +93,10 @@ jobs:
             -only-testing:OBAKitTests/IsraelOperatorColorsTests \
             -only-testing:OBAKitTests/IsraelArrivalLoadAndCacheTests \
             -only-testing:OBAKitTests/IsraelViewportRoutesLayerTests \
-            -only-testing:OBAKitTests/IsraelDirectionLabelTests
+            -only-testing:OBAKitTests/IsraelDirectionLabelTests \
+            -only-testing:OBAKitTests/IsraelLocalLiveActivityCoordinatorTests \
+            -only-testing:OBAKitTests/IsraelTripBackgroundTrackingCoordinatorTests \
+            -only-testing:OBAKitTests/ScreenAwakeCoordinatorTests
 
       - name: Run Focused Israel UI Tests
         run: |
@@ -137,6 +140,9 @@ jobs:
           unzip -l OneBusAway-Israel-unsigned.ipa | head -n 30
           echo "Verifying IsraelStopCatalog.sqlite inside packaged IPA:"
           unzip -l OneBusAway-Israel-unsigned.ipa | grep "IsraelStopCatalog.sqlite"
+          echo "Verifying UIBackgroundModes (location) inside packaged Info.plist:"
+          plutil -p Payload/*.app/Info.plist | grep -A 5 "UIBackgroundModes"
+          plutil -p Payload/*.app/Info.plist | grep "location"
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4

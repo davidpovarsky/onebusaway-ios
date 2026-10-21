@@ -343,4 +343,28 @@ struct ScreenAwakeCoordinatorTests {
 
         reset()
     }
+
+    @Test func `Renewing failsafe re-arms timer for active owner`() {
+        reset(failsafeInterval: 0.1)
+        let screen = NSObject()
+        let owner = ObjectIdentifier(screen)
+
+        ScreenAwakeCoordinator.shared.acquire(owner: owner)
+        let firstTimer = ScreenAwakeCoordinator.shared.armedFailsafe
+        #expect(firstTimer != nil)
+
+        // Renew lease
+        ScreenAwakeCoordinator.shared.renew(owner: owner)
+        let renewedTimer = ScreenAwakeCoordinator.shared.armedFailsafe
+        #expect(renewedTimer != nil)
+        #expect(renewedTimer !== firstTimer)
+
+        // Renewing for non-owner does nothing
+        let nonOwner = ObjectIdentifier(NSObject())
+        ScreenAwakeCoordinator.shared.renew(owner: nonOwner)
+        #expect(ScreenAwakeCoordinator.shared.armedFailsafe === renewedTimer)
+
+        ScreenAwakeCoordinator.shared.release(owner: owner)
+        reset()
+    }
 }

@@ -290,6 +290,12 @@ final class AppSheetViewFactory {
         MapSheetView(model: MapSheetModel(
             mapRegionManager: self.application.mapRegionManager,
             mapViewModel: self.mapViewModel,
+            stopsProvider: { [weak self] in
+                guard let self else { return [] }
+                let obsStops = self.stopsObserver.stops
+                if !obsStops.isEmpty { return obsStops }
+                return self.application.mapRegionManager.stops
+            },
             onSelectRoute: { [weak self] route in
                 guard let self else { return }
                 Task { await self.showRouteOnMap(route) }

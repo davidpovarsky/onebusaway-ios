@@ -67,6 +67,59 @@ struct IsraelRouteScheduleTruthTests {
     }
 
     @Test
+    func testScheduleForRouteWithStopOffsetsPopulatesIntermediateStops() {
+        let stops = (1...3).map { i in
+            TransitStop(
+                code: MOTStopCode(100 + i),
+                internalID: MOTStopInternalID(1000 + i),
+                name: TransitMultiLanguageName(he: "תחנה \(i)", en: "Stop \(i)", ar: nil),
+                location: .init(latitude: 31.8, longitude: 35.2)
+            )
+        }
+        let route = TransitRoute(
+            routeID: MOTRouteID(33287),
+            lineName: "31",
+            longName: "מוצא <-> יעד",
+            routeDesc: MOTRouteDesc("10031-1-0"),
+            agencyID: MOTAgencyID(16),
+            agencyName: "סופרבוס",
+            stops: stops
+        )
+        let departure = DailyCalendarDepartureDTO(
+            tripId: "mot:trip:33287_1",
+            departureTime: "08:00:00",
+            departureTimeString: "08:00"
+        )
+        let stopOffsets: [String: Int] = [
+            "mot:stop:101": 0,
+            "mot:stop:102": 180,
+            "mot:stop:103": 420
+        ]
+
+        let response = OBACompatibilityBridge.scheduleForRouteResponse(
+            route: route,
+            departures: [departure],
+            stopOffsets: stopOffsets
+        )
+
+        guard let data = response["data"] as? [String: Any],
+              let entry = data["entry"] as? [String: Any],
+              let groupings = entry["stopTripGroupings"] as? [[String: Any]],
+              let firstGrouping = groupings.first,
+              let trips = firstGrouping["tripsWithStopTimes"] as? [[String: Any]],
+              let firstTrip = trips.first,
+              let stopTimes = firstTrip["stopTimes"] as? [[String: Any]] else {
+            Issue.record("Malformed scheduleForRoute response")
+            return
+        }
+
+        #expect(stopTimes.count == 3)
+        #expect(stopTimes[0]["departureTime"] as? Int == 28800)
+        #expect(stopTimes[1]["departureTime"] as? Int == 28980) // 28800 + 180
+        #expect(stopTimes[2]["departureTime"] as? Int == 29220) // 28800 + 420
+    }
+
+    @Test
     func testArrivalResponseDoesNotInvent20StopsOrZeroDistance() {
         let stop = TransitStop(
             code: MOTStopCode(5130),

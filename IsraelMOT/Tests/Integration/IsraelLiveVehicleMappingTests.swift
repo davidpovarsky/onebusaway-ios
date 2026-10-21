@@ -54,6 +54,13 @@ struct IsraelLiveVehicleMappingTests {
         }
         #expect(pos["lat"] as? Double == 31.789)
         #expect(pos["lon"] as? Double == 35.204)
+
+        guard let lastKnown = s["lastKnownLocation"] as? [String: Any] else {
+            Issue.record("Missing lastKnownLocation in tripStatus")
+            return
+        }
+        #expect(lastKnown["lat"] as? Double == 31.789)
+        #expect(lastKnown["lon"] as? Double == 35.204)
     }
 
     @Test

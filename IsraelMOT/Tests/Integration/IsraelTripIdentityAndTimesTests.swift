@@ -109,4 +109,71 @@ struct IsraelTripIdentityAndTimesTests {
         #expect(calendarDayFromArrival == calendarDay)
         #expect(arrivalDate > baseDate)
     }
+
+    @Test
+    func testTripDetailsPreservesLastKnownLocationAndMonotonicTimes() {
+        let stop1 = TransitStop(
+            code: MOTStopCode(5130),
+            internalID: MOTStopInternalID(1001),
+            name: TransitMultiLanguageName(he: "תחנה 1", en: "Stop 1", ar: nil),
+            cityName: "ירושלים",
+            streetName: "גולדה מאיר",
+            location: CLLocationCoordinate2D(latitude: 31.815, longitude: 35.201),
+            platformNumber: nil,
+            isAccessible: true,
+            routes: []
+        )
+        let stop2 = TransitStop(
+            code: MOTStopCode(5131),
+            internalID: MOTStopInternalID(1002),
+            name: TransitMultiLanguageName(he: "תחנה 2", en: "Stop 2", ar: nil),
+            cityName: "ירושלים",
+            streetName: "גולדה מאיר",
+            location: CLLocationCoordinate2D(latitude: 31.818, longitude: 35.205),
+            platformNumber: nil,
+            isAccessible: true,
+            routes: []
+        )
+        let route = TransitRoute(
+            routeID: MOTRouteID(33287),
+            lineName: "86",
+            longName: "ירושלים",
+            routeDesc: MOTRouteDesc("10086-1-0"),
+            agencyID: MOTAgencyID(16),
+            agencyName: "סופרבוס"
+        )
+        let stopTimes: [(stop: TransitStop, arrivalSec: Int?, departureSec: Int?)] = [
+            (stop: stop1, arrivalSec: 28800, departureSec: 28800),
+            (stop: stop2, arrivalSec: 28980, departureSec: 28980)
+        ]
+        let vehicleLocation = CLLocationCoordinate2D(latitude: 31.816, longitude: 35.202)
+
+        let response = OBACompatibilityBridge.tripDetailsResponse(
+            tripID: "mot:trip:86_01",
+            route: route,
+            stopTimes: stopTimes,
+            vehicleLocation: vehicleLocation,
+            isRealTime: true
+        )
+
+        guard let data = response["data"] as? [String: Any],
+              let entry = data["entry"] as? [String: Any],
+              let status = entry["status"] as? [String: Any],
+              let schedule = entry["schedule"] as? [String: Any],
+              let stopTimesList = schedule["stopTimes"] as? [[String: Any]] else {
+            Issue.record("Malformed trip details response")
+            return
+        }
+
+        #expect(stopTimesList.count == 2)
+        #expect(stopTimesList[0]["departureTime"] as? Int == 28800)
+        #expect(stopTimesList[1]["departureTime"] as? Int == 28980)
+
+        guard let lastKnown = status["lastKnownLocation"] as? [String: Any] else {
+            Issue.record("Missing lastKnownLocation in trip status")
+            return
+        }
+        #expect(lastKnown["lat"] as? Double == 31.816)
+        #expect(lastKnown["lon"] as? Double == 35.202)
+    }
 }

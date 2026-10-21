@@ -11,3 +11,4 @@ targets:
       properties:
         UIBackgroundModes:
           - remote-notification
+          - location

@@ -182,11 +182,9 @@ final class BookmarkActions {
     ///   departure, or by passing that departure directly — which is why only the
     ///   guarding one returns an `Optional`.
     static func contentState(from arrivalDepartures: [ArrivalDeparture]) -> TripAttributes.ContentState {
-        // Documented above, and unenforced until this became internal: the
-        // guarding wrapper used to be the only way in. An empty array yields a
-        // card with no arrivals rather than being refused, so say so in debug
-        // rather than shipping a blank Live Activity.
-        assert(!arrivalDepartures.isEmpty, "contentState(from:) needs at least one arrival")
+        guard !arrivalDepartures.isEmpty else {
+            return TripAttributes.ContentState(arrivals: [])
+        }
 
         let arrivals = arrivalDepartures.prefix(3).map { arrDep in
             TripAttributes.ContentState.ArrivalInfo(
@@ -227,6 +225,12 @@ final class BookmarkActions {
                 await Activity<TripAttributes>.promoteToDynamicIsland(
                     activityID: existingID,
                     state: freshContentState
+                )
+            }
+            if staticData.regionID == 972 {
+                application.israelLiveActivityCoordinator.track(
+                    activity: existing,
+                    arrivalDepartures: arrivalDepartures
                 )
             }
             showLiveActivityStartedToast()
@@ -270,9 +274,16 @@ final class BookmarkActions {
     /// activity is unregistered when it actually ends rather than when a view controller happens
     /// to be deallocated. See `LiveActivityTracker`.
     private func trackLiveActivity(_ activity: Activity<TripAttributes>, arrivalDepartures: [ArrivalDeparture]) {
-        application.liveActivityTracker.track(
-            activity: activity,
-            metadata: .init(arrivalDepartures.first)
-        )
+        if activity.attributes.staticData.regionID == 972 {
+            application.israelLiveActivityCoordinator.track(
+                activity: activity,
+                arrivalDepartures: arrivalDepartures
+            )
+        } else {
+            application.liveActivityTracker.track(
+                activity: activity,
+                metadata: .init(arrivalDepartures.first)
+            )
+        }
     }
 }

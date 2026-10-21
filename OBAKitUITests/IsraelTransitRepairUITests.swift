@@ -110,24 +110,50 @@ final class IsraelTransitRepairUITests: XCTestCase {
             app.otherElements["oba.search_bar"].searchFields.firstMatch
         ].first(where: { $0.waitForExistence(timeout: 5.0) })
 
-        if let search = searchPill {
-            search.tap()
-            Thread.sleep(forTimeInterval: 0.8)
-            let activeField = app.searchFields.firstMatch
-            if activeField.waitForExistence(timeout: 3.0) {
-                activeField.tap()
-                _ = app.keyboards.firstMatch.waitForExistence(timeout: 2.0)
-                activeField.typeText("31\n")
-                Thread.sleep(forTimeInterval: 1.5)
-
-                let screenshot = XCTAttachment(screenshot: app.screenshot())
-                screenshot.name = "SwiftUI_Panel_Route_31_Search"
-                screenshot.lifetime = .keepAlways
-                add(screenshot)
-            }
+        guard let search = searchPill else {
+            XCTFail("Search entry point must exist in SwiftUI panel")
+            return
         }
 
-        XCTAssertEqual(app.state, .runningForeground, "SwiftUI panel must remain running")
+        search.tap()
+        Thread.sleep(forTimeInterval: 0.8)
+
+        let searchField = [
+            app.textFields["oba.search_field"],
+            app.searchFields.firstMatch,
+            app.textFields.firstMatch
+        ].first(where: { $0.waitForExistence(timeout: 3.0) })
+
+        guard let activeField = searchField else {
+            XCTFail("Active search text field must exist after tapping search")
+            return
+        }
+
+        activeField.tap()
+        _ = app.keyboards.firstMatch.waitForExistence(timeout: 2.0)
+        activeField.typeText("31\n")
+        Thread.sleep(forTimeInterval: 1.5)
+
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "SwiftUI_Panel_Route_31_Search"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+
+        // Positive assertion for Route 31 results
+        let route31Row = app.staticTexts["31"]
+        let routeCell = app.cells.containing(.staticText, identifier: "31").firstMatch
+        let routeElement = route31Row.exists ? route31Row : routeCell
+        XCTAssertTrue(routeElement.waitForExistence(timeout: 10.0), "Route 31 result must exist and appear in SwiftUI search results")
+
+        routeElement.tap()
+        Thread.sleep(forTimeInterval: 1.0)
+
+        let routeSelectedScreenshot = XCTAttachment(screenshot: app.screenshot())
+        routeSelectedScreenshot.name = "SwiftUI_Panel_Route_31_Selected"
+        routeSelectedScreenshot.lifetime = .keepAlways
+        add(routeSelectedScreenshot)
+
+        XCTAssertEqual(app.state, .runningForeground, "SwiftUI panel must remain running after selecting route")
     }
 
     /// Test 2: Ramot Stop 5130 route focus and operator colors

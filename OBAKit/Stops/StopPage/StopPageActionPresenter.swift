@@ -668,6 +668,9 @@ final class StopPageActionPresenter: NSObject, ObservableObject {
                     state: contentState
                 )
             }
+            if staticData.regionID == 972 {
+                application.israelLiveActivityCoordinator.track(activity: existing, departure: departure)
+            }
             // Re-show the confirmation rather than appearing to do nothing.
             viewModel.signalToast(Self.liveActivityStartedText)
             return
@@ -678,7 +681,11 @@ final class StopPageActionPresenter: NSObject, ObservableObject {
                 attributes: TripAttributes(staticData: staticData),
                 state: contentState
             )
-            application.liveActivityTracker.track(activity: activity, metadata: .init(departure))
+            if staticData.regionID == 972 {
+                application.israelLiveActivityCoordinator.track(activity: activity, departure: departure)
+            } else {
+                application.liveActivityTracker.track(activity: activity, metadata: .init(departure))
+            }
             Logger.info("Started Live Activity with ID: \(activity.id)")
             viewModel.signalToast(Self.liveActivityStartedText)
         } catch {

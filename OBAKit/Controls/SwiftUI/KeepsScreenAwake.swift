@@ -118,6 +118,13 @@ final class ScreenAwakeCoordinator {
         releaseLease()
     }
 
+    /// Re-arms the failsafe if owner currently holds a lease, extending the hold
+    /// for active tracking sessions that are genuinely still running.
+    func renew(owner: ObjectIdentifier) {
+        guard owners.contains(owner) else { return }
+        armFailsafe()
+    }
+
     /// Private so `owners` cannot fall out of step with `leaseCount`: the keyed
     /// pair above is the only way in.
     private func acquireLease() {
