@@ -189,8 +189,8 @@ public class ScheduleForRoute: NSObject, Identifiable, Decodable, HasReferences 
             arrivalTime = (try? container.decodeIfPresent(Int.self, forKey: .arrivalTime)) ?? -1
             // swiftlint:disable:next epoch_decoded_as_int
             departureTime = (try? container.decodeIfPresent(Int.self, forKey: .departureTime)) ?? -1
-            arrivalEnabled = try container.decode(Bool.self, forKey: .arrivalEnabled)
-            departureEnabled = try container.decode(Bool.self, forKey: .departureEnabled)
+            arrivalEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .arrivalEnabled)) ?? true
+            departureEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .departureEnabled)) ?? true
             serviceID = try container.decodeIfPresent(String.self, forKey: .serviceID) ?? ""
             stopHeadsign = try container.decodeIfPresent(String.self, forKey: .stopHeadsign) ?? ""
         }

@@ -173,7 +173,9 @@ struct IsraelRouteScheduleTruthTests {
             "stopId": "mot:stop:101",
             "stopSequence": 1,
             "arrivalTime": -1,
-            "departureTime": -1
+            "departureTime": -1,
+            "arrivalEnabled": true,
+            "departureEnabled": true
         }
         """.data(using: .utf8)!
 
@@ -191,7 +193,9 @@ struct IsraelRouteScheduleTruthTests {
             "stopId": "mot:stop:101",
             "stopSequence": 1,
             "arrivalTime": 28800,
-            "departureTime": 28800
+            "departureTime": 28800,
+            "arrivalEnabled": true,
+            "departureEnabled": true
         }
         """.data(using: .utf8)!
 
