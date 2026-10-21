@@ -46,8 +46,12 @@ final class IsraelTransitRepairUITests: XCTestCase {
 
         // Look for search bar or search icon
         let candidates = [
-            app.searchFields.firstMatch,
+            app.searchFields["oba.search_field"],
+            app.textFields["oba.search_field"],
+            app.searchFields["oba.search_bar"],
             app.otherElements["oba.search_bar"].searchFields.firstMatch,
+            app.searchFields.firstMatch,
+            app.buttons["oba.search_pill"],
             app.buttons["חפש קו או תחנה"],
             app.buttons["Search routes and stops"]
         ]
@@ -65,10 +69,29 @@ final class IsraelTransitRepairUITests: XCTestCase {
         search.tap()
         Thread.sleep(forTimeInterval: 0.8)
 
-        let activeField = app.searchFields.firstMatch
-        XCTAssertTrue(activeField.waitForExistence(timeout: 5.0), "Active search field must exist after tapping search")
-        activeField.tap()
-        _ = app.keyboards.firstMatch.waitForExistence(timeout: 2.0)
+        let searchFields = [
+            app.searchFields["oba.search_field"],
+            app.textFields["oba.search_field"],
+            app.searchFields["oba.search_bar"],
+            app.searchFields.firstMatch,
+            app.textFields.firstMatch
+        ]
+        var foundActiveField: XCUIElement?
+        for field in searchFields {
+            if field.waitForExistence(timeout: 3.0) {
+                foundActiveField = field
+                break
+            }
+        }
+        guard let activeField = foundActiveField else {
+            XCTFail("Active search field must exist after tapping search")
+            return
+        }
+        if !activeField.hasKeyboardFocus {
+            activeField.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+        _ = app.keyboards.firstMatch.waitForExistence(timeout: 3.0)
         activeField.typeText("31\n")
 
         Thread.sleep(forTimeInterval: 1.5)
@@ -104,6 +127,9 @@ final class IsraelTransitRepairUITests: XCTestCase {
         XCTAssertTrue(map.exists, "SwiftUI Map must be present on launch")
 
         let searchPill = [
+            app.buttons["oba.search_pill"],
+            app.buttons["oba.search_bar"],
+            app.buttons["לאן תרצה לנסוע?"],
             app.buttons["חפש קו או תחנה"],
             app.buttons["Search routes and stops"],
             app.searchFields.firstMatch,
@@ -120,17 +146,21 @@ final class IsraelTransitRepairUITests: XCTestCase {
 
         let searchField = [
             app.textFields["oba.search_field"],
+            app.searchFields["oba.search_field"],
             app.searchFields.firstMatch,
             app.textFields.firstMatch
-        ].first(where: { $0.waitForExistence(timeout: 3.0) })
+        ].first(where: { $0.waitForExistence(timeout: 5.0) })
 
         guard let activeField = searchField else {
             XCTFail("Active search text field must exist after tapping search")
             return
         }
 
-        activeField.tap()
-        _ = app.keyboards.firstMatch.waitForExistence(timeout: 2.0)
+        if !activeField.hasKeyboardFocus {
+            activeField.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+        _ = app.keyboards.firstMatch.waitForExistence(timeout: 3.0)
         activeField.typeText("31\n")
         Thread.sleep(forTimeInterval: 1.5)
 

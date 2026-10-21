@@ -101,6 +101,7 @@ jobs:
       - name: Run Focused Israel UI Tests
         run: |
           set -euo pipefail
+          defaults write com.apple.iphonesimulator ConnectHardwareKeyboard 0
           xcodebuild test \
             -project OBAKit.xcodeproj \
             -scheme 'App' \

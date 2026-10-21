@@ -104,6 +104,7 @@ struct HomeSheetView: View {
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 12)
+        .accessibilityIdentifier("oba.search_pill")
         // The map panel's home for `TripPlannerTip`, which on the UIKit surface
         // points at `MapFloatingPanelController`'s search bar — this row is that
         // bar's counterpart, and the tip's copy ("tap here to search for places")
