@@ -66,6 +66,7 @@ jobs:
           UDID=$(scripts/resolve_simulator_udid)
           echo "SIMULATOR_UDID=$UDID" >> "$GITHUB_ENV"
           echo "Resolved simulator UDID: $UDID"
+          defaults write com.apple.iphonesimulator ConnectHardwareKeyboard 0
 
       - name: Run Israel MOT Unit Tests
         run: |

@@ -69,30 +69,34 @@ final class IsraelTransitRepairUITests: XCTestCase {
         search.tap()
         Thread.sleep(forTimeInterval: 0.8)
 
-        let searchFields = [
-            app.searchFields["oba.search_field"],
-            app.textFields["oba.search_field"],
-            app.searchFields["oba.search_bar"],
-            app.searchFields.firstMatch,
-            app.textFields.firstMatch
-        ]
-        var foundActiveField: XCUIElement?
-        for field in searchFields {
-            if field.waitForExistence(timeout: 3.0) {
-                foundActiveField = field
-                break
+        let targetField: XCUIElement
+        if search.elementType == .searchField || search.elementType == .textField {
+            targetField = search
+        } else {
+            let activeFields = [
+                app.searchFields["oba.search_field"],
+                app.textFields["oba.search_field"],
+                app.searchFields["oba.search_bar"],
+                app.searchFields.firstMatch,
+                app.textFields.firstMatch
+            ]
+            var foundField: XCUIElement?
+            for field in activeFields {
+                if field.waitForExistence(timeout: 3.0) {
+                    foundField = field
+                    break
+                }
             }
+            guard let field = foundField else {
+                XCTFail("Active search field must exist after tapping search")
+                return
+            }
+            field.tap()
+            targetField = field
         }
-        guard let activeField = foundActiveField else {
-            XCTFail("Active search field must exist after tapping search")
-            return
-        }
-        if !activeField.hasKeyboardFocus {
-            activeField.tap()
-            Thread.sleep(forTimeInterval: 0.5)
-        }
+
         _ = app.keyboards.firstMatch.waitForExistence(timeout: 3.0)
-        activeField.typeText("31\n")
+        targetField.typeText("31\n")
 
         Thread.sleep(forTimeInterval: 1.5)
 
@@ -156,10 +160,7 @@ final class IsraelTransitRepairUITests: XCTestCase {
             return
         }
 
-        if !activeField.hasKeyboardFocus {
-            activeField.tap()
-            Thread.sleep(forTimeInterval: 0.5)
-        }
+        activeField.tap()
         _ = app.keyboards.firstMatch.waitForExistence(timeout: 3.0)
         activeField.typeText("31\n")
         Thread.sleep(forTimeInterval: 1.5)
