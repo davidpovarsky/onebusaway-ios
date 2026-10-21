@@ -794,6 +794,8 @@ nonisolated public enum OBACompatibilityBridge {
                     if stopIdx == 0 { return 0 }
                     if let offsets = stopOffsets {
                         if let o = offsets[stopId] { return o }
+                        if !codeKey.isEmpty, let o = offsets["mot:stop:\(codeKey)"] { return o }
+                        if !internalKey.isEmpty, let o = offsets["mot:stop:\(internalKey)"] { return o }
                         if !internalKey.isEmpty, let o = offsets[internalKey] { return o }
                         if !codeKey.isEmpty, let o = offsets[codeKey] { return o }
                     }
