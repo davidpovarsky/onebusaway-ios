@@ -306,7 +306,7 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
                            let loc = status.lastKnownLocation?.coordinate,
                            loc.latitude >= 29.4 && loc.latitude <= 33.5 &&
                            loc.longitude >= 34.1 && loc.longitude <= 35.9 {
-                            let lastUpdate = status.lastUpdateTime ?? Date()
+                            let lastUpdate = status.lastUpdate ?? Date()
                             // Freshness check: update within last 5 minutes (300 seconds)
                             if abs(Date().timeIntervalSince(lastUpdate)) <= 300 {
                                 let color = dep.route?.color ?? ThemeColors.shared.brand
