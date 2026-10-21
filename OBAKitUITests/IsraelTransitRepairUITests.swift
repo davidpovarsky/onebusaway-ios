@@ -100,12 +100,21 @@ final class IsraelTransitRepairUITests: XCTestCase {
         searchScreenshot.lifetime = .keepAlways
         add(searchScreenshot)
 
-        let route31Row = app.staticTexts["31"].firstMatch
+        let routeButton = app.buttons.containing(.staticText, identifier: "31").firstMatch
         let routeCell = app.cells.containing(.staticText, identifier: "31").firstMatch
-        let routeElement = route31Row.exists ? route31Row : routeCell
-        XCTAssertTrue(routeElement.waitForExistence(timeout: 10.0), "Route 31 result must exist and appear in search results")
+        let route31Row = app.staticTexts["31"].firstMatch
 
-        routeElement.tap()
+        let targetElement: XCUIElement
+        if routeButton.waitForExistence(timeout: 10.0) {
+            targetElement = routeButton
+        } else if routeCell.waitForExistence(timeout: 5.0) {
+            targetElement = routeCell
+        } else {
+            XCTAssertTrue(route31Row.waitForExistence(timeout: 5.0), "Route 31 result must exist and appear in search results")
+            targetElement = route31Row
+        }
+
+        targetElement.tap()
         Thread.sleep(forTimeInterval: 1.0)
 
         let selectedScreenshot = XCTAttachment(screenshot: app.screenshot())
@@ -165,12 +174,21 @@ final class IsraelTransitRepairUITests: XCTestCase {
         add(screenshot)
 
         // Positive assertion for Route 31 results
-        let route31Row = app.staticTexts["31"].firstMatch
+        let routeButton = app.buttons.containing(.staticText, identifier: "31").firstMatch
         let routeCell = app.cells.containing(.staticText, identifier: "31").firstMatch
-        let routeElement = route31Row.exists ? route31Row : routeCell
-        XCTAssertTrue(routeElement.waitForExistence(timeout: 10.0), "Route 31 result must exist and appear in SwiftUI search results")
+        let route31Row = app.staticTexts["31"].firstMatch
 
-        routeElement.tap()
+        let targetElement: XCUIElement
+        if routeButton.waitForExistence(timeout: 10.0) {
+            targetElement = routeButton
+        } else if routeCell.waitForExistence(timeout: 5.0) {
+            targetElement = routeCell
+        } else {
+            XCTAssertTrue(route31Row.waitForExistence(timeout: 5.0), "Route 31 result must exist and appear in SwiftUI search results")
+            targetElement = route31Row
+        }
+
+        targetElement.tap()
         Thread.sleep(forTimeInterval: 1.0)
 
         let routeSelectedScreenshot = XCTAttachment(screenshot: app.screenshot())
