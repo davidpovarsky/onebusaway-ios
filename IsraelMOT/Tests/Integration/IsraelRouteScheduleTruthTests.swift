@@ -169,6 +169,7 @@ struct IsraelRouteScheduleTruthTests {
     func testScheduleForRouteStopTimeNegativeOneReturnsNilDate() throws {
         let json = """
         {
+            "tripId": "mot:trip:1",
             "stopId": "mot:stop:101",
             "stopSequence": 1,
             "arrivalTime": -1,
@@ -186,6 +187,7 @@ struct IsraelRouteScheduleTruthTests {
     func testScheduleForRoutePositiveDepartureYieldsRealDate() throws {
         let json = """
         {
+            "tripId": "mot:trip:1",
             "stopId": "mot:stop:101",
             "stopSequence": 1,
             "arrivalTime": 28800,
