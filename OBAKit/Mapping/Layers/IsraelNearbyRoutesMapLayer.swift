@@ -15,13 +15,13 @@ import SwiftUI
 import UIKit
 
 /// Ambient polyline and chevrons for SwiftUI and tests.
-public struct AmbientRoutePolyline: Identifiable {
-    public let id: String
-    public let coordinates: [CLLocationCoordinate2D]
-    public let color: Color
-    public let arrows: [PolylineArrowPlacement]
+struct AmbientRoutePolyline: Identifiable {
+    let id: String
+    let coordinates: [CLLocationCoordinate2D]
+    let color: Color
+    let arrows: [PolylineArrowPlacement]
 
-    public init(id: String, coordinates: [CLLocationCoordinate2D], color: Color, arrows: [PolylineArrowPlacement]) {
+    init(id: String, coordinates: [CLLocationCoordinate2D], color: Color, arrows: [PolylineArrowPlacement]) {
         self.id = id
         self.coordinates = coordinates
         self.color = color
@@ -30,14 +30,14 @@ public struct AmbientRoutePolyline: Identifiable {
 }
 
 /// Ambient real-time vehicle for SwiftUI and tests.
-public struct AmbientLiveVehicle: Identifiable {
-    public let id: String
-    public let coordinate: CLLocationCoordinate2D
-    public let routeColor: Color
-    public let orientation: CLLocationDirection?
-    public let routeType: Route.RouteType
+struct AmbientLiveVehicle: Identifiable {
+    let id: String
+    let coordinate: CLLocationCoordinate2D
+    let routeColor: Color
+    let orientation: CLLocationDirection?
+    let routeType: Route.RouteType
 
-    public init(id: String, coordinate: CLLocationCoordinate2D, routeColor: Color, orientation: CLLocationDirection?, routeType: Route.RouteType) {
+    init(id: String, coordinate: CLLocationCoordinate2D, routeColor: Color, orientation: CLLocationDirection?, routeType: Route.RouteType) {
         self.id = id
         self.coordinate = coordinate
         self.routeColor = routeColor
@@ -131,9 +131,9 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
     private var vehicleAnnotations: [IsraelNearbyVehicleAnnotation] = []
     private var arrowAnnotations: [PolylineArrowAnnotation] = []
 
-    public private(set) var ambientPolylines: [AmbientRoutePolyline] = []
-    public private(set) var ambientVehicles: [AmbientLiveVehicle] = []
-    public var onContentDidChange: (() -> Void)?
+    private(set) var ambientPolylines: [AmbientRoutePolyline] = []
+    private(set) var ambientVehicles: [AmbientLiveVehicle] = []
+    var onContentDidChange: (() -> Void)?
 
     private var debounceTask: Task<Void, Never>?
     private var fetchTask: Task<Void, Never>?
