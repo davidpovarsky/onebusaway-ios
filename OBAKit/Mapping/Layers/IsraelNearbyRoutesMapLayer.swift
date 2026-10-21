@@ -9,7 +9,6 @@
 
 import Combine
 import CoreLocation
-import IsraelMOT
 import MapKit
 import OBAKitCore
 import SwiftUI
@@ -333,8 +332,10 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
             for route in selectedRoutes {
                 guard !Task.isCancelled, currentGen == self.generation else { return }
                 let routeColor = route.color ?? ThemeColors.shared.brand
-                let motRouteID = MOTIdentityFormatter.parseRouteID(fromScopedID: route.id) ?? MOTRouteID(route.id)
-                let shapeID = MOTIdentityFormatter.scopedShapeID(routeID: motRouteID)
+                let rawID = route.id
+                    .replacingOccurrences(of: "mot:route:", with: "")
+                    .replacingOccurrences(of: "mot:shape:", with: "")
+                let shapeID = "mot:shape:\(rawID)"
                 let coords = try? await self.shapeCache.coordinates(forShapeID: shapeID)
 
                 if let validCoords = coords, !validCoords.isEmpty {
