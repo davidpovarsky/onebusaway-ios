@@ -63,9 +63,12 @@ final class IsraelTransitRepairUITests: XCTestCase {
             return
         }
         search.tap()
+        Thread.sleep(forTimeInterval: 0.8)
 
         let activeField = app.searchFields.firstMatch
         XCTAssertTrue(activeField.waitForExistence(timeout: 5.0), "Active search field must exist after tapping search")
+        activeField.tap()
+        _ = app.keyboards.firstMatch.waitForExistence(timeout: 2.0)
         activeField.typeText("31\n")
 
         Thread.sleep(forTimeInterval: 1.5)
@@ -109,8 +112,11 @@ final class IsraelTransitRepairUITests: XCTestCase {
 
         if let search = searchPill {
             search.tap()
+            Thread.sleep(forTimeInterval: 0.8)
             let activeField = app.searchFields.firstMatch
             if activeField.waitForExistence(timeout: 3.0) {
+                activeField.tap()
+                _ = app.keyboards.firstMatch.waitForExistence(timeout: 2.0)
                 activeField.typeText("31\n")
                 Thread.sleep(forTimeInterval: 1.5)
 
