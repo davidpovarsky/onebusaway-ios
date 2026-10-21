@@ -176,7 +176,7 @@ struct IsraelRouteScheduleTruthTests {
         }
         """.data(using: .utf8)!
 
-        let stopTime = try JSONDecoder().decode(ScheduleForRoute.StopTime.self, from: json)
+        let stopTime: ScheduleForRoute.StopTime = try JSONDecoder().decode(ScheduleForRoute.StopTime.self, from: json)
         #expect(!stopTime.hasValidDepartureTime)
         #expect(stopTime.departureDate(for: Date(), timeZone: TimeZone(identifier: "Asia/Jerusalem")!) == nil)
         #expect(stopTime.arrivalDate(for: Date(), timeZone: TimeZone(identifier: "Asia/Jerusalem")!) == nil)
@@ -193,7 +193,7 @@ struct IsraelRouteScheduleTruthTests {
         }
         """.data(using: .utf8)!
 
-        let stopTime = try JSONDecoder().decode(ScheduleForRoute.StopTime.self, from: json)
+        let stopTime: ScheduleForRoute.StopTime = try JSONDecoder().decode(ScheduleForRoute.StopTime.self, from: json)
         #expect(stopTime.hasValidDepartureTime)
         let tz = TimeZone(identifier: "Asia/Jerusalem")!
         let date = try #require(stopTime.departureDate(for: Date(), timeZone: tz))
