@@ -136,6 +136,8 @@ public class ScheduleForRoute: NSObject, Identifiable, Decodable, HasReferences 
         }
     }
 
+    public typealias StopTime = RouteScheduleStopTime
+
     /// A single stop time entry in the route schedule
     public class RouteScheduleStopTime: NSObject, Decodable {
         /// The stop ID
