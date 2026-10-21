@@ -152,8 +152,7 @@ struct IsraelTripIdentityAndTimesTests {
             tripID: "mot:trip:86_01",
             route: route,
             stopTimes: stopTimes,
-            vehicleLocation: vehicleLocation,
-            isRealTime: true
+            vehicleLocation: vehicleLocation
         )
 
         guard let data = response["data"] as? [String: Any],
