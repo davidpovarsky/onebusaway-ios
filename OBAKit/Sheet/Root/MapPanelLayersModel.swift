@@ -45,9 +45,16 @@ import OTPKit
     /// The zones' tappable markers.
     @Published private(set) var onDemandMarkers: [OnDemandZoneAnnotation] = []
 
+    /// Ambient nearby route polylines for Region 972 (Israel).
+    @Published private(set) var ambientPolylines: [AmbientRoutePolyline] = []
+
+    /// Ambient real-time vehicles for Region 972 (Israel).
+    @Published private(set) var ambientVehicles: [AmbientLiveVehicle] = []
+
     /// The layer whose `onMapContentDidChange` points here. `MapLayerRegistrar`
     /// builds a fresh one per region, so `refresh()` rebinds on a change.
     private weak var boundOnDemandLayer: OnDemandMapLayer?
+    private weak var boundIsraelNearbyRoutesLayer: IsraelNearbyRoutesMapLayer?
 
     /// Every rental currently visible, before clustering. Backs id resolution
     /// for the rental sheet routes.
@@ -119,6 +126,7 @@ import OTPKit
             && mapRegionManager.isMapLayerEnabled(id: OnDemandMapLayer.layerID)
         subscribeToRentalCoordinator()
         bindOnDemandLayer()
+        bindIsraelNearbyRoutesLayer()
 
         // The Map sheet writes the threshold through `MapRegionManager` and
         // posts `.rentalRangeFilterDidChange`; on this surface nothing else
@@ -185,6 +193,19 @@ import OTPKit
     private func syncOnDemandZones() {
         onDemandZones = boundOnDemandLayer?.zoneShapes ?? []
         onDemandMarkers = boundOnDemandLayer?.annotations ?? []
+    }
+
+    private func bindIsraelNearbyRoutesLayer() {
+        let layer = registrar.israelNearbyRoutesLayer
+        guard layer !== boundIsraelNearbyRoutesLayer else { return }
+        boundIsraelNearbyRoutesLayer = layer
+        layer?.onContentDidChange = { [weak self] in
+            guard let self = self else { return }
+            self.ambientPolylines = self.boundIsraelNearbyRoutesLayer?.ambientPolylines ?? []
+            self.ambientVehicles = self.boundIsraelNearbyRoutesLayer?.ambientVehicles ?? []
+        }
+        ambientPolylines = layer?.ambientPolylines ?? []
+        ambientVehicles = layer?.ambientVehicles ?? []
     }
 
     /// The on-demand layer's drawn zone colours by service id, so a picker

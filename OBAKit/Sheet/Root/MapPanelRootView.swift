@@ -307,6 +307,7 @@ struct MapPanelRootView: View {
             bookmarkAnnotations
             regularStopAnnotations
             rentalAnnotations
+            israelNearbyRoutesContent
             searchResultsContent
             tripPlannerMapContent(for: tripPlannerDisplay)
             tripFocusMapContent(for: tripFocusDisplay.display)
@@ -678,6 +679,30 @@ struct MapPanelRootView: View {
                 }
             }
             .tag(tag(for: item))
+        }
+    }
+
+    @MapContentBuilder
+    private var israelNearbyRoutesContent: some MapContent {
+        if tripFocusDisplay.display == nil && !layersModel.ambientPolylines.isEmpty {
+            ForEach(layersModel.ambientPolylines) { polyline in
+                MapPolyline(MKPolyline(coordinates: polyline.coordinates, count: polyline.coordinates.count))
+                    .stroke(.white, style: StrokeStyle(lineWidth: 8, lineCap: .round, lineJoin: .round))
+                MapPolyline(MKPolyline(coordinates: polyline.coordinates, count: polyline.coordinates.count))
+                    .stroke(polyline.color, style: StrokeStyle(lineWidth: 4.5, lineCap: .round, lineJoin: .round))
+
+                ForEach(Array(polyline.arrows.enumerated()), id: \.offset) { _, arrow in
+                    Annotation("", coordinate: arrow.coordinate, anchor: .center) {
+                        TripDirectionArrow(headingDegrees: arrow.headingDegrees, color: polyline.color)
+                    }
+                }
+            }
+
+            ForEach(layersModel.ambientVehicles) { vehicle in
+                Annotation("", coordinate: vehicle.coordinate, anchor: .center) {
+                    TripNearbyVehicleMarker(vehicle: vehicle)
+                }
+            }
         }
     }
 

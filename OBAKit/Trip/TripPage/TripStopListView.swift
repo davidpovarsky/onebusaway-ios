@@ -121,6 +121,12 @@ private struct TripStopRow: View {
                 // its intrinsic width and the stop name (which has two lines and
                 // wraps on word boundaries) absorbs the shortfall instead.
                 .fixedSize(horizontal: true, vertical: false)
+        } else {
+            Text("—")
+                .font(.subheadline)
+                .foregroundStyle(Color(uiColor: .tertiaryLabel))
+                .monospacedDigit()
+                .fixedSize(horizontal: true, vertical: false)
         }
     }
 

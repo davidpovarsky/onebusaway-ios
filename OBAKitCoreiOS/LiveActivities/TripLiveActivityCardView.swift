@@ -105,6 +105,10 @@ public struct TripLiveActivityCardView: View {
                     .lineLimit(2)
                 if let primary {
                     timeStatusLine(for: primary, now: now)
+                } else {
+                    Text(OBALoc("live_activity.no_upcoming_departures", value: "No upcoming departures", comment: "No upcoming departures"))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
             }
             Spacer(minLength: 8)

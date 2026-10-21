@@ -46,6 +46,9 @@ import OTPKit
     /// support (`OnDemandSupport`).
     private(set) var onDemandLayer: OnDemandMapLayer?
 
+    /// The ambient nearby routes and real-time vehicles layer for Region 972 (Israel).
+    private(set) var israelNearbyRoutesLayer: IsraelNearbyRoutesMapLayer?
+
     init(application: Application, onDidConfigure: @escaping (MapLayerRegistrar) -> Void) {
         self.application = application
         self.onDidConfigure = onDidConfigure
@@ -63,6 +66,7 @@ import OTPKit
         }
         configureRentalLayers()
         configureOnDemandLayer()
+        configureIsraelNearbyRoutesLayer()
         onDidConfigure(self)
     }
 
@@ -110,6 +114,29 @@ import OTPKit
         }
         let layer = OnDemandMapLayer(application: application)
         onDemandLayer = layer
+        mapRegionManager.registerMapLayer(layer)
+    }
+
+    private func configureIsraelNearbyRoutesLayer() {
+        mapRegionManager.removeMapLayer(id: IsraelNearbyRoutesMapLayer.layerID)
+        guard application.currentRegion?.regionIdentifier == 972,
+              let apiService = application.apiService else {
+            israelNearbyRoutesLayer = nil
+            return
+        }
+
+        let shapeCache = ShapeCache { [weak apiService] shapeID in
+            guard let apiService else { throw CancellationError() }
+            return try await apiService.getShape(id: shapeID).entry.points
+        }
+        let layer = IsraelNearbyRoutesMapLayer(
+            mapView: mapRegionManager.mapView,
+            shapeCache: shapeCache,
+            apiService: apiService,
+            application: application,
+            mapRegionManager: mapRegionManager
+        )
+        israelNearbyRoutesLayer = layer
         mapRegionManager.registerMapLayer(layer)
     }
 }

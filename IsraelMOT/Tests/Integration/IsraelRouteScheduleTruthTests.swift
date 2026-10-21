@@ -164,4 +164,42 @@ struct IsraelRouteScheduleTruthTests {
         #expect(depTime == 91800)
         #expect(depTime > 86399) // Proves no clamp to 86399!
     }
+
+    @Test
+    func testScheduleForRouteStopTimeNegativeOneReturnsNilDate() throws {
+        let json = """
+        {
+            "stopId": "mot:stop:101",
+            "stopSequence": 1,
+            "arrivalTime": -1,
+            "departureTime": -1
+        }
+        """.data(using: .utf8)!
+
+        let stopTime = try JSONDecoder().decode(ScheduleForRoute.StopTime.self, from: json)
+        #expect(!stopTime.hasValidDepartureTime)
+        #expect(stopTime.departureDate(for: Date(), timeZone: TimeZone(identifier: "Asia/Jerusalem")!) == nil)
+        #expect(stopTime.arrivalDate(for: Date(), timeZone: TimeZone(identifier: "Asia/Jerusalem")!) == nil)
+    }
+
+    @Test
+    func testScheduleForRoutePositiveDepartureYieldsRealDate() throws {
+        let json = """
+        {
+            "stopId": "mot:stop:101",
+            "stopSequence": 1,
+            "arrivalTime": 28800,
+            "departureTime": 28800
+        }
+        """.data(using: .utf8)!
+
+        let stopTime = try JSONDecoder().decode(ScheduleForRoute.StopTime.self, from: json)
+        #expect(stopTime.hasValidDepartureTime)
+        let tz = TimeZone(identifier: "Asia/Jerusalem")!
+        let date = try #require(stopTime.departureDate(for: Date(), timeZone: tz))
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = tz
+        #expect(cal.component(.hour, from: date) == 8)
+        #expect(cal.component(.minute, from: date) == 0)
+    }
 }

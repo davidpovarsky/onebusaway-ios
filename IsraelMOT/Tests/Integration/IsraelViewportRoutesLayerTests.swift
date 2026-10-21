@@ -42,4 +42,31 @@ struct IsraelViewportRoutesLayerTests {
         #expect(zoomWindow.contains(visibleHeight: 35000) == true)
         #expect(zoomWindow.contains(visibleHeight: 45000) == false)
     }
+
+    @Test
+    func testAmbientDataStructuresInitialization() {
+        let coords = [
+            CLLocationCoordinate2D(latitude: 31.815, longitude: 35.201),
+            CLLocationCoordinate2D(latitude: 31.819, longitude: 35.205)
+        ]
+        let polyline = AmbientRoutePolyline(
+            id: "mot:route:31",
+            coordinates: coords,
+            color: .blue,
+            arrows: []
+        )
+        #expect(polyline.id == "mot:route:31")
+        #expect(polyline.coordinates.count == 2)
+
+        let vehicle = AmbientLiveVehicle(
+            id: "veh_123",
+            coordinate: coords[0],
+            routeColor: .green,
+            orientation: 180.0,
+            routeType: .bus
+        )
+        #expect(vehicle.id == "veh_123")
+        #expect(vehicle.orientation == 180.0)
+        #expect(vehicle.routeType == .bus)
+    }
 }

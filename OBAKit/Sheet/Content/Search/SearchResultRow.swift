@@ -101,7 +101,7 @@ enum SearchResultRow {
             return SearchListRow(
                 kind: .searchResult(id: route.id),
                 title: route.shortName,
-                subtitle: route.longName ?? route.agency.name,
+                subtitle: route.longName ?? route.agency?.name ?? "",
                 icon: .uiImage(Icons.route),
                 accessory: .disclosureIndicator,
                 action: onSelect

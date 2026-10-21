@@ -197,16 +197,19 @@ public class ScheduleForRoute: NSObject, Identifiable, Decodable, HasReferences 
         ///
         /// `timeZone` must match the zone used to *format* the result (typically
         /// `formatters.timeZone`). Seconds-since-midnight values are agency-local;
-        /// synthesizing with `Calendar.current` while formatting in another zone
-        /// shifts every cell by the device↔region offset (#332 / PR #1308).
-        public func arrivalDate(for scheduleDate: Date, timeZone: TimeZone) -> Date {
-            Self.date(secondsFromMidnight: arrivalTime, on: scheduleDate, timeZone: timeZone)
+        /// The arrival time as a Date using the provided schedule date as the base.
+        /// Nil if unknown or negative sentinel (e.g. -1).
+        public func arrivalDate(for scheduleDate: Date, timeZone: TimeZone) -> Date? {
+            guard arrivalTime >= 0 else { return nil }
+            return Self.date(secondsFromMidnight: arrivalTime, on: scheduleDate, timeZone: timeZone)
         }
 
         /// Formats the departure time as a Date using the provided schedule date as the base.
+        /// Nil if unknown or negative sentinel (e.g. -1).
         /// See `arrivalDate(for:timeZone:)` for why `timeZone` is required.
-        public func departureDate(for scheduleDate: Date, timeZone: TimeZone) -> Date {
-            Self.date(secondsFromMidnight: departureTime, on: scheduleDate, timeZone: timeZone)
+        public func departureDate(for scheduleDate: Date, timeZone: TimeZone) -> Date? {
+            guard departureTime >= 0 else { return nil }
+            return Self.date(secondsFromMidnight: departureTime, on: scheduleDate, timeZone: timeZone)
         }
 
         private static func date(secondsFromMidnight: Int, on scheduleDate: Date, timeZone: TimeZone) -> Date {

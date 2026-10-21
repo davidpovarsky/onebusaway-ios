@@ -169,6 +169,8 @@ nonisolated public enum MOTIdentityFormatter {
         let stripped: String
         if shapeID.hasPrefix("mot:shape:") {
             stripped = String(shapeID.dropFirst("mot:shape:".count))
+        } else if shapeID.hasPrefix("mot:route:") {
+            stripped = String(shapeID.dropFirst("mot:route:".count))
         } else {
             stripped = shapeID
         }

@@ -133,7 +133,7 @@ class ScheduleForRouteViewModel: ObservableObject {
     /// Calculates the actual start time for a trip by finding the earliest departure across all stops.
     /// This is used for sorting trips chronologically, since some trips may not serve the first stop.
     private func actualStartTime(for trip: ScheduleForRoute.TripWithStopTimes, scheduleDate: Date) -> Date? {
-        guard let minDepartureSeconds = trip.stopTimes.map({ $0.departureTime }).min() else {
+        guard let minDepartureSeconds = trip.stopTimes.map({ $0.departureTime }).filter({ $0 >= 0 }).min() else {
             return nil
         }
         var calendar = Calendar.current

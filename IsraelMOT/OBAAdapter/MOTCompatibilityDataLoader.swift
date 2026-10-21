@@ -512,8 +512,13 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             preferredCity = "ירושלים"
         }
 
-        let query = rawQuery.replacingOccurrences(
-            of: "^קו\\s*",
+        let arabicIndicNumerals: [Character: Character] = [
+            "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4",
+            "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9"
+        ]
+        let asciiQuery = String(rawQuery.map { arabicIndicNumerals[$0] ?? $0 })
+        let query = asciiQuery.replacingOccurrences(
+            of: "^(קו|خط|line|route|bus)\\s*",
             with: "",
             options: [.regularExpression, .caseInsensitive]
         ).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -523,8 +528,8 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             routeSummaries = []
         } else {
             let tokens = query.split(separator: " ").map(String.init)
-            let lineToken = tokens.first(where: { Int($0) != nil })
-            let textTokens = tokens.filter { Int($0) == nil }
+            let lineToken = tokens.first(where: { $0.contains(where: \.isNumber) })
+            let textTokens = tokens.filter { !$0.contains(where: \.isNumber) }
 
             let apiSearchQuery = lineToken ?? query
             let searchURL = endpoints.searchLinesURL(query: apiSearchQuery)
@@ -554,7 +559,8 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
                     let matchesCity = line.cityName?.localizedCaseInsensitiveContains(text) == true
                     let matchesAgency = line.agencyName?.localizedCaseInsensitiveContains(text) == true
                     let matchesLongName = line.routeLongName?.localizedCaseInsensitiveContains(text) == true
-                    if !matchesCity && !matchesAgency && !matchesLongName {
+                    let matchesRouteName = line.routeName.localizedCaseInsensitiveContains(text) == true
+                    if !matchesCity && !matchesAgency && !matchesLongName && !matchesRouteName {
                         return false
                     }
                 }
@@ -775,19 +781,68 @@ nonisolated public final class MOTCompatibilityDataLoader: NSObject, URLDataLoad
             let rawTripParts = tripID.split(separator: "_")
             let matchTripToken: String? = rawTripParts.count >= 2 ? String(rawTripParts[1]) : nil
 
+            // Pre-pass: discover the coherent trip series index and authentic live vehicle location
+            var matchedTripIndex: Int? = nil
+            if let token = matchTripToken {
+                for s in (routeDTO.stops ?? []) {
+                    if let times = s.nextStopsTimes {
+                        if let idx = times.firstIndex(where: {
+                            $0.staticTripId == token ||
+                            ($0.tripIdToDate != nil && String($0.tripIdToDate!) == token)
+                        }) {
+                            matchedTripIndex = idx
+                            if liveVehicleLoc == nil, let loc = times[idx].routeLocation {
+                                liveVehicleLoc = CLLocationCoordinate2D(latitude: loc.lat, longitude: loc.lng)
+                            }
+                            break
+                        }
+                    }
+                }
+                // Fallback: match by arrival/departure time token if token is not a raw static trip ID
+                if matchedTripIndex == nil {
+                    for s in (routeDTO.stops ?? []) {
+                        if let times = s.nextStopsTimes {
+                            if let idx = times.firstIndex(where: { t in
+                                if let arrStr = t.arrivalTimeString ?? t.arrivalTime {
+                                    if arrStr == token || arrStr.replacingOccurrences(of: ":", with: "") == token {
+                                        return true
+                                    }
+                                    if let parsed = MOTDateParser.parse(arrStr),
+                                       abs(parsed.timeIntervalSince1970 - (Double(token) ?? 0)) < 120 {
+                                        return true
+                                    }
+                                }
+                                return false
+                            }) {
+                                matchedTripIndex = idx
+                                if liveVehicleLoc == nil, let loc = times[idx].routeLocation {
+                                    liveVehicleLoc = CLLocationCoordinate2D(latitude: loc.lat, longitude: loc.lng)
+                                }
+                                break
+                            }
+                        }
+                    }
+                }
+            }
+            let activeTripIndex = matchedTripIndex ?? 0
+
             for stop in domainRoute.stops {
                 var arrivalSec: Int? = nil
                 if let dtoStop = routeDTO.stops?.first(where: { $0.stopid == stop.internalID?.rawValue || $0.stopcode == stop.code.rawValue }),
-                   let nextTimes = dtoStop.nextStopsTimes {
-                    let matchedTime: NextStopTimeDTO?
+                   let nextTimes = dtoStop.nextStopsTimes, !nextTimes.isEmpty {
+                    var matchedTime: NextStopTimeDTO? = nil
                     if let token = matchTripToken {
-                        matchedTime = nextTimes.first(where: { $0.staticTripId == token || ($0.tripIdToDate != nil && String($0.tripIdToDate!) == token) })
-                    } else {
-                        matchedTime = nil
+                        matchedTime = nextTimes.first(where: {
+                            $0.staticTripId == token ||
+                            ($0.tripIdToDate != nil && String($0.tripIdToDate!) == token)
+                        })
+                    }
+                    if matchedTime == nil, activeTripIndex < nextTimes.count {
+                        matchedTime = nextTimes[activeTripIndex]
                     }
 
                     if let timeObj = matchedTime {
-                        if let loc = timeObj.routeLocation {
+                        if liveVehicleLoc == nil, let loc = timeObj.routeLocation {
                             liveVehicleLoc = CLLocationCoordinate2D(latitude: loc.lat, longitude: loc.lng)
                         }
                         if let arrivalStr = timeObj.arrivalTimeString ?? timeObj.arrivalTime {

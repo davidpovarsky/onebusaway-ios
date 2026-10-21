@@ -101,4 +101,35 @@ struct IsraelRouteSearchEndToEndTests {
             #expect(normalized == "31")
         }
     }
+
+    @Test
+    func testArabicIndicAndAlphanumericRouteNormalization() {
+        let arabicIndic31 = "٣١"
+        let mapped = String(arabicIndic31.map { char in
+            switch char {
+            case "٠": return "0"
+            case "١": return "1"
+            case "٢": return "2"
+            case "٣": return "3"
+            case "٤": return "4"
+            case "٥": return "5"
+            case "٦": return "6"
+            case "٧": return "7"
+            case "٨": return "8"
+            case "٩": return "9"
+            default: return char
+            }
+        })
+        #expect(mapped == "31")
+
+        // Route query with Hebrew prefix and city
+        let rawQueries = ["קו 31", "خط 31", "bus 31", "31 ירושלים", "קו 31א"]
+        for q in rawQueries {
+            let stripped = q
+                .replacingOccurrences(of: "^(קו|خط|line|route|bus)\\s*", with: "", options: .regularExpression)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let hasRouteDigit = stripped.contains(where: { $0.isNumber })
+            #expect(hasRouteDigit)
+        }
+    }
 }

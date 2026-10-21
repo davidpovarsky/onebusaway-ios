@@ -68,7 +68,7 @@ private func tripShapeStroke(width: CGFloat) -> StrokeStyle {
 
 /// A chevron pointing the way the trip runs, as `PolylineArrowAnnotationView` draws
 /// it on the map tab.
-private struct TripDirectionArrow: View {
+struct TripDirectionArrow: View {
     let headingDegrees: CLLocationDirection
     let color: Color
 
@@ -83,6 +83,37 @@ private struct TripDirectionArrow: View {
             // flood the VoiceOver rotor.
             .accessibilityHidden(true)
             .allowsHitTesting(false)
+    }
+}
+
+/// An ambient real-time vehicle marker for Region 972.
+struct TripNearbyVehicleMarker: View {
+    let vehicle: AmbientLiveVehicle
+
+    private static let diameter: CGFloat = 26
+
+    var body: some View {
+        ZStack {
+            if let orientation = vehicle.orientation {
+                Image(uiImage: Icons.templateHeading)
+                    .renderingMode(.template)
+                    .resizable()
+                    .frame(width: Self.diameter * 3, height: Self.diameter * 3)
+                    .foregroundStyle(vehicle.routeColor)
+                    .rotationEffect(.degrees(-orientation))
+            }
+            Circle()
+                .fill(vehicle.routeColor)
+                .frame(width: Self.diameter, height: Self.diameter)
+            Image(uiImage: Icons.transportIcon(from: vehicle.routeType))
+                .renderingMode(.template)
+                .resizable()
+                .scaledToFit()
+                .frame(width: Self.diameter / 2, height: Self.diameter / 2)
+                .foregroundStyle(.white)
+        }
+        .accessibilityHidden(true)
+        .allowsHitTesting(false)
     }
 }
 

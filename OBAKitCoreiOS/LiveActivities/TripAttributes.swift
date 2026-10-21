@@ -125,11 +125,18 @@ public struct TripAttributes: ActivityAttributes, Sendable {
         /// Up to 3 upcoming arrivals, soonest first.
         public let arrivals: [ArrivalInfo]
 
-        /// Arrivals whose departure time is at or after `now`, soonest first.
+        /// Arrivals whose departure time is at or after `now` (with a 60-second grace window), soonest first.
         /// Push updates and stale content states may include already-departed
         /// trips; use this for display rather than `arrivals` directly.
         public func upcomingArrivals(now: Date = Date()) -> [ArrivalInfo] {
-            arrivals.filter { $0.departureDate >= now }
+            let upcoming = arrivals.filter { $0.departureDate >= now.addingTimeInterval(-60) }
+            if !upcoming.isEmpty {
+                return upcoming
+            }
+            if let last = arrivals.last, last.departureDate >= now.addingTimeInterval(-300) {
+                return [last]
+            }
+            return []
         }
 
         enum CodingKeys: String, CodingKey {

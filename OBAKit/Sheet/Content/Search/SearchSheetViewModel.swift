@@ -197,7 +197,12 @@ final class SearchSheetViewModel: NSObject, ObservableObject, SearchDelegate {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         let type: SearchType
-        if trimmed.hasPrefix("קו") || trimmed.localizedCaseInsensitiveContains("line ") || trimmed.localizedCaseInsensitiveContains("route ") {
+        let hasRoutePrefix = trimmed.hasPrefix("קו") ||
+            trimmed.hasPrefix("خط") ||
+            trimmed.localizedCaseInsensitiveContains("line ") ||
+            trimmed.localizedCaseInsensitiveContains("route ") ||
+            trimmed.localizedCaseInsensitiveContains("bus ")
+        if hasRoutePrefix {
             type = .route
         } else if let num = Int(trimmed), num > 0 {
             if trimmed.count <= 3 {
@@ -206,7 +211,15 @@ final class SearchSheetViewModel: NSObject, ObservableObject, SearchDelegate {
                 type = .stopNumber
             }
         } else {
-            type = .address
+            // Recognize route patterns like "31 ירושלים", "86 מרכז", or alphanumeric lines like "31א", "14ב"
+            let tokens = trimmed.split(separator: " ")
+            let firstToken = tokens.first ?? ""
+            let isAlphaNumericRoute = firstToken.count <= 4 && firstToken.contains(where: \.isNumber)
+            if isAlphaNumericRoute && application.currentRegion?.regionIdentifier == 972 {
+                type = .route
+            } else {
+                type = .address
+            }
         }
         performSearch(request: SearchRequest(query: trimmed, type: type))
     }

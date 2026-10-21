@@ -2,7 +2,7 @@
 //  ScheduleForStopViewModel.swift
 //  OBAKit
 //
-//  Copyright © Open Transit Software Foundation
+//  Copyright Â© Open Transit Software Foundation
 //  This source code is licensed under the Apache 2.0 license found in the
 //  LICENSE file in the root directory of this source tree.
 //
@@ -77,6 +77,7 @@ class ScheduleForStopViewModel: ObservableObject {
             let directionHeadsign = directionSchedule.tripHeadsign
 
             for stopTime in directionSchedule.scheduleStopTimes {
+                guard stopTime.departureTime > 0 else { continue }
                 let headsign = stopTime.stopHeadsign.isEmpty ? directionHeadsign : stopTime.stopHeadsign
 
                 let departure = ScheduledDeparture(

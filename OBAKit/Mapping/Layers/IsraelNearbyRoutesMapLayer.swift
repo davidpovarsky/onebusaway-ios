@@ -9,9 +9,43 @@
 
 import Combine
 import CoreLocation
+import IsraelMOT
 import MapKit
 import OBAKitCore
+import SwiftUI
 import UIKit
+
+/// Ambient polyline and chevrons for SwiftUI and tests.
+public struct AmbientRoutePolyline: Identifiable {
+    public let id: String
+    public let coordinates: [CLLocationCoordinate2D]
+    public let color: Color
+    public let arrows: [PolylineArrowPlacement]
+
+    public init(id: String, coordinates: [CLLocationCoordinate2D], color: Color, arrows: [PolylineArrowPlacement]) {
+        self.id = id
+        self.coordinates = coordinates
+        self.color = color
+        self.arrows = arrows
+    }
+}
+
+/// Ambient real-time vehicle for SwiftUI and tests.
+public struct AmbientLiveVehicle: Identifiable {
+    public let id: String
+    public let coordinate: CLLocationCoordinate2D
+    public let routeColor: Color
+    public let orientation: CLLocationDirection?
+    public let routeType: Route.RouteType
+
+    public init(id: String, coordinate: CLLocationCoordinate2D, routeColor: Color, orientation: CLLocationDirection?, routeType: Route.RouteType) {
+        self.id = id
+        self.coordinate = coordinate
+        self.routeColor = routeColor
+        self.orientation = orientation
+        self.routeType = routeType
+    }
+}
 
 /// Overlay representing a route polyline in the ambient nearby routes map layer.
 final class IsraelNearbyRouteOverlay: MKPolyline {
@@ -97,6 +131,10 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
     private var overlays: [IsraelNearbyRouteOverlay] = []
     private var vehicleAnnotations: [IsraelNearbyVehicleAnnotation] = []
     private var arrowAnnotations: [PolylineArrowAnnotation] = []
+
+    public private(set) var ambientPolylines: [AmbientRoutePolyline] = []
+    public private(set) var ambientVehicles: [AmbientLiveVehicle] = []
+    public var onContentDidChange: (() -> Void)?
 
     private var debounceTask: Task<Void, Never>?
     private var fetchTask: Task<Void, Never>?
@@ -246,34 +284,40 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
                 if candidateRoutes.count >= 6 { break }
             }
 
-            var liveVehicles: [(id: String, routeID: RouteID, color: UIColor, status: TripStatus)] = []
+            var liveVehicles: [(id: String, routeID: RouteID, color: UIColor, status: TripStatus, routeType: Route.RouteType)] = []
 
-            // If routes weren't pre-populated, query arrivals for the nearest 1-2 stops
-            if candidateRoutes.count < 4 {
-                for stop in targetStops.prefix(2) {
-                    guard !Task.isCancelled, currentGen == self.generation else { return }
-                    do {
-                        let arrivalsResponse = try await self.apiService.getArrivalsAndDeparturesForStop(
-                            id: stop.id,
-                            minutesBefore: 0,
-                            minutesAfter: 60
-                        ).entry
-                        for dep in arrivalsResponse.arrivalsAndDepartures {
-                            if let route = dep.route, seenRouteIDs.insert(route.id).inserted {
+            // Query arrivals for the nearest stops to discover live vehicles (and additional routes if needed)
+            // DECOUPLED: Query up to 3 nearest stops regardless of candidateRoutes.count
+            for stop in targetStops.prefix(3) {
+                guard !Task.isCancelled, currentGen == self.generation else { return }
+                do {
+                    let arrivalsResponse = try await self.apiService.getArrivalsAndDeparturesForStop(
+                        id: stop.id,
+                        minutesBefore: 0,
+                        minutesAfter: 60
+                    ).entry
+                    for dep in arrivalsResponse.arrivalsAndDepartures {
+                        if let route = dep.route, seenRouteIDs.insert(route.id).inserted {
+                            if candidateRoutes.count < 6 {
                                 candidateRoutes.append(route)
                             }
-                            if let status = dep.tripStatus,
-                               status.isRealTime,
-                               let loc = status.lastKnownLocation?.coordinate,
-                               loc.latitude >= 29.4 && loc.latitude <= 33.5 &&
-                               loc.longitude >= 34.1 && loc.longitude <= 35.9 {
+                        }
+                        if let status = dep.tripStatus,
+                           status.isRealTime,
+                           let loc = status.lastKnownLocation?.coordinate,
+                           loc.latitude >= 29.4 && loc.latitude <= 33.5 &&
+                           loc.longitude >= 34.1 && loc.longitude <= 35.9 {
+                            let lastUpdate = status.lastUpdateTime ?? Date()
+                            // Freshness check: update within last 5 minutes (300 seconds)
+                            if abs(Date().timeIntervalSince(lastUpdate)) <= 300 {
                                 let color = dep.route?.color ?? ThemeColors.shared.brand
-                                liveVehicles.append((id: dep.id, routeID: dep.routeID, color: color, status: status))
+                                let routeType = dep.route?.routeType ?? .bus
+                                liveVehicles.append((id: dep.id, routeID: dep.routeID, color: color, status: status, routeType: routeType))
                             }
                         }
-                    } catch {
-                        // Ambient layer failure is non-fatal
                     }
+                } catch {
+                    // Ambient layer failure is non-fatal
                 }
             }
 
@@ -284,32 +328,57 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
             // 3. Fetch polylines for selected routes
             var newOverlays: [IsraelNearbyRouteOverlay] = []
             var newArrows: [PolylineArrowAnnotation] = []
+            var newAmbientPolylines: [AmbientRoutePolyline] = []
 
             for route in selectedRoutes {
                 guard !Task.isCancelled, currentGen == self.generation else { return }
                 let routeColor = route.color ?? ThemeColors.shared.brand
-                let coords = try? await self.shapeCache.coordinates(forShapeID: route.id)
+                let motRouteID = MOTIdentityFormatter.parseRouteID(fromScopedID: route.id) ?? MOTRouteID(route.id)
+                let shapeID = MOTIdentityFormatter.scopedShapeID(routeID: motRouteID)
+                let coords = try? await self.shapeCache.coordinates(forShapeID: shapeID)
 
                 if let validCoords = coords, !validCoords.isEmpty {
                     let casing = IsraelNearbyRouteOverlay.make(coordinates: validCoords, routeID: route.id, isCasing: true, color: .white)
                     let core = IsraelNearbyRouteOverlay.make(coordinates: validCoords, routeID: route.id, isCasing: false, color: routeColor)
                     newOverlays.append(contentsOf: [casing, core])
 
-                    let arrows = PolylineDirectionArrows.placements(along: validCoords).prefix(4).map {
+                    let placements = Array(PolylineDirectionArrows.placements(along: validCoords).prefix(4))
+                    let arrows = placements.map {
                         PolylineArrowAnnotation(placement: $0, tintColor: routeColor, routeID: route.id)
                     }
                     newArrows.append(contentsOf: arrows)
+
+                    newAmbientPolylines.append(
+                        AmbientRoutePolyline(
+                            id: route.id,
+                            coordinates: validCoords,
+                            color: Color(uiColor: routeColor),
+                            arrows: placements
+                        )
+                    )
                 }
             }
 
             // 4. Create vehicle annotations ONLY with genuine live status
             var newVehicles: [IsraelNearbyVehicleAnnotation] = []
+            var newAmbientVehicles: [AmbientLiveVehicle] = []
             var seenVehicleIDs = Set<String>()
             for v in liveVehicles.prefix(8) {
                 if seenVehicleIDs.insert(v.id).inserted {
                     newVehicles.append(
                         IsraelNearbyVehicleAnnotation(id: v.id, routeID: v.routeID, routeColor: v.color, tripStatus: v.status)
                     )
+                    if let coord = v.status.lastKnownLocation?.coordinate {
+                        newAmbientVehicles.append(
+                            AmbientLiveVehicle(
+                                id: v.id,
+                                coordinate: coord,
+                                routeColor: Color(uiColor: v.color),
+                                orientation: v.status.orientation,
+                                routeType: v.routeType
+                            )
+                        )
+                    }
                 }
             }
 
@@ -327,6 +396,10 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
             self.mapView.addOverlays(self.overlays, level: .aboveRoads)
             self.mapView.addAnnotations(self.arrowAnnotations)
             self.mapView.addAnnotations(self.vehicleAnnotations)
+
+            self.ambientPolylines = newAmbientPolylines
+            self.ambientVehicles = newAmbientVehicles
+            self.onContentDidChange?()
         }
     }
 
@@ -338,5 +411,8 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
         overlays.removeAll()
         arrowAnnotations.removeAll()
         vehicleAnnotations.removeAll()
+        ambientPolylines.removeAll()
+        ambientVehicles.removeAll()
+        onContentDidChange?()
     }
 }

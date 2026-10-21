@@ -81,23 +81,9 @@ extension MapViewController {
 
     /// Registers `IsraelNearbyRoutesMapLayer` for Region 972 to provide ambient
     /// nearby routes and authentic live vehicle positions at pedestrian zoom.
+    /// Handled authoritatively by `MapLayerRegistrar.configure()` for both UIKit and SwiftUI.
     private func configureIsraelNearbyRoutesLayer() {
-        mapRegionManager.removeMapLayer(id: IsraelNearbyRoutesMapLayer.layerID)
-        guard application.currentRegion?.regionIdentifier == 972,
-              let apiService = application.apiService else { return }
-
-        let shapeCache = ShapeCache { [weak apiService] shapeID in
-            guard let apiService else { throw CancellationError() }
-            return try await apiService.getShape(id: shapeID).entry.points
-        }
-        let layer = IsraelNearbyRoutesMapLayer(
-            mapView: mapRegionManager.mapView,
-            shapeCache: shapeCache,
-            apiService: apiService,
-            application: application,
-            mapRegionManager: mapRegionManager
-        )
-        mapRegionManager.registerMapLayer(layer)
+        // No-op: MapLayerRegistrar.configure() owns IsraelNearbyRoutesMapLayer lifecycle.
     }
 
     /// Re-points everything hanging off the freshly-built rental layers: the
