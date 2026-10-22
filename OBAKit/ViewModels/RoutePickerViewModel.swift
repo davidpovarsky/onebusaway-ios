@@ -250,7 +250,7 @@ final class RoutePickerViewModel: ObservableObject {
             let secondPrefix = second.shortName.lowercased().hasPrefix(target)
             if firstPrefix != secondPrefix { return firstPrefix }
 
-            return first.localizedCompare(second) == .orderedAscending
+            return first.shortName.localizedStandardCompare(second.shortName) == .orderedAscending
         }
         didFinishLoading = true
     }
