@@ -513,7 +513,7 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
                                 let headsign = dep.tripHeadsign ?? ""
                                 let agency = dep.route?.agency.name ?? ""
                                 let nextStop = status.nextStop?.name ?? status.closestStop?.name
-                                let eta = dep.predictedArrivalTime ?? dep.scheduledArrivalTime
+                                let eta = dep.arrivalDepartureDate
                                 let tripID = dep.tripID
                                 let sDate = dep.serviceDate
                                 liveVehicles.append((
