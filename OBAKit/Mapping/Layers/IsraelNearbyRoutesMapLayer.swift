@@ -15,13 +15,13 @@ import SwiftUI
 import UIKit
 
 /// Ambient polyline and chevrons for SwiftUI and tests.
-public struct AmbientRoutePolyline: Identifiable, Sendable {
-    public let id: String
-    public let coordinates: [CLLocationCoordinate2D]
-    public let color: Color
-    public let arrows: [PolylineArrowPlacement]
+struct AmbientRoutePolyline: Identifiable, Sendable {
+    let id: String
+    let coordinates: [CLLocationCoordinate2D]
+    let color: Color
+    let arrows: [PolylineArrowPlacement]
 
-    public init(id: String, coordinates: [CLLocationCoordinate2D], color: Color, arrows: [PolylineArrowPlacement]) {
+    init(id: String, coordinates: [CLLocationCoordinate2D], color: Color, arrows: [PolylineArrowPlacement]) {
         self.id = id
         self.coordinates = coordinates
         self.color = color
