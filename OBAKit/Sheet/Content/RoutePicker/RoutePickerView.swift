@@ -125,8 +125,8 @@ struct RoutePickerView: View {
                     Text(route.shortName)
                         .font(.headline.weight(.bold))
                         .foregroundStyle(Color(ThemeColors.shared.label))
-                    if let agency = route.agency.name, !agency.isEmpty {
-                        Text(agency)
+                    if !route.agency.name.isEmpty {
+                        Text(route.agency.name)
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
