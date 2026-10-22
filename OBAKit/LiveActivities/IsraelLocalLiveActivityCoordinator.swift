@@ -164,7 +164,6 @@ public final class IsraelLocalLiveActivityCoordinator {
 
         persistContexts()
         checkPollingState()
-        onActivityTracked?(context)
     }
 
     public func refreshTrackedActivities() async {
@@ -228,8 +227,9 @@ public final class IsraelLocalLiveActivityCoordinator {
             if let lastDep = context.lastDepartureTime {
                 let fallbackArrival = TripAttributes.ContentState.ArrivalInfo(
                     departureTime: lastDep,
-                    scheduleStatus: .scheduled,
-                    scheduledDepartureTime: lastDep
+                    scheduleStatus: .unknown,
+                    scheduleDeviation: 0,
+                    isArrival: true
                 )
                 newContentState = TripAttributes.ContentState(arrivals: [fallbackArrival])
             } else {
@@ -274,6 +274,7 @@ public final class IsraelLocalLiveActivityCoordinator {
         persistContexts()
         observeLifecycle(of: activity)
         checkPollingState()
+        onActivityTracked?(context)
     }
 
     private func untrackOnMain(activityID: String) async {
