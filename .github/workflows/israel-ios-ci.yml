@@ -23,7 +23,7 @@ jobs:
   test-and-build:
     name: Test Israel MOT Adapter & Package IPA
     runs-on: macos-15
-    timeout-minutes: 40
+    timeout-minutes: 60
 
     steps:
       - name: Checkout Code
@@ -76,6 +76,7 @@ jobs:
             -scheme 'App' \
             -destination "platform=iOS Simulator,id=${SIMULATOR_UDID}" \
             -derivedDataPath DerivedData \
+            -parallel-testing-enabled NO \
             -only-testing:OBAKitTests/MOTDTODecodingTests \
             -only-testing:OBAKitTests/MOTMapperTests \
             -only-testing:OBAKitTests/MOTHTTPClientTests \
