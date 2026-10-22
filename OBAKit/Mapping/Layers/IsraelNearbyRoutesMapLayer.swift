@@ -350,7 +350,9 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
             lastUpdateTime: vehicleAnnotation.lastUpdateTime,
             tripID: vehicleAnnotation.tripID,
             routeID: vehicleAnnotation.routeID,
-            vehicleID: vehicleAnnotation.tripStatus?.vehicleID
+            vehicleID: vehicleAnnotation.tripStatus?.vehicleID,
+            tripConvertible: vehicleAnnotation.tripConvertible,
+            arrivalDeparture: vehicleAnnotation.arrivalDeparture
         )
 
         let hosting = UIHostingController(
@@ -368,13 +370,25 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
         return hosting
     }
 
+    private var presentingViewController: UIViewController? {
+        var responder: UIResponder? = mapView
+        while let next = responder?.next {
+            if let vc = next as? UIViewController {
+                return vc
+            }
+            responder = next
+        }
+        return mapView.window?.rootViewController
+    }
+
     private func openTripDetails(for vehicleAnnotation: IsraelNearbyVehicleAnnotation) {
+        guard let host = presentingViewController else { return }
         if let convertible = vehicleAnnotation.tripConvertible {
             let tripPage = TripPageViewController(application: application, tripConvertible: convertible)
-            application.viewRouter.navigate(to: tripPage, from: application.viewRouter.currentViewController)
+            application.viewRouter.navigate(to: tripPage, from: host)
         } else if let arrDep = vehicleAnnotation.arrivalDeparture {
             let tripPage = TripPageViewController(application: application, arrivalDeparture: arrDep)
-            application.viewRouter.navigate(to: tripPage, from: application.viewRouter.currentViewController)
+            application.viewRouter.navigate(to: tripPage, from: host)
         }
     }
 
