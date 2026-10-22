@@ -556,7 +556,7 @@ nonisolated public enum OBACompatibilityBridge {
             if stopCoords.count >= 2 {
                 return stopCoords
             }
-            return stopTimes.map { CLLocationCoordinate2D(latitude: $0.stop.coordinate.latitude, longitude: $0.stop.coordinate.longitude) }
+            return stopTimes.map { CLLocationCoordinate2D(latitude: $0.stop.location.latitude, longitude: $0.stop.location.longitude) }
         }()
 
         var totalDistanceAlongTrip: Double = 0.0
@@ -649,7 +649,7 @@ nonisolated public enum OBACompatibilityBridge {
             var minStopDist: Double = .greatestFiniteMagnitude
             var bestStopTime: (stop: TransitStop, arrivalSec: Int?, departureSec: Int?)? = nil
             for item in stopTimes {
-                let sLoc = CLLocation(latitude: item.stop.coordinate.latitude, longitude: item.stop.coordinate.longitude)
+                let sLoc = CLLocation(latitude: item.stop.location.latitude, longitude: item.stop.location.longitude)
                 let d = locVeh.distance(from: sLoc)
                 if d < minStopDist {
                     minStopDist = d
