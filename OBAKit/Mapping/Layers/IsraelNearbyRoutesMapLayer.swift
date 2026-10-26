@@ -370,250 +370,106 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
         generation += 1
         let currentGen = generation
 
-        var metrics = IsraelMapMetrics(viewportChangeAt: Date())
-
         fetchTask = Task { @MainActor [weak self] in
             guard let self = self else { return }
-
             guard let manager = self.mapRegionManager else { return }
             let stops = manager.stops
-            guard !stops.isEmpty else {
-                self.removeAllContent()
-                return
-            }
-            metrics.firstStopAt = Date()
+            guard !stops.isEmpty else { return }
 
-            let centerCoord = MKMapPoint(x: mapRect.midX, y: mapRect.midY).coordinate
-            let centerLoc = CLLocation(latitude: centerCoord.latitude, longitude: centerCoord.longitude)
-
-            // 1. Pick 1 to 3 stops closest to the center of the viewport
-            let sortedStops = stops.sorted {
-                $0.location.distance(from: centerLoc) < $1.location.distance(from: centerLoc)
-            }
-            let targetStops = Array(sortedStops.prefix(3))
-
-            // 2. Discover routes serving these stops (budget: up to 4-6 routes)
-            var candidateRoutes: [Route] = []
-            var seenRouteIDs = Set<RouteID>()
-
-            for stop in targetStops {
-                for route in (stop.routes ?? []) {
-                    if seenRouteIDs.insert(route.id).inserted {
-                        candidateRoutes.append(route)
-                    }
-                }
-            }
-
-            // PHASE 1: Fetch live arrivals across the target stops concurrently
-            metrics.requestCount += targetStops.count
-            var liveVehicles: [(
-                id: String,
-                routeID: RouteID,
-                color: UIColor,
-                status: TripStatus,
-                routeType: Route.RouteType,
-                routeShortName: String,
-                headsign: String,
-                agencyName: String,
-                nextStopName: String?,
-                etaDate: Date?,
-                lastUpdateTime: Date?,
-                tripID: String,
-                serviceDate: Date,
-                arrivalDeparture: ArrivalDeparture
-            )] = []
-
-            await withTaskGroup(of: [ArrivalDeparture]?.self) { group in
-                for stop in targetStops {
-                    group.addTask { [apiService = self.apiService] in
-                        do {
-                            let resp = try await apiService.getArrivalsAndDeparturesForStop(
-                                id: stop.id,
-                                minutesBefore: 0,
-                                minutesAfter: 60
-                            ).entry
-                            return resp.arrivalsAndDepartures
-                        } catch {
-                            return nil
-                        }
-                    }
-                }
-
-                for await result in group {
-                    guard let arrivals = result else {
-                        metrics.failureCount += 1
-                        continue
-                    }
-                    for dep in arrivals {
-                        if let route = dep.route, seenRouteIDs.insert(route.id).inserted {
-                            candidateRoutes.append(route)
-                        }
-                        if let status = dep.tripStatus,
-                           status.isRealTime,
-                           let loc = (status.lastKnownLocation?.coordinate ?? status.position?.coordinate),
-                           loc.latitude >= 29.0 && loc.latitude <= 33.5 &&
-                           loc.longitude >= 34.0 && loc.longitude <= 36.0 {
-                            let lastUpdate = status.lastUpdate ?? Date()
-                            if abs(Date().timeIntervalSince(lastUpdate)) <= 300 {
-                                let color = dep.route?.color ?? ThemeColors.shared.brand
-                                let routeType = dep.route?.routeType ?? .bus
-                                let shortName = dep.route?.shortName ?? dep.routeShortName
-                                let headsign = dep.tripHeadsign ?? ""
-                                let agency = dep.route?.agency.name ?? ""
-                                let nextStop = status.nextStop?.name ?? status.closestStop?.name
-                                let eta = dep.arrivalDepartureDate
-                                let tripID = dep.tripID
-                                let sDate = dep.serviceDate
-                                liveVehicles.append((
-                                    id: dep.id,
-                                    routeID: dep.routeID,
-                                    color: color,
-                                    status: status,
-                                    routeType: routeType,
-                                    routeShortName: shortName,
-                                    headsign: headsign,
-                                    agencyName: agency,
-                                    nextStopName: nextStop,
-                                    etaDate: eta,
-                                    lastUpdateTime: lastUpdate,
-                                    tripID: tripID,
-                                    serviceDate: sDate,
-                                    arrivalDeparture: dep
-                                ))
-                            }
-                        }
-                    }
-                }
-            }
+            IsraelViewportRouteRepository.shared.updateViewport(
+                visibleRect: mapRect,
+                stops: stops,
+                apiService: self.apiService,
+                shapeCache: self.shapeCache
+            )
 
             guard !Task.isCancelled, currentGen == self.generation else { return }
-
-            // PROGRESSIVE STEP 1: Publish live vehicles IMMEDIATELY!
-            var newVehicles: [IsraelNearbyVehicleAnnotation] = []
-            var newAmbientVehicles: [AmbientLiveVehicle] = []
-            var seenVehicleIDs = Set<String>()
-            for v in liveVehicles.prefix(8) {
-                if seenVehicleIDs.insert(v.id).inserted {
-                    let convertible = TripConvertible(arrivalDeparture: v.arrivalDeparture)
-                    newVehicles.append(
-                        IsraelNearbyVehicleAnnotation(
-                            id: v.id,
-                            routeID: v.routeID,
-                            routeColor: v.color,
-                            tripStatus: v.status,
-                            routeShortName: v.routeShortName,
-                            headsign: v.headsign,
-                            agencyName: v.agencyName,
-                            nextStopName: v.nextStopName,
-                            etaDate: v.etaDate,
-                            lastUpdateTime: v.lastUpdateTime,
-                            tripID: v.tripID,
-                            arrivalDeparture: v.arrivalDeparture,
-                            tripConvertible: convertible
-                        )
-                    )
-                    if let coord = (v.status.lastKnownLocation?.coordinate ?? v.status.position?.coordinate) {
-                        newAmbientVehicles.append(
-                            AmbientLiveVehicle(
-                                id: v.id,
-                                coordinate: coord,
-                                routeColor: Color(uiColor: v.color),
-                                orientation: v.status.orientation,
-                                routeType: v.routeType,
-                                routeShortName: v.routeShortName,
-                                headsign: v.headsign,
-                                agencyName: v.agencyName,
-                                nextStopName: v.nextStopName,
-                                etaDate: v.etaDate,
-                                lastUpdateTime: v.lastUpdateTime,
-                                tripID: v.tripID,
-                                routeID: v.routeID,
-                                serviceDate: v.serviceDate,
-                                vehicleID: v.status.vehicleID,
-                                tripConvertible: convertible,
-                                arrivalDeparture: v.arrivalDeparture
-                            )
-                        )
-                    }
-                }
-            }
-
-            self.mapView.removeAnnotations(self.vehicleAnnotations)
-            self.vehicleAnnotations = newVehicles
-            self.mapView.addAnnotations(self.vehicleAnnotations)
-            self.ambientVehicles = newAmbientVehicles
-            metrics.firstVehicleAt = Date()
-            self.onContentDidChange?()
-
-            // PHASE 2: Fetch and render route polylines progressively
-            self.viewportRoutes = candidateRoutes
-            let selectedRoutes = Array(candidateRoutes.prefix(Self.routeCap))
-
-            var newOverlays: [IsraelNearbyRouteOverlay] = []
-            var newArrows: [PolylineArrowAnnotation] = []
-            var newAmbientPolylines: [AmbientRoutePolyline] = []
-
-            for route in selectedRoutes {
-                guard !Task.isCancelled, currentGen == self.generation else { return }
-                let routeColor = route.color ?? ThemeColors.shared.brand
-                let rawID = route.id
-                    .replacingOccurrences(of: "mot:route:", with: "")
-                    .replacingOccurrences(of: "mot:shape:", with: "")
-                let shapeID = "mot:shape:\(rawID)"
-                metrics.requestCount += 1
-                let coords = try? await self.shapeCache.coordinates(forShapeID: shapeID)
-
-                if let validCoords = coords, !validCoords.isEmpty {
-                    metrics.cacheHits += 1
-                    let casing = IsraelNearbyRouteOverlay.make(coordinates: validCoords, routeID: route.id, isCasing: true, color: .white)
-                    let core = IsraelNearbyRouteOverlay.make(coordinates: validCoords, routeID: route.id, isCasing: false, color: routeColor)
-                    newOverlays.append(contentsOf: [casing, core])
-
-                    let placements = Array(PolylineDirectionArrows.placements(along: validCoords).prefix(4))
-                    let arrows = placements.map {
-                        PolylineArrowAnnotation(placement: $0, tintColor: routeColor, routeID: route.id)
-                    }
-                    newArrows.append(contentsOf: arrows)
-
-                    newAmbientPolylines.append(
-                        AmbientRoutePolyline(
-                            id: route.id,
-                            coordinates: validCoords,
-                            color: Color(uiColor: routeColor),
-                            arrows: placements
-                        )
-                    )
-                    if metrics.firstRouteAt == nil {
-                        metrics.firstRouteAt = Date()
-                    }
-                }
-            }
-
-            guard !Task.isCancelled, currentGen == self.generation else { return }
-
-            self.mapView.removeOverlays(self.overlays)
-            self.mapView.removeAnnotations(self.arrowAnnotations)
-
-            self.overlays = newOverlays
-            self.arrowAnnotations = newArrows
-
-            self.mapView.addOverlays(self.overlays, level: .aboveRoads)
-            self.mapView.addAnnotations(self.arrowAnnotations)
-
-            self.ambientPolylines = newAmbientPolylines
-            metrics.allCompleteAt = Date()
-            self.lastMetrics = metrics
-            self.onContentDidChange?()
-
-            let totalElapsed = String(format: "%.3f", Date().timeIntervalSince(metrics.viewportChangeAt))
-            let firstVehElapsed = metrics.firstVehicleAt.map { String(format: "%.3f", $0.timeIntervalSince(metrics.viewportChangeAt)) } ?? "none"
-            let firstRouteElapsed = metrics.firstRouteAt.map { String(format: "%.3f", $0.timeIntervalSince(metrics.viewportChangeAt)) } ?? "none"
-            Logger.info("[IsraelMapMetrics] viewport-settle to vehicles=\(firstVehElapsed)s, routes=\(firstRouteElapsed)s, all=\(totalElapsed)s (reqs=\(metrics.requestCount), hits=\(metrics.cacheHits), fails=\(metrics.failureCount))")
+            self.applyRepositorySnapshot()
         }
+    }
+
+    private func applyRepositorySnapshot() {
+        let repo = IsraelViewportRouteRepository.shared
+        let vehicles = repo.activeVehicles
+        self.ambientVehicles = vehicles
+        self.viewportRoutes = repo.currentSnapshot?.routes ?? []
+
+        // In-place diff annotations
+        let incomingIDs = Set(vehicles.map(\.id))
+        let toRemove = vehicleAnnotations.filter { !incomingIDs.contains($0.id) }
+        if !toRemove.isEmpty {
+            mapView.removeAnnotations(toRemove)
+            vehicleAnnotations.removeAll { toRemove.contains($0) }
+        }
+
+        let existingIDs = Set(vehicleAnnotations.map(\.id))
+        var toAdd: [IsraelNearbyVehicleAnnotation] = []
+        for v in vehicles where !existingIDs.contains(v.id) {
+            let convertible = v.tripConvertible ?? (v.arrivalDeparture.map { TripConvertible(arrivalDeparture: $0) })
+            let ann = IsraelNearbyVehicleAnnotation(
+                id: v.id,
+                routeID: v.routeID,
+                routeColor: UIColor(v.routeColor),
+                tripStatus: v.arrivalDeparture?.tripStatus ?? TripStatus(),
+                routeShortName: v.routeShortName,
+                headsign: v.headsign,
+                agencyName: v.agencyName,
+                nextStopName: v.nextStopName,
+                etaDate: v.etaDate,
+                lastUpdateTime: v.lastUpdateTime,
+                tripID: v.tripID,
+                arrivalDeparture: v.arrivalDeparture,
+                tripConvertible: convertible
+            )
+            toAdd.append(ann)
+            vehicleAnnotations.append(ann)
+        }
+        if !toAdd.isEmpty {
+            mapView.addAnnotations(toAdd)
+        }
+
+        // In-place diff polylines
+        let polylines = repo.activePolylines
+        let existingOverlayIDs = Set(overlays.map(\.routeID))
+        var newOverlays: [IsraelNearbyRouteOverlay] = []
+        var newArrows: [PolylineArrowAnnotation] = []
+        var newAmbientPolylines: [AmbientRoutePolyline] = []
+
+        for (routeID, coords) in polylines where !existingOverlayIDs.contains(routeID) {
+            let casing = IsraelNearbyRouteOverlay.make(coordinates: coords, routeID: routeID, isCasing: true, color: .white)
+            let core = IsraelNearbyRouteOverlay.make(coordinates: coords, routeID: routeID, isCasing: false, color: ThemeColors.shared.brand)
+            newOverlays.append(contentsOf: [casing, core])
+            overlays.append(contentsOf: [casing, core])
+
+            let placements = Array(PolylineDirectionArrows.placements(along: coords).prefix(4))
+            let arrows = placements.map {
+                PolylineArrowAnnotation(placement: $0, tintColor: ThemeColors.shared.brand, routeID: routeID)
+            }
+            newArrows.append(contentsOf: arrows)
+            arrowAnnotations.append(contentsOf: arrows)
+
+            newAmbientPolylines.append(
+                AmbientRoutePolyline(
+                    id: routeID,
+                    coordinates: coords,
+                    color: Color(uiColor: ThemeColors.shared.brand),
+                    arrows: placements
+                )
+            )
+        }
+
+        if !newOverlays.isEmpty {
+            mapView.addOverlays(newOverlays, level: .aboveRoads)
+            mapView.addAnnotations(newArrows)
+            self.ambientPolylines.append(contentsOf: newAmbientPolylines)
+        }
+
+        self.onContentDidChange?()
     }
 
     private func removeAllContent() {
         generation += 1
+        IsraelViewportRouteRepository.shared.reset()
         mapView.removeOverlays(overlays)
         mapView.removeAnnotations(arrowAnnotations)
         mapView.removeAnnotations(vehicleAnnotations)

@@ -10,6 +10,7 @@
 import SwiftUI
 import MapKit
 import OBAKitCore
+import IsraelMOT
 
 /// One row of the route-stops list. A plain value so the mapping — including the
 /// direction formatting and the unresolved-stops case — is testable without a view.
@@ -92,6 +93,14 @@ struct RouteStopsSheetView: View {
                     comment: "Title shown when a route's stop list could not be loaded or is empty."
                 ),
                 systemImage: AppSymbol.error
+            )
+        } else if IsraelProviderBootstrap.isIsraelContext(routeID: stopsForRoute.route?.id) {
+            IsraelRouteStopsTimelineView(
+                stopsForRoute: stopsForRoute,
+                displayModel: displayModel,
+                onSelectStop: { stopID, _ in
+                    coordinator.push(.stopDetails(stopID: stopID))
+                }
             )
         } else {
             List(rows) { row in

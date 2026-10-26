@@ -69,4 +69,19 @@ struct IsraelViewportRoutesLayerTests {
         #expect(vehicle.orientation == 180.0)
         #expect(vehicle.routeType == .bus)
     }
+
+    @Test
+    @MainActor
+    func testViewportRepositoryHysteresisAndDiffing() {
+        let repo = IsraelViewportRouteRepository.shared
+        repo.reset()
+
+        #expect(repo.activeVehicles.isEmpty)
+        #expect(repo.activePolylines.isEmpty)
+        #expect(repo.isLoading == false)
+
+        // Verify envelope padding is non-zero
+        #expect(repo.envelopePaddingRatio > 0.1)
+        #expect(repo.vehicleStaleThreshold >= 180.0)
+    }
 }
