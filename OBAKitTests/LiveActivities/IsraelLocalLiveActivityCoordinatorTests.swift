@@ -74,4 +74,22 @@ struct IsraelLocalLiveActivityCoordinatorTests {
         await coordinator.refreshTrackedActivities()
         #expect(coordinator.trackedContexts.isEmpty)
     }
+
+    @Test
+    func testLifecycleServiceInitializationAndDiagnostics() {
+        let service = IsraelActivityLifecycleService.shared
+        service.configure(apiServiceProvider: { nil })
+
+        #expect(service.localCoordinator != nil)
+        #expect(service.trackingCoordinator != nil)
+
+        let snapshot = IsraelActivityDiagnostics.shared.snapshot(
+            trackedCount: 0,
+            isBackgroundTrackingActive: false,
+            tripID: nil,
+            stopID: nil
+        )
+        #expect(snapshot.trackedCount == 0)
+        #expect(snapshot.isBackgroundTrackingActive == false)
+    }
 }
