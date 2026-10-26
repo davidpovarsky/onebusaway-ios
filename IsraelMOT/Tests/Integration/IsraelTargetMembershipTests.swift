@@ -49,19 +49,8 @@ struct IsraelTargetMembershipTests {
         let client = IsraelWidgetArrivalsClient.shared
         #expect(client != nil)
 
-        // Non-Israel region (e.g. Puget Sound = 1) must return empty departures immediately
-        let nonIsraelRegion = Region(
-            active: true,
-            contactEmail: "test@oba.org",
-            custom: false,
-            experimental: false,
-            language: "en_US",
-            name: "Puget Sound",
-            obaBaseURL: URL(string: "https://api.pugetsound.onebusaway.org")!,
-            regionIdentifier: 1,
-            bounds: [],
-            open311Servers: []
-        )
+        // Non-Israel region must return empty departures immediately
+        let nonIsraelRegion = Fixtures.customMinneapolisRegion
 
         let departures = await client.loadDepartures(
             for: [],

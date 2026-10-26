@@ -35,7 +35,7 @@ nonisolated public struct TransitMultiLanguageName: Hashable, Codable, Sendable 
 }
 
 /// Normalized domain representation of a transit stop in Israel.
-nonisolated public struct TransitStop: Identifiable, Hashable, Codable, Sendable {
+nonisolated public struct TransitStop: Identifiable, Hashable, Sendable {
     public var id: String {
         if let internalID = internalID {
             return "\(code.rawValue)_\(internalID.rawValue)"
@@ -103,7 +103,7 @@ nonisolated public struct TransitRouteSummary: Identifiable, Hashable, Codable, 
 }
 
 /// Normalized domain representation of a transit route.
-nonisolated public struct TransitRoute: Identifiable, Hashable, Codable, Sendable {
+nonisolated public struct TransitRoute: Identifiable, Hashable, Sendable {
     public var id: MOTRouteID { routeID }
     public let routeID: MOTRouteID
     public let lineName: String
@@ -181,7 +181,7 @@ nonisolated public struct TransitRoute: Identifiable, Hashable, Codable, Sendabl
 }
 
 /// Real-time or scheduled arrival record at a stop with authentic trip and schedule provenance.
-nonisolated public struct TransitArrival: Identifiable, Hashable, Codable, Sendable {
+nonisolated public struct TransitArrival: Identifiable, Hashable, Sendable {
     public var id: String {
         if let staticTripId, !staticTripId.isEmpty {
             return "\(routeID.rawValue)_\(staticTripId)"

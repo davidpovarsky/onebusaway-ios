@@ -48,7 +48,7 @@ IsraelMOT/Map/IsraelViewportRouteRepository.swift:93:21: error: cannot find type
 | `IsraelProviderBootstrap.swift` | `IsraelMOT/Bootstrap/` | `IsraelMOT/Bootstrap/` (**OBAKit + OBAWidget**) | `Foundation, OBAKitCore` | **Yes** | Provider bootstrap & region detection. |
 | `IsraelRegionMigration.swift` | `IsraelMOT/Bootstrap/` | `IsraelMOT/Bootstrap/` (**OBAKit + OBAWidget**) | `Foundation, OBAKitCore` | **Yes** | Migration helper. |
 | `Identifiers.swift` | `IsraelMOT/Contracts/` | `IsraelMOT/Contracts/` (**OBAKit + OBAWidget**) | `Foundation` | **Yes** | Pure value types and strongly typed IDs. |
-| `TransitDomainModels.swift` | `IsraelMOT/Contracts/` | `IsraelMOT/Contracts/` (**OBAKit + OBAWidget**) | `Foundation, CoreLocation` | **Yes** | Core domain models. |
+| `TransitDomainModels.swift` | `IsraelMOT/Contracts/` | `IsraelMOT/Contracts/` (**OBAKit + OBAWidget**) | `Foundation, CoreLocation` | **Yes** | Core domain models (`Identifiable, Hashable, Sendable`; unused `Codable` removed to fix synthesis in widget without OTPKit). |
 | `TransitProvider.swift` | `IsraelMOT/Contracts/` | `IsraelMOT/Contracts/` (**OBAKit + OBAWidget**) | `Foundation, Combine` | **Yes** | Provider registry & capabilities. |
 | `Core/DTO/**` | `IsraelMOT/Core/DTO/` | `IsraelMOT/Core/DTO/` (**OBAKit + OBAWidget**) | `Foundation` | **Yes** | Codable network transfer objects. |
 | `Core/Geometry/**` | `IsraelMOT/Core/Geometry/` | `IsraelMOT/Core/Geometry/` (**OBAKit + OBAWidget**) | `Foundation, CoreLocation` | **Yes** | Flexible polyline decoding & Google polyline encoding. |
