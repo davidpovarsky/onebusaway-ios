@@ -10,6 +10,7 @@
 import Foundation
 import MapKit
 import OBAKitCore
+import IsraelMOT
 
 /// A one-shot search outcome, surfaced by the view as an alert.
 ///
@@ -197,36 +198,16 @@ final class SearchSheetViewModel: NSObject, ObservableObject, SearchDelegate {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
-        let arabicIndicNumerals: [Character: Character] = [
-            "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4",
-            "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9"
-        ]
-        let asciiTrimmed = String(trimmed.map { arabicIndicNumerals[$0] ?? $0 })
-
+        let isIsrael = application.currentRegion?.regionIdentifier == IsraelProviderBootstrap.israelRegionIdentifier
+        let intent = IsraelRouteQueryNormalizer.detectIntent(for: trimmed, isIsraelRegion: isIsrael)
         let type: SearchType
-        let hasRoutePrefix = asciiTrimmed.hasPrefix("קו") ||
-            asciiTrimmed.hasPrefix("خط") ||
-            asciiTrimmed.localizedCaseInsensitiveContains("line ") ||
-            asciiTrimmed.localizedCaseInsensitiveContains("route ") ||
-            asciiTrimmed.localizedCaseInsensitiveContains("bus ")
-        if hasRoutePrefix {
+        switch intent {
+        case .route:
             type = .route
-        } else if let num = Int(asciiTrimmed), num > 0 {
-            if asciiTrimmed.count <= 3 {
-                type = .route
-            } else {
-                type = .stopNumber
-            }
-        } else {
-            // Recognize route patterns like "31 ירושלים", "86 מרכז", or alphanumeric lines like "31א", "14ב"
-            let tokens = asciiTrimmed.split(separator: " ")
-            let firstToken = tokens.first ?? ""
-            let isAlphaNumericRoute = firstToken.count <= 4 && firstToken.contains(where: \.isNumber)
-            if isAlphaNumericRoute && application.currentRegion?.regionIdentifier == 972 {
-                type = .route
-            } else {
-                type = .address
-            }
+        case .stopNumber:
+            type = .stopNumber
+        case .address:
+            type = .address
         }
         performSearch(request: SearchRequest(query: trimmed, type: type))
     }

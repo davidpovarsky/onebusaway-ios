@@ -132,4 +132,21 @@ struct IsraelRouteSearchEndToEndTests {
             #expect(hasRouteDigit)
         }
     }
+
+    @Test
+    func testRouteQueryNormalizerAndIntentClassification() {
+        #expect(IsraelRouteQueryNormalizer.normalize("קו 31") == "31")
+        #expect(IsraelRouteQueryNormalizer.normalize("خط ٧١") == "71")
+        #expect(IsraelRouteQueryNormalizer.normalize("bus 64A") == "64A")
+        #expect(IsraelRouteQueryNormalizer.normalize("  קו 471  ") == "471")
+
+        #expect(IsraelRouteQueryNormalizer.detectIntent(for: "קו 71", isIsraelRegion: true) == .route)
+        #expect(IsraelRouteQueryNormalizer.detectIntent(for: "خط 31", isIsraelRegion: true) == .route)
+        #expect(IsraelRouteQueryNormalizer.detectIntent(for: "31", isIsraelRegion: true) == .route)
+        #expect(IsraelRouteQueryNormalizer.detectIntent(for: "31 ירושלים", isIsraelRegion: true) == .route)
+        #expect(IsraelRouteQueryNormalizer.detectIntent(for: "64א", isIsraelRegion: true) == .route)
+        #expect(IsraelRouteQueryNormalizer.detectIntent(for: "2190", isIsraelRegion: true) == .stopNumber)
+        #expect(IsraelRouteQueryNormalizer.detectIntent(for: "5130", isIsraelRegion: true) == .stopNumber)
+        #expect(IsraelRouteQueryNormalizer.detectIntent(for: "רחוב יפו ירושלים", isIsraelRegion: true) == .address)
+    }
 }

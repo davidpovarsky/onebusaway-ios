@@ -11,6 +11,7 @@ import Combine
 import CoreLocation
 import Foundation
 import OBAKitCore
+import IsraelMOT
 
 /// Shared ViewModel for `RoutePickerViewController`.
 ///
@@ -239,18 +240,22 @@ final class RoutePickerViewModel: ObservableObject {
             combined.append(r)
         }
 
-        // Sort exact number matches first, then agency/longName
-        let target = query.lowercased()
-        filteredRoutes = combined.sorted { first, second in
-            let firstExact = first.shortName.lowercased() == target
-            let secondExact = second.shortName.lowercased() == target
-            if firstExact != secondExact { return firstExact }
+        // Rank results: exact match first, prefix second, then localized compare
+        if application.currentRegion?.regionIdentifier == IsraelProviderBootstrap.israelRegionIdentifier {
+            filteredRoutes = IsraelRouteSearchService.shared.rankRoutes(combined, for: query)
+        } else {
+            let target = query.lowercased()
+            filteredRoutes = combined.sorted { first, second in
+                let firstExact = first.shortName.lowercased() == target
+                let secondExact = second.shortName.lowercased() == target
+                if firstExact != secondExact { return firstExact }
 
-            let firstPrefix = first.shortName.lowercased().hasPrefix(target)
-            let secondPrefix = second.shortName.lowercased().hasPrefix(target)
-            if firstPrefix != secondPrefix { return firstPrefix }
+                let firstPrefix = first.shortName.lowercased().hasPrefix(target)
+                let secondPrefix = second.shortName.lowercased().hasPrefix(target)
+                if firstPrefix != secondPrefix { return firstPrefix }
 
-            return first.shortName.localizedStandardCompare(second.shortName) == .orderedAscending
+                return first.shortName.localizedStandardCompare(second.shortName) == .orderedAscending
+            }
         }
         didFinishLoading = true
     }
@@ -258,19 +263,7 @@ final class RoutePickerViewModel: ObservableObject {
     // MARK: - Normalization
 
     static func normalizeQuery(_ raw: String) -> String {
-        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return "" }
-
-        let arabicIndicNumerals: [Character: Character] = [
-            "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4",
-            "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9"
-        ]
-        let ascii = String(trimmed.map { arabicIndicNumerals[$0] ?? $0 })
-        return ascii.replacingOccurrences(
-            of: "^(קו|خط|line|route|bus)\\s*",
-            with: "",
-            options: [.regularExpression, .caseInsensitive]
-        ).trimmingCharacters(in: .whitespacesAndNewlines)
+        IsraelRouteQueryNormalizer.normalize(raw)
     }
 
     // MARK: - Private

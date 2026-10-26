@@ -74,4 +74,22 @@ struct IsraelDirectionLabelTests {
         #expect(route.destinationName == "תחנת יעד")
         #expect(route.originName == "תחנת מוצא")
     }
+
+    @Test
+    func testRealisticIsraeliLineHeadsigns() {
+        let lines = [
+            ("71 רמות <-> גילה", "גילה", "רמות"),
+            ("31 קניון מלחה <-> גבעת רם", "גבעת רם", "קניון מלחה"),
+            ("471 ירושלים <-> מעלה אדומים", "מעלה אדומים", "ירושלים"),
+            ("64א הר נוף <-> נווה יעקב", "נווה יעקב", "הר נוף"),
+            ("480 ירושלים (תמח״י) ↔ תל אביב (מסוף 2000)", "תל אביב (מסוף 2000)", "ירושלים (תמח״י)")
+        ]
+
+        for (headsign, expectedDest, expectedOrigin) in lines {
+            let res = IsraelRouteDirectionFormatter.format(headsign: headsign)
+            #expect(res.destination == expectedDest)
+            #expect(res.origin == expectedOrigin)
+            #expect(!res.accessibilityLabel.isEmpty)
+        }
+    }
 }

@@ -122,14 +122,12 @@ public class Application: CoreApplication, PushServiceDelegate {
 
     @objc lazy var userActivityBuilder = UserActivityBuilder(application: self)
 
-    public private(set) lazy var israelLiveActivityCoordinator = IsraelLocalLiveActivityCoordinator(
+    public private(set) lazy var israelLiveActivityCoordinator = IsraelActivityLifecycleService.shared.legacyLocalCoordinator(
         apiServiceProvider: { [weak self] in self?.apiService },
         userDefaults: userDefaults
     )
 
-    public private(set) lazy var israelTripBackgroundTrackingCoordinator = IsraelTripBackgroundTrackingCoordinator(
-        liveActivityCoordinator: israelLiveActivityCoordinator
-    )
+    public private(set) lazy var israelTripBackgroundTrackingCoordinator = IsraelActivityLifecycleService.shared.legacyTrackingCoordinator
 
     /// Handles all deep-linking into the app.
     @objc public private(set) lazy var appLinksRouter: AppLinksRouter? = makeAppLinksRouter()
@@ -220,6 +218,7 @@ public class Application: CoreApplication, PushServiceDelegate {
         configureAppearanceProxies()
         observeShortcutLifecycle()
         observeTransitProviderLifecycle()
+        IsraelAppServices.shared.configure(with: self)
     }
 
     private func configureTipKit() {
@@ -924,15 +923,8 @@ public class Application: CoreApplication, PushServiceDelegate {
     }
 
     open override func dataLoader(for region: Region) -> URLDataLoader {
-        if region.regionIdentifier == 972 {
-            let activeProvider = TransitProviderSelectionStore.currentProviderID()
-            if activeProvider == .israelMOT {
-                return MOTCompatibilityDataLoader(fallbackLoader: super.dataLoader(for: region))
-            } else if activeProvider == .oneBusAwayNative {
-                return super.dataLoader(for: region)
-            }
-        }
-        return super.dataLoader(for: region)
+        let fallback = super.dataLoader(for: region)
+        return IsraelAppServices.shared.dataLoader(for: region, fallbackLoader: fallback)
     }
 
     // MARK: - Appearance and Themes

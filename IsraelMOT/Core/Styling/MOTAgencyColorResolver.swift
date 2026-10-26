@@ -6,7 +6,9 @@
 //
 
 import Foundation
+#if canImport(UIKit)
 import UIKit
+#endif
 import OBAKitCore
 
 nonisolated public enum MOTAgencyColorResolver {
@@ -70,6 +72,7 @@ nonisolated public enum MOTAgencyColorResolver {
         return resolve(agencyID: MOTAgencyID(agencyID)).textColorHex
     }
 
+    #if canImport(UIKit)
     public static func color(forAgencyID agencyID: Int) -> UIColor {
         let hex = hexColor(forAgencyID: agencyID)
         return UIColor(hex: hex) ?? .systemGreen
@@ -79,6 +82,7 @@ nonisolated public enum MOTAgencyColorResolver {
         let textHex = contrastTextColor(forHex: hex)
         return UIColor(hex: textHex) ?? .white
     }
+    #endif
 
     /// Verifies if a string is a 6-digit RGB hex code (with or without '#').
     public static func isValidHex(_ hex: String) -> Bool {

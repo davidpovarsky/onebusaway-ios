@@ -6,6 +6,7 @@
 
 import SwiftUI
 import OBAKitCore
+import IsraelMOT
 
 /// `Strings.removeAlarm` doesn't exist yet (only `Strings.addAlarm` does); this
 /// row needs both add/remove wording for the alarm toggle, so it's defined
@@ -142,18 +143,17 @@ struct DepartureRowView: View {
     /// Clamped to two lines at every size (the guide's committed "clamp + tap"
     /// choice): capping row height keeps more departures visible, and tapping
     /// the row opens the trip panel with the full name.
+    @ViewBuilder
     private var headsignText: some View {
-        let resolved = RouteDirectionLabelResolver(headsign: departure.tripHeadsign ?? departure.routeShortName)
-        return VStack(alignment: .leading, spacing: 1) {
-            Text(resolved.destination)
-                .font(.system(.body, weight: .bold))
+        if IsraelProviderBootstrap.isIsraelContext(routeID: departure.routeID, stopID: departure.stopID) {
+            IsraelRouteDirectionTitleView(
+                headsign: departure.tripHeadsign ?? departure.routeShortName,
+                lineLimit: 2
+            )
+        } else {
+            Text(departure.tripHeadsign ?? departure.routeShortName)
+                .font(.headline.weight(.heavy))
                 .lineLimit(2)
-            if let origin = resolved.origin {
-                Text(String(format: OBALoc("departure_row.origin_fmt", value: "מוצא: %@", comment: "Subdued origin line under destination"), origin))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
         }
     }
 

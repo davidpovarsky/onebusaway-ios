@@ -2,7 +2,15 @@ targets:
   OBAWidget:
     type: app-extension
     platform: iOS
-    sources: ["."]
+    sources:
+      - path: "."
+      - path: ../IsraelMOT
+        type: group
+        excludes:
+          - "Tests"
+          - "Scripts"
+          - "Docs"
+          - "Resources"
     dependencies:
       - target: OBAKitCore
       - sdk: SwiftUI.framework

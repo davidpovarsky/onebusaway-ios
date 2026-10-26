@@ -64,17 +64,29 @@ final class WidgetDataProvider {
             return WidgetContent(bookmarks: bookmarks, departures: [:], fetchedAt: nil)
         }
 
-        let service = RESTAPIService.standalone(
-            region: region,
-            apiKey: apiKey,
-            appVersion: Bundle.main.appVersion,
-            uuid: UserUUID.value(in: userDefaults)
-        )
+        let departures: [UUID: [ArrivalDeparture]]
+        if region.regionIdentifier == 972 {
+            departures = await IsraelWidgetArrivalsClient.shared.loadDepartures(
+                for: bookmarks,
+                in: region,
+                apiKey: apiKey,
+                appVersion: Bundle.main.appVersion,
+                uuid: UserUUID.value(in: userDefaults),
+                minutesAfter: 90
+            )
+        } else {
+            let service = RESTAPIService.standalone(
+                region: region,
+                apiKey: apiKey,
+                appVersion: Bundle.main.appVersion,
+                uuid: UserUUID.value(in: userDefaults)
+            )
 
-        // 90, not the default 60: entries run up to 30 minutes past the fetch,
-        // so every one of them still knows a full hour ahead — which is what a
-        // row's "no departures in the next 60 minutes" fallback claims.
-        let departures = await BookmarkArrivalsLoader(minutesAfter: 90).departuresByBookmark(for: bookmarks, using: service)
+            // 90, not the default 60: entries run up to 30 minutes past the fetch,
+            // so every one of them still knows a full hour ahead — which is what a
+            // row's "no departures in the next 60 minutes" fallback claims.
+            departures = await BookmarkArrivalsLoader(minutesAfter: 90).departuresByBookmark(for: bookmarks, using: service)
+        }
         return WidgetContent(bookmarks: bookmarks, departures: departures, fetchedAt: departures.isEmpty ? nil : Date())
     }
 }

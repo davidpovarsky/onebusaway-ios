@@ -9,6 +9,7 @@
 
 import SwiftUI
 import OBAKitCore
+import IsraelMOT
 
 /// Grouped mode: one Section (= one inset-grouped card) per route, ordered by
 /// soonest departure (§4.9). Card header is the next departure; expansion
@@ -195,10 +196,18 @@ struct GroupedListView: View {
 
     /// Clamped to two lines at every size (the guide's committed "clamp + tap"
     /// choice); expanding the card reveals rows that lead to the full name.
+    @ViewBuilder
     private func headsignText(_ next: ArrivalDeparture) -> some View {
-        Text(next.tripHeadsign ?? next.routeShortName)
-            .font(.headline.weight(.heavy))
-            .lineLimit(2)
+        if IsraelProviderBootstrap.isIsraelContext(routeID: next.routeID, stopID: next.stopID) {
+            IsraelRouteDirectionTitleView(
+                headsign: next.tripHeadsign ?? next.routeShortName,
+                lineLimit: 2
+            )
+        } else {
+            Text(next.tripHeadsign ?? next.routeShortName)
+                .font(.headline.weight(.heavy))
+                .lineLimit(2)
+        }
     }
 
     /// Upcoming-trip chips (each tinted by its own departure's status), the

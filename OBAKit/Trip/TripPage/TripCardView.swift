@@ -9,6 +9,7 @@
 
 import SwiftUI
 import OBAKitCore
+import IsraelMOT
 
 /// The trip page's header card: which vehicle this is, when it reaches the
 /// rider's stop, and how much of that is actually known.
@@ -156,21 +157,14 @@ struct TripCardView: View {
         )
     }
 
-    private var resolvedLabels: RouteDirectionLabelResolver {
-        RouteDirectionLabelResolver(headsign: headsign)
-    }
-
+    @ViewBuilder
     private var headsignText: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(resolvedLabels.destination)
+        if IsraelProviderBootstrap.isIsraelContext(routeID: nil, stopID: nil) {
+            IsraelRouteDirectionTitleView(headsign: headsign, lineLimit: 3)
+        } else {
+            Text(headsign)
                 .font(.title3.weight(.bold))
                 .fixedSize(horizontal: false, vertical: true)
-            if let origin = resolvedLabels.origin {
-                Text(String(format: OBALoc("trip_card.origin_fmt", value: "מוצא: %@", comment: "Subdued origin line under destination"), origin))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
         }
     }
 
