@@ -38,7 +38,7 @@ public final class IsraelWidgetArrivalsClient: Sendable {
             dataLoader: loader
         )
 
-        let departuresLoader = BookmarkArrivalsLoader(minutesAfter: minutesAfter)
+        let departuresLoader = BookmarkArrivalsLoader(minutesAfter: UInt(max(0, minutesAfter)))
         return await departuresLoader.departuresByBookmark(for: bookmarks, using: service)
     }
 }
