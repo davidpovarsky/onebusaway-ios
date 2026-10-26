@@ -41,7 +41,7 @@ public enum IsraelRouteDirectionFormatter {
         }
 
         // Normalize various bidirectional and directional delimiters to standard arrow "↔"
-        var normalized = text
+        let normalized = text
             .replacingOccurrences(of: "<->", with: "↔")
             .replacingOccurrences(of: "< - >", with: "↔")
             .replacingOccurrences(of: "<—>", with: "↔")
