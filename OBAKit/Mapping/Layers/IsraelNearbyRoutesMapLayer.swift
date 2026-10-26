@@ -13,7 +13,6 @@ import MapKit
 import OBAKitCore
 import SwiftUI
 import UIKit
-import IsraelMOT
 
 /// Ambient polyline and chevrons for SwiftUI and tests.
 struct AmbientRoutePolyline: Identifiable, Sendable {

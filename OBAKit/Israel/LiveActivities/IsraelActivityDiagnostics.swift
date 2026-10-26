@@ -8,7 +8,6 @@
 import Foundation
 import ActivityKit
 import OBAKitCore
-import OBAKitCoreiOS
 
 public struct IsraelActivityDiagnosticsSnapshot: Sendable, Codable {
     public let timestamp: Date

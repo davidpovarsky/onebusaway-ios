@@ -8,7 +8,6 @@
 import Foundation
 import CoreLocation
 import OBAKitCore
-import IsraelMOT
 
 @MainActor
 public final class IsraelAppServices: ObservableObject {

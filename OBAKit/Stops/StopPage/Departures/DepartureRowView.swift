@@ -6,7 +6,6 @@
 
 import SwiftUI
 import OBAKitCore
-import IsraelMOT
 
 /// `Strings.removeAlarm` doesn't exist yet (only `Strings.addAlarm` does); this
 /// row needs both add/remove wording for the alarm toggle, so it's defined

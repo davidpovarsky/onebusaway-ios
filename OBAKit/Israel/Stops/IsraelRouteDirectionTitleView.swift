@@ -7,7 +7,6 @@
 
 import SwiftUI
 import OBAKitCore
-import IsraelMOT
 
 public struct IsraelRouteDirectionTitleView: View {
     public let headsign: String

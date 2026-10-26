@@ -11,7 +11,6 @@ import Combine
 import CoreLocation
 import Foundation
 import OBAKitCore
-import IsraelMOT
 
 /// Shared ViewModel for `RoutePickerViewController`.
 ///

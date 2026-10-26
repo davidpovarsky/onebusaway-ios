@@ -9,7 +9,6 @@
 
 import SwiftUI
 import OBAKitCore
-import IsraelMOT
 
 /// The trip page's header card: which vehicle this is, when it reaches the
 /// rider's stop, and how much of that is actually known.

@@ -9,8 +9,6 @@ import Foundation
 import ActivityKit
 import CoreLocation
 import OBAKitCore
-import OBAKitCoreiOS
-import IsraelMOT
 
 @MainActor
 public final class IsraelActivityLifecycleService: ObservableObject {

@@ -98,6 +98,7 @@ jobs:
             -only-testing:OBAKitTests/IsraelDirectionLabelTests \
             -only-testing:OBAKitTests/IsraelLocalLiveActivityCoordinatorTests \
             -only-testing:OBAKitTests/IsraelTripBackgroundTrackingCoordinatorTests \
+            -only-testing:OBAKitTests/IsraelTargetMembershipTests \
             -only-testing:OBAKitTests/ScreenAwakeCoordinatorTests
 
       - name: Run Focused Israel UI Tests

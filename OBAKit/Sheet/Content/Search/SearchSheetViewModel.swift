@@ -10,7 +10,6 @@
 import Foundation
 import MapKit
 import OBAKitCore
-import IsraelMOT
 
 /// A one-shot search outcome, surfaced by the view as an alert.
 ///

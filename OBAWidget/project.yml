@@ -11,6 +11,12 @@ targets:
           - "Scripts"
           - "Docs"
           - "Resources"
+          - "Map"
+          - "Routes"
+          - "OTPAdapter"
+          - "UI"
+          - "Weather"
+          - "Search"
     dependencies:
       - target: OBAKitCore
       - sdk: SwiftUI.framework
@@ -24,4 +30,6 @@ targets:
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
-
+    settings:
+      base:
+        APPLICATION_EXTENSION_API_ONLY: true

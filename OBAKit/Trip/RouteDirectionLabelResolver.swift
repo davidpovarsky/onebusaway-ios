@@ -9,7 +9,6 @@
 
 import Foundation
 import OBAKitCore
-import IsraelMOT
 
 /// Bridge forwarding to the extracted `IsraelRouteDirectionFormatter` in IsraelMOT.
 public struct RouteDirectionLabelResolver: Sendable, Equatable {

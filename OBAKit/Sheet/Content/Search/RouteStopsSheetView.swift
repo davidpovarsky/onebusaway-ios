@@ -10,7 +10,6 @@
 import SwiftUI
 import MapKit
 import OBAKitCore
-import IsraelMOT
 
 /// One row of the route-stops list. A plain value so the mapping — including the
 /// direction formatting and the unresolved-stops case — is testable without a view.

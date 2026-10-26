@@ -9,7 +9,6 @@
 
 import SwiftUI
 import OBAKitCore
-import IsraelMOT
 
 /// Grouped mode: one Section (= one inset-grouped card) per route, ordered by
 /// soonest departure (§4.9). Card header is the next departure; expansion
