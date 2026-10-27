@@ -54,11 +54,19 @@ public enum IsraelRouteDirectionFormatter {
             .filter { !$0.isEmpty }
 
         if parts.count >= 2 {
-            let origin = String(parts[0])
-            let destination = String(parts[1])
+            let origin = stripLeadingLineNumber(from: String(parts[0]))
+            let destination = stripLeadingLineNumber(from: String(parts[1]))
             return IsraelRouteDirectionResult(destination: destination, origin: origin, rawText: text)
         } else {
             return IsraelRouteDirectionResult(destination: text, origin: nil, rawText: text)
         }
+    }
+
+    private static func stripLeadingLineNumber(from string: String) -> String {
+        let pattern = #"^[0-9]+[א-תa-zA-Z]?\s+"#
+        if let range = string.range(of: pattern, options: .regularExpression) {
+            return String(string[range.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return string
     }
 }
