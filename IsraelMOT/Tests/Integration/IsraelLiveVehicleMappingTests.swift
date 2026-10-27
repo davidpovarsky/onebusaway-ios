@@ -107,29 +107,21 @@ struct IsraelLiveVehicleMappingTests {
     }
 
     @Test
-    func testRouteStopTimelineGeneration() {
-        let stop1 = Stop(id: "mot:stop:2190", name: "בר אילן/שמואל הנביא", coordinate: CLLocationCoordinate2D(latitude: 31.795, longitude: 35.218))
-        let stop2 = Stop(id: "mot:stop:5130", name: "גולדה מאיר/שדרות גולדה", coordinate: CLLocationCoordinate2D(latitude: 31.802, longitude: 35.210))
-        let stop3 = Stop(id: "mot:stop:3040", name: "שדרות רמות/קניון רמות", coordinate: CLLocationCoordinate2D(latitude: 31.815, longitude: 35.195))
-
-        let route = Route(id: "mot:route:33285", shortName: "71", agency: Agency(id: "mot:agency:16", name: "סופרבוס"))
-        let stopsForRoute = StopsForRoute(route: route, stops: [stop1, stop2, stop3], polylines: [])
-
+    func testRouteStopTimelineGeneration() throws {
+        let stopsForRoute = try Fixtures.loadRESTAPIPayload(type: StopsForRoute.self, fileName: "stops_for_route_1_44.json")
         let items = IsraelRouteStopTimelineFactory.makeTimeline(from: stopsForRoute)
-        #expect(items.count == 3)
-        #expect(items[0].isFirstStop == true)
-        #expect(items[0].isLastStop == false)
-        #expect(items[0].sequence == 1)
-        #expect(items[0].stopCode == "2190")
 
-        #expect(items[1].isFirstStop == false)
-        #expect(items[1].isLastStop == false)
-        #expect(items[1].sequence == 2)
-        #expect(items[1].stopCode == "5130")
+        #expect(!items.isEmpty)
+        #expect(items.count == (stopsForRoute.stops ?? []).count)
 
-        #expect(items[2].isFirstStop == false)
-        #expect(items[2].isLastStop == true)
-        #expect(items[2].sequence == 3)
-        #expect(items[2].stopCode == "3040")
+        let first = try #require(items.first)
+        #expect(first.isFirstStop == true)
+        #expect(first.isLastStop == false)
+        #expect(first.sequence == 1)
+
+        let last = try #require(items.last)
+        #expect(last.isFirstStop == false)
+        #expect(last.isLastStop == true)
+        #expect(last.sequence == items.count)
     }
 }

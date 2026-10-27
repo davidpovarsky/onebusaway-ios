@@ -57,7 +57,7 @@ public enum IsraelRouteStopTimelineFactory {
         guard let stops = stopsForRoute.stops, !stops.isEmpty else { return [] }
         let count = stops.count
         return stops.enumerated().map { index, stop in
-            let code = stop.code ?? stop.id.replacingOccurrences(of: "mot:stop:", with: "")
+            let code = stop.code.isEmpty ? stop.id.replacingOccurrences(of: "mot:stop:", with: "") : stop.code
             let isFirst = index == 0
             let isLast = index == count - 1
             let dir = Formatters.adjectiveFormOfCardinalDirection(stop.direction) ?? ""
