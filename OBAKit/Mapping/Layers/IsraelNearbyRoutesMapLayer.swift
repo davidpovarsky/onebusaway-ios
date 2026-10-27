@@ -71,9 +71,10 @@ final class IsraelNearbyVehicleAnnotation: VehicleAnnotation {
 
     init(
         id: String,
+        coordinate: CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: 0, longitude: 0),
         routeID: RouteID,
         routeColor: UIColor,
-        tripStatus: TripStatus,
+        tripStatus: TripStatus? = nil,
         routeShortName: String = "",
         headsign: String = "",
         agencyName: String = "",
@@ -96,7 +97,14 @@ final class IsraelNearbyVehicleAnnotation: VehicleAnnotation {
         self.tripID = tripID
         self.arrivalDeparture = arrivalDeparture
         self.tripConvertible = tripConvertible
-        super.init(tripStatus: tripStatus)
+        if let tripStatus {
+            super.init(tripStatus: tripStatus)
+        } else {
+            super.init()
+        }
+        if coordinate.latitude != 0 || coordinate.longitude != 0 {
+            self.coordinate = coordinate
+        }
         updateTitles()
     }
 
@@ -407,9 +415,10 @@ final class IsraelNearbyRoutesMapLayer: NSObject, MapLayer {
             let convertible = v.tripConvertible ?? (v.arrivalDeparture.map { TripConvertible(arrivalDeparture: $0) })
             let ann = IsraelNearbyVehicleAnnotation(
                 id: v.id,
+                coordinate: v.coordinate,
                 routeID: v.routeID,
                 routeColor: UIColor(v.routeColor),
-                tripStatus: v.arrivalDeparture?.tripStatus ?? TripStatus(),
+                tripStatus: v.arrivalDeparture?.tripStatus,
                 routeShortName: v.routeShortName,
                 headsign: v.headsign,
                 agencyName: v.agencyName,
