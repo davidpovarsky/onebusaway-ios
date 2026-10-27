@@ -47,7 +47,7 @@ public final class IsraelViewportRouteRepository: ObservableObject {
     }
 
     /// Evaluates viewport changes and triggers background updates only when moving outside the buffered envelope.
-    public func updateViewport(
+    func updateViewport(
         visibleRect: MKMapRect,
         stops: [Stop],
         apiService: RESTAPIService?,

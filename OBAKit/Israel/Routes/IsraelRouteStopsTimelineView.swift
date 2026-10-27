@@ -9,16 +9,16 @@ import SwiftUI
 import MapKit
 import OBAKitCore
 
-public struct IsraelRouteStopsTimelineView: View {
-    public let stopsForRoute: StopsForRoute
-    public let displayModel: MapSearchDisplayModel
-    public let onSelectStop: (Stop.ID, CLLocationCoordinate2D) -> Void
+struct IsraelRouteStopsTimelineView: View {
+    let stopsForRoute: StopsForRoute
+    let displayModel: MapSearchDisplayModel
+    let onSelectStop: (Stop.ID, CLLocationCoordinate2D) -> Void
 
     private var timelineItems: [IsraelRouteStopItem] {
         IsraelRouteStopTimelineFactory.makeTimeline(from: stopsForRoute)
     }
 
-    public init(
+    init(
         stopsForRoute: StopsForRoute,
         displayModel: MapSearchDisplayModel,
         onSelectStop: @escaping (Stop.ID, CLLocationCoordinate2D) -> Void
